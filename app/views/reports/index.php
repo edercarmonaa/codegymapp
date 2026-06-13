@@ -38,7 +38,12 @@ $reportsJson = json_encode($reports, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERRO
     </div>
     <div class="col-12 col-xl-6">
         <section class="border rounded-2 p-3 h-100">
-            <h2 class="h5">Tiempo practicado por mes</h2>
+            <div class="d-flex align-items-center justify-content-between gap-3">
+                <h2 class="h5 mb-0">Tiempo practicado por mes</h2>
+                <span class="badge text-bg-primary">
+                    <?= e((string) array_sum(array_map(static fn (array $row): int => (int) $row['value'], $reports['timeByMonth']))) ?> min
+                </span>
+            </div>
             <div class="chart-frame">
                 <canvas id="reportTimeChart"></canvas>
             </div>

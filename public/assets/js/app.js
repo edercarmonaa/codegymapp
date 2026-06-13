@@ -58,12 +58,20 @@ document.addEventListener('DOMContentLoaded', () => {
     if (time && window.Chart && reports) {
         const data = chartRows(reports.timeByMonth, 'Sin meses');
         new Chart(time, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: data.labels,
-                datasets: [{ label: 'Minutos', data: data.values, borderColor: '#0d6efd', backgroundColor: 'rgba(13, 110, 253, .15)', fill: true }]
+                datasets: [{
+                    label: 'Minutos',
+                    data: data.values,
+                    backgroundColor: '#0d6efd'
+                }]
             },
-            options: { responsive: true, maintainAspectRatio: false }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
         });
     }
 

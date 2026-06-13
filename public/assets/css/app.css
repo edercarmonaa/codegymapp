@@ -27,10 +27,11 @@ body {
 }
 
 .chart-frame {
+    height: 320px;
     min-height: 320px;
+    position: relative;
 }
 
 #calendar {
     min-height: 680px;
 }
-
