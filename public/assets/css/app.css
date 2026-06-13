@@ -25,6 +25,12 @@ body {
     margin: 0 auto 1rem;
 }
 
+.navbar-logo {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
 .app-shell {
     max-width: 1440px;
 }

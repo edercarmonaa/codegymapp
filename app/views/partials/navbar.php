@@ -1,6 +1,9 @@
 <nav class="navbar navbar-expand-lg border-bottom bg-body">
     <div class="container-fluid">
-        <a class="navbar-brand fw-semibold" href="/dashboard">CodeGymApp</a>
+        <a class="navbar-brand fw-semibold d-inline-flex align-items-center gap-2" href="/dashboard">
+            <img class="navbar-logo" src="/public/assets/img/site-icon.png" alt="" aria-hidden="true">
+            <span>CodeGymApp</span>
+        </a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar" aria-controls="mainNavbar" aria-expanded="false" aria-label="Abrir navegación">
             <span class="navbar-toggler-icon"></span>
         </button>
