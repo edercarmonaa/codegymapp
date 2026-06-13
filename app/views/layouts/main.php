@@ -13,7 +13,7 @@ $pageTitle = $title ?? 'CodeGymApp';
     <link rel="apple-touch-icon" href="/public/assets/img/site-icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="/public/assets/css/app.css" rel="stylesheet">
+    <link href="/public/assets/css/app.css?v=2" rel="stylesheet">
     <script src="https://unpkg.com/htmx.org@1.9.12"></script>
 </head>
 <body>

@@ -21,13 +21,18 @@ body {
 .login-logo {
     display: block;
     width: min(260px, 72vw);
+    max-width: 100%;
+    max-height: 260px;
     height: auto;
     margin: 0 auto 1rem;
+    object-fit: contain;
 }
 
 .navbar-logo {
     width: 28px;
     height: 28px;
+    min-width: 28px;
+    max-width: 28px;
     object-fit: contain;
 }
 

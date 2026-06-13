@@ -1,6 +1,6 @@
 <section class="login-panel w-100">
     <div class="text-center mb-4">
-        <img class="login-logo" src="/public/assets/img/codegym-logo.png" alt="CodeGym">
+        <img class="login-logo" src="/public/assets/img/codegym-logo.png" width="260" height="260" alt="CodeGym">
         <p class="text-body-secondary mb-0">Control personal de retos de programación</p>
     </div>
 
