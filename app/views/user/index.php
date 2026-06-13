@@ -30,8 +30,12 @@
             <?= csrf_field() ?>
             <h2 class="h5">Cambiar contraseña</h2>
             <div class="mb-3">
+                <label class="form-label">Contraseña actual</label>
+                <input class="form-control" type="password" name="current_password" autocomplete="current-password" required>
+            </div>
+            <div class="mb-3">
                 <label class="form-label">Nueva contraseña</label>
-                <input class="form-control" type="password" name="password" required>
+                <input class="form-control" type="password" name="password" autocomplete="new-password" required>
             </div>
             <button class="btn btn-warning">Cambiar contraseña</button>
         </form>
