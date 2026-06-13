@@ -37,6 +37,8 @@ $router->post('/metas/guardar', 'GoalController', 'save');
 $router->post('/metas/desactivar', 'GoalController', 'deactivate');
 $router->get('/reportes', 'ReportController', 'index');
 $router->get('/notificaciones', 'NotificationController', 'index');
+$router->post('/notificaciones/marcar-leida', 'NotificationController', 'markRead');
+$router->post('/notificaciones/eliminar', 'NotificationController', 'delete');
 
 $router->get('/usuario', 'UserController', 'index');
 $router->post('/usuario/actualizar', 'UserController', 'update');

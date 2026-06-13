@@ -7,6 +7,7 @@ final class DashboardController
     public function index(): void
     {
         Challenge::expirePending();
+        Notification::generateSystemNotifications();
         $stats = Challenge::dashboardStats();
         $scheduled = max(1, (int) $stats['scheduled_month']);
         $stats['general_percent'] = round(((int) $stats['completed_month'] / $scheduled) * 100, 1);
@@ -19,6 +20,7 @@ final class DashboardController
             'distribution' => Challenge::dashboardDistribution(),
             'todayChallenges' => Challenge::todayPending(),
             'expiredChallenges' => Challenge::expiredForReview(),
+            'notifications' => Notification::unread(5),
         ], 'main');
     }
 }

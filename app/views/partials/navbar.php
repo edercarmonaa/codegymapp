@@ -6,7 +6,8 @@
         </button>
         <div class="collapse navbar-collapse" id="mainNavbar">
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-                <?php foreach ([
+<?php $unreadNotifications = Notification::unreadCount(); ?>
+<?php foreach ([
                     '/dashboard' => 'Dashboard',
                     '/calendario' => 'Calendario',
                     '/retos' => 'Retos',
@@ -18,7 +19,14 @@
                     '/usuario' => 'Mi usuario',
                     '/seguridad' => 'Seguridad',
                 ] as $href => $label): ?>
-                    <li class="nav-item"><a class="nav-link" href="<?= e($href) ?>"><?= e($label) ?></a></li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="<?= e($href) ?>">
+                            <?= e($label) ?>
+                            <?php if ($href === '/notificaciones' && $unreadNotifications > 0): ?>
+                                <span class="badge rounded-pill text-bg-danger"><?= e((string) $unreadNotifications) ?></span>
+                            <?php endif; ?>
+                        </a>
+                    </li>
                 <?php endforeach; ?>
             </ul>
             <form class="d-flex align-items-center gap-2 me-3" action="/usuario/cambiar-tema" method="post">
@@ -32,4 +40,3 @@
         </div>
     </div>
 </nav>
-

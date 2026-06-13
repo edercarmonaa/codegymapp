@@ -5,4 +5,4 @@
     </div>
 </div>
 
-<div class="alert alert-info">No hay notificaciones pendientes.</div>
+<?php require __DIR__ . '/table.php'; ?>

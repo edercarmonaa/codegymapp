@@ -56,6 +56,21 @@
                 <?php endif; ?>
             </div>
         </section>
+
+        <section class="mt-4">
+            <h2 class="h5">Notificaciones pendientes</h2>
+            <div class="list-group">
+                <?php foreach ($notifications as $notification): ?>
+                    <a class="list-group-item list-group-item-action" href="<?= e($notification['action_url'] ?: '/notificaciones') ?>">
+                        <strong><?= e($notification['title']) ?></strong>
+                        <span class="d-block text-body-secondary"><?= e($notification['message']) ?></span>
+                    </a>
+                <?php endforeach; ?>
+                <?php if (!$notifications): ?>
+                    <div class="list-group-item text-body-secondary">No hay notificaciones pendientes.</div>
+                <?php endif; ?>
+            </div>
+        </section>
     </div>
     <div class="col-12 col-xl-7">
         <section>
