@@ -45,6 +45,31 @@ function form_page(array $errors = []): void
     <?php
 }
 
+function create_initial_user(string $name, string $username, string $email, string $password): void
+{
+    $sql = "INSERT INTO users (name, username, email, password_hash, preferred_theme, failed_login_attempts, is_active, created_at, updated_at)
+        VALUES (:name, :username, :email, :password_hash, 'light', 0, 1, NOW(), NOW())";
+    $payload = [
+        'name' => $name,
+        'username' => $username,
+        'email' => $email,
+        'password_hash' => password_hash($password, PASSWORD_DEFAULT),
+    ];
+
+    try {
+        $stmt = Database::reconnect()->prepare($sql);
+        $stmt->execute($payload);
+    } catch (PDOException $exception) {
+        $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+        if (!in_array($driverCode, [2006, 2013], true)) {
+            throw $exception;
+        }
+
+        $stmt = Database::reconnect()->prepare($sql);
+        $stmt->execute($payload);
+    }
+}
+
 try {
     if (User::countAll() > 0) {
         output_message('Ya existe un usuario. No se permite crear otro.', $isCli);
@@ -94,16 +119,7 @@ if ($errors) {
     exit;
 }
 
-$stmt = Database::connection()->prepare(
-    "INSERT INTO users (name, username, email, password_hash, preferred_theme, failed_login_attempts, is_active, created_at, updated_at)
-     VALUES (:name, :username, :email, :password_hash, 'light', 0, 1, NOW(), NOW())"
-);
-$stmt->execute([
-    'name' => $name,
-    'username' => $username,
-    'email' => $email,
-    'password_hash' => password_hash($password, PASSWORD_DEFAULT),
-]);
+create_initial_user($name, $username, $email, $password);
 
 output_message('Usuario inicial creado correctamente.', $isCli);
 
@@ -112,4 +128,3 @@ if (@unlink(__FILE__)) {
 } else {
     output_message('No se pudo borrar el script automáticamente. Elimínalo manualmente.', $isCli);
 }
-
