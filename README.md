@@ -104,6 +104,17 @@ La contraseña debe tener mínimo 10 caracteres, mayúscula, minúscula, número
 - Notificaciones internas.
 - Tablas con filtros, ordenamiento, paginación y actualización parcial con HTMX.
 
+## Arquitectura PHP
+
+El arranque en `app/core/bootstrap.php` usa un autoload compatible con PSR-4 para migraciones graduales:
+
+- `CodeGymApp\Core\` apunta a `app/core/`
+- `CodeGymApp\Controllers\` apunta a `app/controllers/`
+- `CodeGymApp\Models\` apunta a `app/models/`
+- `CodeGymApp\Helpers\` apunta a `app/helpers/`
+
+El autoload mantiene compatibilidad con las clases actuales sin namespace para no romper despliegues en cPanel. Las nuevas clases pueden agregarse con namespace siguiendo esas rutas.
+
 ## Seguridad
 
 `.htaccess` bloquea acceso directo a:
