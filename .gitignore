@@ -1,7 +1,8 @@
 .env
+.env.*
+!.env.example
 /storage/logs/*
 /storage/cache/*
 *.log
 .DS_Store
 Thumbs.db
-

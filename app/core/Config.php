@@ -1,0 +1,35 @@
+<?php
+
+declare(strict_types=1);
+
+final class Config
+{
+    public static function validate(): void
+    {
+        $missing = [];
+        foreach (['APP_URL', 'DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASS', 'JWT_SECRET'] as $key) {
+            if (trim((string) Env::get($key, '')) === '') {
+                $missing[] = $key;
+            }
+        }
+
+        $jwtSecret = (string) Env::get('JWT_SECRET', '');
+        if (
+            str_starts_with($jwtSecret, 'pega_aqui')
+            || $jwtSecret === 'clave_secreta_larga'
+            || strlen($jwtSecret) < 32
+        ) {
+            $missing[] = 'JWT_SECRET valido de minimo 32 caracteres';
+        }
+
+        if ($missing !== []) {
+            http_response_code(500);
+            $message = 'Configuracion incompleta: ' . implode(', ', array_unique($missing)) . '. Revisa el archivo .env.';
+            if ((bool) Env::get('APP_DEBUG', false)) {
+                throw new RuntimeException($message);
+            }
+
+            exit('Configuracion incompleta. Revisa el archivo .env.');
+        }
+    }
+}
