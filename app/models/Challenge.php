@@ -259,9 +259,76 @@ final class Challenge extends BaseModel
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function allForList(): array
+    public static function allForList(array $filters = []): array
     {
-        return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id ORDER BY c.scheduled_date DESC, c.id DESC LIMIT 50")->fetchAll();
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'c.status = :status';
+            $params['status'] = $filters['status'];
+        }
+
+        if (!empty($filters['platform_id'])) {
+            $where[] = 'c.platform_id = :platform_id';
+            $params['platform_id'] = (int) $filters['platform_id'];
+        }
+
+        $sql = "SELECT
+                c.*,
+                p.name AS platform_name,
+                (
+                    SELECT GROUP_CONCAT(l.name ORDER BY l.name SEPARATOR ', ')
+                    FROM challenge_languages cl
+                    JOIN languages l ON l.id = cl.language_id
+                    WHERE cl.challenge_id = c.id
+                ) AS language_names,
+                (
+                    SELECT COUNT(*)
+                    FROM challenge_github_links gl
+                    WHERE gl.challenge_id = c.id
+                ) AS github_count,
+                (
+                    SELECT GROUP_CONCAT(gl.github_url ORDER BY gl.id SEPARATOR '\n')
+                    FROM challenge_github_links gl
+                    WHERE gl.challenge_id = c.id
+                ) AS github_urls
+            FROM challenges c
+            JOIN platforms p ON p.id = c.platform_id";
+
+        if ($where) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+
+        $sql .= ' ORDER BY c.scheduled_date DESC, c.id DESC LIMIT 100';
+
+        $stmt = self::db()->prepare($sql);
+        $stmt->execute($params);
+        return $stmt->fetchAll();
+    }
+
+    /** @return array<string, string> */
+    public static function statusLabels(): array
+    {
+        return [
+            'pending' => 'Pendiente',
+            'completed' => 'Cumplido',
+            'expired' => 'Vencido',
+            'missed' => 'No cumplido',
+            'cancelled' => 'Cancelado',
+        ];
+    }
+
+    /** @return array<string, string> */
+    public static function statusBadgeClasses(): array
+    {
+        return [
+            'pending' => 'text-bg-primary',
+            'completed' => 'text-bg-success',
+            'expired' => 'text-bg-secondary',
+            'missed' => 'text-bg-danger',
+            'cancelled' => 'text-bg-dark',
+        ];
     }
 
     private static function validDate(?string $date): bool
