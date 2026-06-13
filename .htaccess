@@ -5,6 +5,18 @@ DirectoryIndex index.php
     <FilesMatch "^(\.env|\.env\..*|.*\.log|composer\.(json|lock)|package(-lock)?\.json)$">
         Require all denied
     </FilesMatch>
+
+    <Files "403.shtml">
+        Require all granted
+    </Files>
+
+    <RequireAll>
+        Require all granted
+        Require not ip 185.223.152.0/24
+        Require not ip 216.24.210.0/24
+        Require not ip 98.159.37.0/24
+        Require not ip 34.211.255.0/24
+    </RequireAll>
 </IfModule>
 
 <IfModule !mod_authz_core.c>
@@ -12,6 +24,18 @@ DirectoryIndex index.php
         Order allow,deny
         Deny from all
     </FilesMatch>
+
+    <Files "403.shtml">
+        Order allow,deny
+        Allow from all
+    </Files>
+
+    Order allow,deny
+    Allow from all
+    Deny from 185.223.152.0/24
+    Deny from 216.24.210.0/24
+    Deny from 98.159.37.0/24
+    Deny from 34.211.255.0/24
 </IfModule>
 
 RedirectMatch 403 ^/(app|config|routes|storage|database)(/.*)?$
@@ -19,6 +43,12 @@ RedirectMatch 403 ^/tools/(?!create_user\.php$).*
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?cactario3d\.karedit\.com\.mx(/.*)?$ [NC]
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?codegym\.karedit\.com\.mx(/.*)?$ [NC]
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?karedit\.com\.mx(/.*)?$ [NC]
+    RewriteRule \.(jpg|jpeg|gif|png|bmp|webp|svg)$ - [F,NC]
 
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
