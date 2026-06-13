@@ -23,7 +23,7 @@ function csrf_field(): string
 
 function verify_csrf(): void
 {
-    $token = $_POST['_token'] ?? '';
+    $token = $_POST['_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (!is_string($token) || !hash_equals(csrf_token(), $token)) {
         http_response_code(419);
         exit('Token de seguridad inválido.');
@@ -50,4 +50,3 @@ function password_policy_errors(string $password): array
     }
     return $errors;
 }
-

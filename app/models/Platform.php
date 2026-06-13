@@ -10,6 +10,19 @@ final class Platform extends BaseModel
         return self::db()->query('SELECT * FROM platforms ORDER BY is_active DESC, name ASC')->fetchAll();
     }
 
+    /** @return array<int, array<string, mixed>> */
+    public static function active(): array
+    {
+        return self::db()->query('SELECT * FROM platforms WHERE is_active = 1 ORDER BY name ASC')->fetchAll();
+    }
+
+    public static function existsActive(int $id): bool
+    {
+        $stmt = self::db()->prepare('SELECT COUNT(*) FROM platforms WHERE id = :id AND is_active = 1');
+        $stmt->execute(['id' => $id]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
     /** @param array<string, string> $data */
     public static function save(array $data): void
     {
@@ -29,4 +42,3 @@ final class Platform extends BaseModel
         $stmt->execute(['id' => $id, 'active' => $active ? 1 : 0]);
     }
 }
-

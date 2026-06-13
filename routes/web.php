@@ -13,6 +13,10 @@ $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/calendario', 'CalendarController', 'index');
 $router->get('/retos', 'ChallengeController', 'index');
 
+$router->get('/api/calendar/events', 'ApiCalendarController', 'events');
+$router->post('/api/calendar/store', 'ApiCalendarController', 'store');
+$router->post('/api/calendar/update-date', 'ApiCalendarController', 'updateDate');
+
 $router->get('/plataformas', 'PlatformController', 'index');
 $router->post('/plataformas/guardar', 'PlatformController', 'save');
 $router->post('/plataformas/desactivar', 'PlatformController', 'deactivate');
@@ -35,4 +39,3 @@ $router->post('/usuario/cambiar-tema', 'UserController', 'changeTheme');
 $router->get('/seguridad', 'SecurityLogController', 'index');
 
 return $router;
-
