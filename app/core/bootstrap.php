@@ -16,6 +16,7 @@ spl_autoload_register(static function (string $class): void {
 require_once __DIR__ . '/../helpers/Security.php';
 
 Env::load(dirname(__DIR__, 2) . '/.env');
+RateLimiter::enforce();
 
 if ((bool) Env::get('APP_DEBUG', false)) {
     ini_set('display_errors', '1');

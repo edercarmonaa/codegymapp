@@ -61,6 +61,10 @@ JWT_EXPIRES_MINUTES=30
 
 LOGIN_MAX_ATTEMPTS=3
 LOGIN_BLOCK_MINUTES=30
+
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_REQUESTS=120
+RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 Nunca subas `.env` a GitHub.
@@ -113,6 +117,20 @@ La contraseña debe tener mínimo 10 caracteres, mayúscula, minúscula, número
 - archivos internos de `/tools`, excepto `create_user.php` durante la instalación
 
 Después de crear el usuario inicial, `tools/create_user.php` debe desaparecer.
+
+### Mitigación De Ráfagas
+
+La app incluye un límite ligero por IP antes de consultar MySQL. Por defecto permite `120` peticiones por `60` segundos y responde `429 Too Many Requests` cuando se supera.
+
+Puedes ajustarlo en `.env`:
+
+```env
+RATE_LIMIT_ENABLED=true
+RATE_LIMIT_REQUESTS=120
+RATE_LIMIT_WINDOW_SECONDS=60
+```
+
+Para ataques volumétricos, usa también una capa externa como Cloudflare/WAF, ModSecurity de cPanel o reglas del firewall del hosting. El límite interno ayuda, pero no sustituye una protección antes de Apache/PHP.
 
 ## Reinstalación O Respaldo
 
