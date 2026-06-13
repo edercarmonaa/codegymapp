@@ -33,6 +33,8 @@ $router->post('/lenguajes/desactivar', 'LanguageController', 'deactivate');
 $router->post('/lenguajes/activar', 'LanguageController', 'activate');
 
 $router->get('/metas', 'GoalController', 'index');
+$router->post('/metas/guardar', 'GoalController', 'save');
+$router->post('/metas/desactivar', 'GoalController', 'deactivate');
 $router->get('/reportes', 'ReportController', 'index');
 $router->get('/notificaciones', 'NotificationController', 'index');
 
