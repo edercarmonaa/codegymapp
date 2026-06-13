@@ -1,0 +1,36 @@
+body {
+    min-height: 100vh;
+}
+
+.auth-body {
+    background: #f5f7fb;
+}
+
+[data-bs-theme="dark"] .auth-body {
+    background: #111827;
+}
+
+.login-panel {
+    max-width: 420px;
+    border: 1px solid var(--bs-border-color);
+    border-radius: 8px;
+    padding: 2rem;
+    background: var(--bs-body-bg);
+}
+
+.app-shell {
+    max-width: 1440px;
+}
+
+.metric-card {
+    background: var(--bs-tertiary-bg);
+}
+
+.chart-frame {
+    min-height: 320px;
+}
+
+#calendar {
+    min-height: 680px;
+}
+
