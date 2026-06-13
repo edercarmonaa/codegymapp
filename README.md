@@ -131,6 +131,26 @@ Para respaldo de producción:
 - Respalda `.env` fuera del repositorio.
 - Respalda el repositorio/carpeta del subdominio.
 
+## Limpieza De Datos De Prueba
+
+Si necesitas dejar la instalación lista para uso real sin borrar el usuario ni los catálogos base, ejecuta `database/cleanup_test_data.sql` desde phpMyAdmin.
+
+El script conserva:
+
+- `users`
+- `platforms`
+- `languages`
+
+El script borra:
+
+- retos y sus lenguajes/enlaces de GitHub;
+- rutinas repetitivas;
+- metas;
+- notificaciones;
+- bitácora de seguridad.
+
+Antes de ejecutarlo, exporta un respaldo completo de la base de datos.
+
 ## Checklist Post-Instalación
 
 - `/login` carga correctamente.
