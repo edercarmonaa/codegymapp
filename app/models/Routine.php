@@ -199,6 +199,8 @@ final class Routine extends BaseModel
 
             self::createChallengeIfMissing($routine, $date);
         }
+
+        self::cancelUnusedGeneratedChallenges($available, $usedIds);
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -296,6 +298,32 @@ final class Routine extends BaseModel
         $update = self::db()->prepare("UPDATE challenges SET status = 'pending', is_locked = 0, updated_at = NOW() WHERE id = :id");
         $update->execute(['id' => $challengeId]);
         return true;
+    }
+
+    /** @param array<int, array<string, mixed>> $available @param array<int, int> $usedIds */
+    private static function cancelUnusedGeneratedChallenges(array $available, array $usedIds): void
+    {
+        $unusedIds = [];
+        foreach ($available as $challenge) {
+            $id = (int) $challenge['id'];
+            if (!in_array($id, $usedIds, true)) {
+                $unusedIds[] = $id;
+            }
+        }
+
+        if (!$unusedIds) {
+            return;
+        }
+
+        $placeholders = implode(',', array_fill(0, count($unusedIds), '?'));
+        $stmt = self::db()->prepare(
+            "UPDATE challenges
+             SET status = 'cancelled', is_locked = 1, updated_at = NOW()
+             WHERE id IN ({$placeholders})
+               AND status = 'pending'
+               AND is_rescheduled = 0"
+        );
+        $stmt->execute($unusedIds);
     }
 
     /** @param mixed $weekDays */

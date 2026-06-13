@@ -27,13 +27,7 @@ final class Challenge extends BaseModel
               AND NOT (
                   c.status = 'cancelled'
                   AND c.routine_id IS NOT NULL
-                  AND EXISTS (
-                      SELECT 1
-                      FROM challenges c2
-                      WHERE c2.routine_id = c.routine_id
-                        AND c2.scheduled_date = c.scheduled_date
-                        AND c2.status <> 'cancelled'
-                  )
+                  AND c.is_rescheduled = 0
               )
             ORDER BY c.scheduled_date ASC, c.id ASC";
         $stmt = self::db()->prepare($sql);
