@@ -9,7 +9,12 @@
             <?php foreach ($platforms as $platform): ?>
                 <tr>
                     <td><?= e($platform['name']) ?></td>
-                    <td><?php if ($platform['url']): ?><a href="<?= e($platform['url']) ?>" target="_blank" rel="noopener">Abrir</a><?php endif; ?></td>
+                    <td>
+                        <?php $platformUrl = safe_url($platform['url'] ?? null); ?>
+                        <?php if ($platformUrl): ?>
+                            <a href="<?= e($platformUrl) ?>" target="_blank" rel="noopener">Abrir</a>
+                        <?php endif; ?>
+                    </td>
                     <td><?= e($platform['description']) ?></td>
                     <td><span class="badge <?= $platform['is_active'] ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= $platform['is_active'] ? 'Activa' : 'Inactiva' ?></span></td>
                     <td class="text-end">

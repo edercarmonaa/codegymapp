@@ -7,7 +7,7 @@ $router = new Router();
 $router->get('/', 'DashboardController', 'index');
 $router->get('/login', 'AuthController', 'showLogin', false);
 $router->post('/login', 'AuthController', 'login', false);
-$router->get('/logout', 'AuthController', 'logout');
+$router->post('/logout', 'AuthController', 'logout');
 
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/calendario', 'CalendarController', 'index');

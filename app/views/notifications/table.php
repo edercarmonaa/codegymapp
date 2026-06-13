@@ -17,7 +17,7 @@
                         <div class="fw-semibold"><?= e($notification['title']) ?></div>
                         <div class="text-body-secondary"><?= e($notification['message']) ?></div>
                         <?php if (!empty($notification['action_url'])): ?>
-                            <a class="small" href="<?= e($notification['action_url']) ?>">Abrir</a>
+                            <a class="small" href="<?= e(safe_app_url($notification['action_url'], '/notificaciones')) ?>">Abrir</a>
                         <?php endif; ?>
                     </td>
                     <td>

@@ -7,6 +7,27 @@ function e(?string $value): string
     return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 }
 
+function safe_url(?string $url): ?string
+{
+    $url = trim((string) $url);
+    if ($url === '' || !filter_var($url, FILTER_VALIDATE_URL)) {
+        return null;
+    }
+
+    $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+    return in_array($scheme, ['http', 'https'], true) ? $url : null;
+}
+
+function safe_app_url(?string $url, string $fallback = '/dashboard'): string
+{
+    $url = trim((string) $url);
+    if ($url === '' || !str_starts_with($url, '/') || str_starts_with($url, '//') || str_contains($url, "\0")) {
+        return $fallback;
+    }
+
+    return $url;
+}
+
 function csrf_token(): string
 {
     if (empty($_SESSION['csrf_token'])) {

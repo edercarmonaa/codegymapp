@@ -127,7 +127,7 @@ final class Challenge extends BaseModel
             $stmt->execute([
                 'platform_id' => (int) $data['platform_id'],
                 'title' => self::blankToNull((string) ($data['title'] ?? '')),
-                'challenge_url' => self::blankToNull((string) ($data['challenge_url'] ?? '')),
+                'challenge_url' => safe_url((string) ($data['challenge_url'] ?? '')),
                 'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
                 'time_spent_minutes' => self::positiveIntOrNull($data['time_spent_minutes'] ?? null),
                 'notes' => self::blankToNull((string) ($data['notes'] ?? '')),
@@ -190,7 +190,7 @@ final class Challenge extends BaseModel
             $stmt->execute([
                 'id' => $id,
                 'title' => self::blankToNull((string) ($data['title'] ?? '')),
-                'challenge_url' => self::blankToNull((string) ($data['challenge_url'] ?? '')),
+                'challenge_url' => safe_url((string) ($data['challenge_url'] ?? '')),
                 'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
                 'time_spent_minutes' => self::positiveIntOrNull($data['time_spent_minutes'] ?? null),
                 'notes' => self::blankToNull((string) ($data['notes'] ?? '')),
@@ -842,8 +842,8 @@ final class Challenge extends BaseModel
         $rows = preg_split('/\R+/', trim($links)) ?: [];
         $insert = $db->prepare('INSERT INTO challenge_github_links (challenge_id, github_url, created_at) VALUES (:challenge_id, :github_url, NOW())');
         foreach ($rows as $row) {
-            $url = trim($row);
-            if ($url === '') {
+            $url = safe_url($row);
+            if ($url === null) {
                 continue;
             }
             $insert->execute(['challenge_id' => $challengeId, 'github_url' => $url]);

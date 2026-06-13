@@ -121,7 +121,7 @@
             <h2 class="h5">Notificaciones pendientes</h2>
             <div class="list-group">
                 <?php foreach ($notifications as $notification): ?>
-                    <a class="list-group-item list-group-item-action" href="<?= e($notification['action_url'] ?: '/notificaciones') ?>">
+                    <a class="list-group-item list-group-item-action" href="<?= e(safe_app_url($notification['action_url'] ?? '', '/notificaciones')) ?>">
                         <strong><?= e($notification['title']) ?></strong>
                         <span class="d-block text-body-secondary"><?= e($notification['message']) ?></span>
                     </a>

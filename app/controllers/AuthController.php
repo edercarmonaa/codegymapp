@@ -43,6 +43,8 @@ final class AuthController
         }
 
         User::updateLoginSuccess((int) $user['id']);
+        session_regenerate_id(true);
+        unset($_SESSION['csrf_token']);
         Auth::login($user);
         SecurityLog::record((int) $user['id'], 'login_success', 'success', 'Inicio de sesión exitoso.');
         Response::redirect('/dashboard');
@@ -50,6 +52,7 @@ final class AuthController
 
     public function logout(): void
     {
+        verify_csrf();
         $user = Auth::user();
         SecurityLog::record($user ? (int) $user['id'] : null, 'logout', 'success', 'Cierre de sesión.');
         Auth::logoutCookie();
@@ -62,4 +65,3 @@ final class AuthController
         Response::redirect('/login');
     }
 }
-

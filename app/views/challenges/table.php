@@ -53,7 +53,7 @@
                     && !empty($challenge['completed_date'])
                     && !empty($challenge['scheduled_date'])
                     && $challenge['completed_date'] > $challenge['scheduled_date'];
-                $githubUrls = array_filter(explode("\n", (string) ($challenge['github_urls'] ?? '')));
+                $githubUrls = array_values(array_filter(array_map('safe_url', explode("\n", (string) ($challenge['github_urls'] ?? '')))));
                 ?>
                 <tr>
                     <td>
@@ -68,8 +68,9 @@
                     <td><?= e($challenge['platform_name']) ?></td>
                     <td>
                         <div class="fw-semibold"><?= e($challenge['title'] ?: 'Pendiente por detallar') ?></div>
-                        <?php if (!empty($challenge['challenge_url'])): ?>
-                            <a class="small" href="<?= e($challenge['challenge_url']) ?>" target="_blank" rel="noopener">Ver reto</a>
+                        <?php $challengeUrl = safe_url($challenge['challenge_url'] ?? null); ?>
+                        <?php if ($challengeUrl): ?>
+                            <a class="small" href="<?= e($challengeUrl) ?>" target="_blank" rel="noopener">Ver reto</a>
                         <?php endif; ?>
                     </td>
                     <td>

@@ -44,14 +44,15 @@ final class Platform extends BaseModel
     /** @param array<string, string> $data */
     public static function save(array $data): void
     {
+        $url = safe_url((string) ($data['url'] ?? ''));
         if (!empty($data['id'])) {
             $stmt = self::db()->prepare('UPDATE platforms SET name = :name, description = :description, url = :url, updated_at = NOW() WHERE id = :id');
-            $stmt->execute(['id' => $data['id'], 'name' => $data['name'], 'description' => $data['description'], 'url' => $data['url']]);
+            $stmt->execute(['id' => $data['id'], 'name' => $data['name'], 'description' => $data['description'], 'url' => $url]);
             return;
         }
 
         $stmt = self::db()->prepare('INSERT INTO platforms (name, description, url, is_active, created_at, updated_at) VALUES (:name, :description, :url, 1, NOW(), NOW())');
-        $stmt->execute(['name' => $data['name'], 'description' => $data['description'], 'url' => $data['url']]);
+        $stmt->execute(['name' => $data['name'], 'description' => $data['description'], 'url' => $url]);
     }
 
     public static function setActive(int $id, bool $active): void

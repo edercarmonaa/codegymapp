@@ -36,7 +36,10 @@
                     <i class="bi <?= ($theme ?? 'light') === 'dark' ? 'bi-sun' : 'bi-moon-stars' ?>"></i>
                 </button>
             </form>
-            <a class="btn btn-outline-danger btn-sm" href="/logout">Cerrar sesión</a>
+            <form action="/logout" method="post">
+                <?= csrf_field() ?>
+                <button class="btn btn-outline-danger btn-sm">Cerrar sesión</button>
+            </form>
         </div>
     </div>
 </nav>
