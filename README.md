@@ -1,68 +1,154 @@
 # CodeGymApp
 
-Aplicación web privada en PHP 8.3 para controlar retos de programación, calendario, metas, estadísticas, notificaciones internas y seguridad con JWT propio.
+Aplicación web privada en PHP 8.3 para controlar retos de programación, calendario, rutinas, metas, reportes, notificaciones internas y bitácora de seguridad.
+
+El proyecto está pensado para un hosting tradicional con cPanel, Apache, `.htaccess`, PHP 8.3 y MySQL. No usa Composer ni frameworks.
 
 ## Requisitos
 
-- Apache con soporte para `.htaccess`
-- PHP 8.3
-- MySQL
-- PDO MySQL habilitado
-- Hosting tradicional tipo cPanel
+- Apache con `mod_rewrite` y soporte para `.htaccess`.
+- PHP 8.3 con PDO MySQL habilitado.
+- MySQL 8 o MariaDB reciente con InnoDB.
+- Subdominio o carpeta pública donde `index.php` quede en la raíz.
+- HTTPS recomendado para que la cookie JWT use `Secure`.
 
-No usa Composer ni frameworks.
+## Instalación En cPanel
 
-## Instalación en cPanel
-
-1. Clona el repositorio dentro de la carpeta del subdominio.
-2. Copia `.env.example` como `.env`.
+1. Clona o sube el repositorio a la carpeta del subdominio.
+2. Verifica que `index.php`, `.htaccess`, `app`, `database`, `public`, `routes`, `storage` y `tools` queden en la misma raíz.
 3. Crea una base de datos MySQL desde cPanel.
-4. Crea un usuario MySQL y asígnalo a la base de datos.
-5. Edita `.env` con los datos de conexión, `APP_URL` y `JWT_SECRET`.
-6. Importa `database/install.sql` desde phpMyAdmin o la herramienta disponible en cPanel.
-7. Ejecuta `tools/create_user.php` desde navegador o CLI.
-8. Verifica que `tools/create_user.php` se borre automáticamente después de crear el usuario.
-9. Entra a `/login`.
-10. Cambia la contraseña inicial desde “Mi usuario”.
+4. Crea un usuario MySQL y asígnalo a la base de datos con todos los permisos necesarios.
+5. Importa `database/install.sql` desde phpMyAdmin sobre una base de datos vacía.
+6. Copia `.env.example` como `.env`.
+7. Edita `.env` con `APP_URL`, `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` y `JWT_SECRET`.
+8. Abre `https://tu-subdominio/tools/create_user.php` y crea el usuario inicial.
+9. Confirma que `tools/create_user.php` se borre automáticamente. Si no se borra, elimínalo manualmente.
+10. Entra a `/login`.
+11. Revisa `/dashboard`, `/calendario`, `/retos`, `/reportes`, `/notificaciones` y `/seguridad`.
+
+## JWT_SECRET
+
+Usa una clave larga y aleatoria. Ejemplo con terminal:
+
+```bash
+openssl rand -hex 32
+```
+
+Colócala en `.env`:
+
+```env
+JWT_SECRET=pega_aqui_la_clave_generada
+```
+
+## Archivo .env
+
+Ejemplo:
+
+```env
+APP_NAME="CodeGymApp"
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://subdominio.tudominio.com
+
+DB_HOST=localhost
+DB_NAME=nombre_bd
+DB_USER=usuario_bd
+DB_PASS=password_bd
+DB_CHARSET=utf8mb4
+
+JWT_SECRET=clave_secreta_larga
+JWT_EXPIRES_MINUTES=30
+
+LOGIN_MAX_ATTEMPTS=3
+LOGIN_BLOCK_MINUTES=30
+```
+
+Nunca subas `.env` a GitHub.
+
+## Usuario Inicial
+
+El sistema permite un solo usuario. El usuario inicial se crea con:
+
+```text
+/tools/create_user.php
+```
+
+El script:
+
+- lee la conexión desde `.env`;
+- valida la política de contraseña;
+- crea el hash con `password_hash()`;
+- impide crear más de un usuario;
+- se borra automáticamente al terminar correctamente.
+
+La contraseña debe tener mínimo 10 caracteres, mayúscula, minúscula, número y símbolo.
+
+## Módulos
+
+- Login/logout con JWT en cookie `HttpOnly`.
+- Bloqueo por intentos fallidos.
+- Bitácora de seguridad.
+- Modo claro/oscuro.
+- Dashboard con métricas y gráficas.
+- Calendario con FullCalendar.
+- Rutinas repetitivas diarias, semanales y mensuales.
+- Registro y edición de retos calendarizados.
+- Registro manual de retos ya realizados.
+- Plataformas y lenguajes.
+- Metas semanales, mensuales y anuales.
+- Reportes con filtros y Chart.js.
+- Notificaciones internas.
+- Tablas con filtros, ordenamiento, paginación y actualización parcial con HTMX.
 
 ## Seguridad
 
-- El login usa contraseña con `password_hash()` y `password_verify()`.
-- La sesión usa JWT propio en cookie `HttpOnly`.
-- La cookie usa `Secure` cuando el sitio está bajo HTTPS.
-- El token caduca según `JWT_EXPIRES_MINUTES`.
-- Los intentos fallidos se registran y pueden bloquear al usuario.
-- `.htaccess` bloquea carpetas sensibles y archivos internos.
+`.htaccess` bloquea acceso directo a:
 
-## Estructura
+- `.env`
+- logs
+- `/app`
+- `/routes`
+- `/database`
+- `/storage`
+- archivos internos de `/tools`, excepto `create_user.php` durante la instalación
 
-```text
-/app
-/config
-/routes
-/database
-/tools
-/public/assets
-/storage
-index.php
-.htaccess
-.env.example
-```
+Después de crear el usuario inicial, `tools/create_user.php` debe desaparecer.
 
-## Módulos incluidos
+## Reinstalación O Respaldo
 
-- Login y logout
-- Dashboard base con métricas y Chart.js
-- Navbar superior
-- Modo claro/oscuro guardado en usuario
-- Catálogo de plataformas
-- Catálogo de lenguajes
-- Listado base de retos
-- Calendario preparado con FullCalendar
-- Pantallas base de metas, reportes, notificaciones, usuario y seguridad
+Para reinstalar desde cero:
 
-## Pendiente por confirmar
+1. Respalda el código y la base de datos actual.
+2. Crea una base de datos vacía.
+3. Importa `database/install.sql`.
+4. Crea `.env` desde `.env.example`.
+5. Ejecuta `tools/create_user.php`.
+6. Verifica login y módulos principales.
 
-- Completar endpoints JSON de calendario.
-- Implementar rutinas, metas, reportes y notificaciones con reglas completas.
-- Añadir paginación, filtros y HTMX parcial en tablas.
+Para respaldo de producción:
+
+- Exporta la base de datos desde phpMyAdmin.
+- Respalda `.env` fuera del repositorio.
+- Respalda el repositorio/carpeta del subdominio.
+
+## Checklist Post-Instalación
+
+- `/login` carga correctamente.
+- El usuario inicial fue creado.
+- `tools/create_user.php` ya no existe.
+- `/dashboard` carga sin errores.
+- `/calendario` muestra eventos y permite rutinas.
+- `/retos` pagina y filtra.
+- `/reportes` muestra gráficas.
+- `/notificaciones` muestra historial.
+- `/seguridad` registra eventos.
+- `.env` no es accesible desde navegador.
+- `/app`, `/database`, `/routes` y `/storage` devuelven acceso denegado.
+
+## Solución De Problemas
+
+- Error de conexión: revisa `DB_HOST`, `DB_NAME`, `DB_USER` y `DB_PASS` en `.env`.
+- Pantalla en blanco: activa temporalmente `APP_DEBUG=true` y vuelve a cargar.
+- Login expira rápido: revisa `JWT_EXPIRES_MINUTES`.
+- CSS/JS no cargan: confirma que `/public/assets` sea accesible.
+- Rutas no funcionan: confirma que `.htaccess` esté activo y que Apache permita `AllowOverride`.

@@ -1,15 +1,25 @@
 Options -Indexes
 DirectoryIndex index.php
 
-<FilesMatch "^(\.env|.*\.log)$">
-    Require all denied
-</FilesMatch>
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(\.env|\.env\..*|.*\.log|composer\.(json|lock)|package(-lock)?\.json)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>
+
+<IfModule !mod_authz_core.c>
+    <FilesMatch "^(\.env|\.env\..*|.*\.log|composer\.(json|lock)|package(-lock)?\.json)$">
+        Order allow,deny
+        Deny from all
+    </FilesMatch>
+</IfModule>
 
 RedirectMatch 403 ^/(app|config|routes|storage|database)(/.*)?$
 RedirectMatch 403 ^/tools/(?!create_user\.php$).*
 
 <IfModule mod_rewrite.c>
     RewriteEngine On
+
     RewriteCond %{REQUEST_FILENAME} !-f
     RewriteCond %{REQUEST_FILENAME} !-d
     RewriteRule ^ index.php [QSA,L]

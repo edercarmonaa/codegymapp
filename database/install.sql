@@ -91,9 +91,12 @@ CREATE TABLE challenges (
     PRIMARY KEY (id),
     KEY challenges_platform_id_index (platform_id),
     KEY challenges_routine_id_index (routine_id),
+    KEY challenges_scheduled_date_index (scheduled_date),
     KEY challenges_status_date_index (status, scheduled_date),
     KEY challenges_completed_date_index (completed_date),
     KEY challenges_origin_index (origin),
+    KEY challenges_routine_sync_index (routine_id, status, is_rescheduled, scheduled_date),
+    KEY challenges_calendar_range_index (scheduled_date, status, routine_id, is_rescheduled),
     CONSTRAINT challenges_platform_id_foreign
         FOREIGN KEY (platform_id) REFERENCES platforms (id)
         ON UPDATE CASCADE ON DELETE RESTRICT,
@@ -219,4 +222,3 @@ INSERT INTO languages (name) VALUES
 ('SQL'),
 ('Java'),
 ('C++');
-
