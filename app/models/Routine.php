@@ -30,6 +30,15 @@ final class Routine extends BaseModel
     {
         $stmt = self::db()->prepare('UPDATE routines SET is_active = 0, updated_at = NOW() WHERE id = :id');
         $stmt->execute(['id' => $id]);
+
+        $stmt = self::db()->prepare(
+            "UPDATE challenges
+             SET status = 'cancelled', is_locked = 1, updated_at = NOW()
+             WHERE routine_id = :id
+               AND status = 'pending'
+               AND is_rescheduled = 0"
+        );
+        $stmt->execute(['id' => $id]);
     }
 
     /** @param array<string, mixed> $data */
