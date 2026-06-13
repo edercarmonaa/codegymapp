@@ -1,4 +1,40 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const dashboardDataNode = document.getElementById('dashboardData');
+    let dashboardWeekly = [];
+    if (dashboardDataNode) {
+        try {
+            dashboardWeekly = JSON.parse(dashboardDataNode.dataset.weekly || '[]');
+        } catch (error) {
+            dashboardWeekly = [];
+        }
+    }
+    const dashboardWeeklyChart = document.getElementById('dashboardWeeklyChart');
+    if (dashboardWeeklyChart && window.Chart) {
+        new Chart(dashboardWeeklyChart, {
+            type: 'bar',
+            data: {
+                labels: dashboardWeekly.map((row) => row.label),
+                datasets: [
+                    {
+                        label: 'Programados',
+                        data: dashboardWeekly.map((row) => Number(row.scheduled || 0)),
+                        backgroundColor: '#0d6efd'
+                    },
+                    {
+                        label: 'Cumplidos',
+                        data: dashboardWeekly.map((row) => Number(row.completed || 0)),
+                        backgroundColor: '#198754'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true } }
+            }
+        });
+    }
+
     const dashboardChart = document.getElementById('dashboardComplianceChart');
     if (dashboardChart && window.Chart) {
         new Chart(dashboardChart, {

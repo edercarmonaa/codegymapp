@@ -296,6 +296,106 @@ final class Challenge extends BaseModel
         ];
     }
 
+    /** @return array<int, array<string, mixed>> */
+    public static function dashboardWeeklyCompliance(): array
+    {
+        $scheduled = self::countsByDate(
+            "SELECT scheduled_date AS date_value, COUNT(*) AS total
+             FROM challenges
+             WHERE origin IN ('calendar', 'routine')
+               AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+             GROUP BY scheduled_date"
+        );
+        $manualCompleted = self::countsByDate(
+            "SELECT completed_date AS date_value, COUNT(*) AS total
+             FROM challenges
+             WHERE origin = 'manual'
+               AND status = 'completed'
+               AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+             GROUP BY completed_date"
+        );
+        $completed = self::countsByDate(
+            "SELECT completed_date AS date_value, COUNT(*) AS total
+             FROM challenges
+             WHERE status = 'completed'
+               AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+             GROUP BY completed_date"
+        );
+
+        $rows = [];
+        $monthStart = new DateTimeImmutable('first day of this month');
+        $monthEnd = new DateTimeImmutable('last day of this month');
+        for ($weekStart = $monthStart; $weekStart <= $monthEnd; $weekStart = $weekStart->modify('+7 days')) {
+            $weekEnd = $weekStart->modify('+6 days');
+            if ($weekEnd > $monthEnd) {
+                $weekEnd = $monthEnd;
+            }
+
+            $scheduledTotal = 0;
+            $completedTotal = 0;
+            for ($day = $weekStart; $day <= $weekEnd; $day = $day->modify('+1 day')) {
+                $key = $day->format('Y-m-d');
+                $scheduledTotal += ($scheduled[$key] ?? 0) + ($manualCompleted[$key] ?? 0);
+                $completedTotal += $completed[$key] ?? 0;
+            }
+
+            $rows[] = [
+                'label' => $weekStart->format('d/m') . '-' . $weekEnd->format('d/m'),
+                'scheduled' => $scheduledTotal,
+                'completed' => $completedTotal,
+                'percent' => $scheduledTotal > 0 ? round(($completedTotal / $scheduledTotal) * 100, 1) : 0,
+            ];
+        }
+        return $rows;
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public static function dashboardTopPlatforms(): array
+    {
+        return self::db()->query(
+            "SELECT p.name AS label, COUNT(*) AS value, COALESCE(SUM(c.time_spent_minutes), 0) AS minutes
+             FROM challenges c
+             JOIN platforms p ON p.id = c.platform_id
+             WHERE c.status = 'completed'
+               AND c.completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+             GROUP BY p.id, p.name
+             ORDER BY value DESC, minutes DESC, p.name ASC
+             LIMIT 5"
+        )->fetchAll();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public static function dashboardTopLanguages(): array
+    {
+        return self::db()->query(
+            "SELECT l.name AS label, COUNT(DISTINCT c.id) AS value, COALESCE(SUM(c.time_spent_minutes), 0) AS minutes
+             FROM challenges c
+             JOIN challenge_languages cl ON cl.challenge_id = c.id
+             JOIN languages l ON l.id = cl.language_id
+             WHERE c.status = 'completed'
+               AND c.completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+             GROUP BY l.id, l.name
+             ORDER BY value DESC, minutes DESC, l.name ASC
+             LIMIT 5"
+        )->fetchAll();
+    }
+
+    /** @return array<string, int> */
+    public static function dashboardAttention(): array
+    {
+        $lastPractice = self::db()->query("SELECT MAX(completed_date) FROM challenges WHERE status = 'completed' AND completed_date IS NOT NULL")->fetchColumn();
+        $daysWithoutPractice = $lastPractice
+            ? (int) self::db()->query("SELECT DATEDIFF(CURDATE(), MAX(completed_date)) FROM challenges WHERE status = 'completed' AND completed_date IS NOT NULL")->fetchColumn()
+            : 0;
+
+        return [
+            'days_without_practice' => $daysWithoutPractice,
+            'pending_today' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'pending' AND scheduled_date = CURDATE()")->fetchColumn(),
+            'expired' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'expired'")->fetchColumn(),
+            'pending_week' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'pending' AND scheduled_date BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)")->fetchColumn(),
+        ];
+    }
+
     /** @return array<string, int> */
     public static function streakStats(): array
     {
@@ -540,6 +640,18 @@ final class Challenge extends BaseModel
             }
         }
         return $dates;
+    }
+
+    /** @return array<string, int> */
+    private static function countsByDate(string $sql): array
+    {
+        $counts = [];
+        foreach (self::db()->query($sql)->fetchAll() as $row) {
+            if (!empty($row['date_value'])) {
+                $counts[(string) $row['date_value']] = (int) $row['total'];
+            }
+        }
+        return $counts;
     }
 
     /** @param array<int, string> $dates */

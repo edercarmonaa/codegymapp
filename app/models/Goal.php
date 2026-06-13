@@ -89,6 +89,21 @@ final class Goal extends BaseModel
     }
 
     /** @return array<int, array<string, mixed>> */
+    public static function dashboardAtRisk(): array
+    {
+        return self::db()->query(
+            "SELECT g.*, p.name AS platform_name, l.name AS language_name
+             FROM goals g
+             LEFT JOIN platforms p ON p.id = g.platform_id
+             LEFT JOIN languages l ON l.id = g.language_id
+             WHERE g.status = 'active'
+               AND g.progress_percent < 50
+             ORDER BY g.period_end ASC, g.progress_percent ASC
+             LIMIT 3"
+        )->fetchAll();
+    }
+
+    /** @return array<int, array<string, mixed>> */
     private static function activeGoals(): array
     {
         return self::db()->query("SELECT * FROM goals WHERE status = 'active' ORDER BY period_end ASC")->fetchAll();

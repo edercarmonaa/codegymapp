@@ -8,6 +8,7 @@ final class DashboardController
     {
         Routine::generateCurrentMonth();
         Challenge::expirePending();
+        Goal::refreshActiveProgress();
         Notification::generateSystemNotifications();
         $stats = Challenge::dashboardStats();
         $scheduled = max(1, (int) $stats['scheduled_month']);
@@ -19,6 +20,12 @@ final class DashboardController
             'stats' => $stats,
             'streaks' => Challenge::streakStats(),
             'distribution' => Challenge::dashboardDistribution(),
+            'weeklyCompliance' => Challenge::dashboardWeeklyCompliance(),
+            'topPlatforms' => Challenge::dashboardTopPlatforms(),
+            'topLanguages' => Challenge::dashboardTopLanguages(),
+            'attention' => Challenge::dashboardAttention(),
+            'goalAlerts' => Goal::dashboardAtRisk(),
+            'goalTypes' => Goal::goalTypes(),
             'todayChallenges' => Challenge::todayPending(),
             'expiredChallenges' => Challenge::expiredForReview(),
             'notifications' => Notification::unread(5),

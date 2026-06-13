@@ -5,6 +5,12 @@
     </div>
 </div>
 
+<div
+    id="dashboardData"
+    data-weekly="<?= e(json_encode($weeklyCompliance, JSON_UNESCAPED_UNICODE) ?: '[]') ?>"
+    hidden
+></div>
+
 <div class="row g-3 mb-4">
     <?php foreach ([
         ['Retos cumplidos', $stats['completed_month']],
@@ -27,6 +33,36 @@
 
 <div class="row g-4">
     <div class="col-12 col-xl-5">
+        <section class="mb-4">
+            <h2 class="h5">Necesita atención</h2>
+            <div class="list-group">
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="/retos?status=expired">
+                    <span>Retos vencidos por revisar</span>
+                    <span class="badge text-bg-secondary"><?= e((string) $attention['expired']) ?></span>
+                </a>
+                <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="/calendario">
+                    <span>Pendientes próximos 7 días</span>
+                    <span class="badge text-bg-primary"><?= e((string) $attention['pending_week']) ?></span>
+                </a>
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <span>Días sin práctica registrada</span>
+                    <span class="badge text-bg-<?= (int) $attention['days_without_practice'] > 2 ? 'warning' : 'success' ?>"><?= e((string) $attention['days_without_practice']) ?></span>
+                </div>
+                <?php foreach ($goalAlerts as $goal): ?>
+                    <a class="list-group-item list-group-item-action" href="/metas">
+                        <strong><?= e($goalTypes[$goal['goal_type']] ?? $goal['goal_type']) ?></strong>
+                        <span class="text-body-secondary">
+                            <?= e((string) $goal['current_value']) ?>/<?= e((string) $goal['target_value']) ?>
+                            · <?= e((string) $goal['progress_percent']) ?>%
+                            <?php if ($goal['platform_name'] || $goal['language_name']): ?>
+                                · <?= e(trim(($goal['platform_name'] ?? '') . ' ' . ($goal['language_name'] ?? ''))) ?>
+                            <?php endif; ?>
+                        </span>
+                    </a>
+                <?php endforeach; ?>
+            </div>
+        </section>
+
         <section class="mb-4">
             <h2 class="h5">Retos de hoy</h2>
             <div class="list-group">
@@ -73,7 +109,14 @@
         </section>
     </div>
     <div class="col-12 col-xl-7">
-        <section>
+        <section class="mb-4">
+            <h2 class="h5">Cumplimiento semanal</h2>
+            <div class="chart-frame border rounded-2 p-3">
+                <canvas id="dashboardWeeklyChart"></canvas>
+            </div>
+        </section>
+
+        <section class="mb-4">
             <h2 class="h5">Cumplimiento</h2>
             <div class="chart-frame border rounded-2 p-3">
                 <canvas
@@ -85,5 +128,40 @@
                 ></canvas>
             </div>
         </section>
+
+        <div class="row g-4">
+            <div class="col-12 col-lg-6">
+                <section>
+                    <h2 class="h5">Plataformas del mes</h2>
+                    <div class="list-group">
+                        <?php foreach ($topPlatforms as $platform): ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><?= e($platform['label']) ?></span>
+                                <span class="text-body-secondary"><?= e((string) $platform['value']) ?> retos · <?= e((string) $platform['minutes']) ?> min</span>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (!$topPlatforms): ?>
+                            <div class="list-group-item text-body-secondary">Sin plataformas completadas este mes.</div>
+                        <?php endif; ?>
+                    </div>
+                </section>
+            </div>
+            <div class="col-12 col-lg-6">
+                <section>
+                    <h2 class="h5">Lenguajes del mes</h2>
+                    <div class="list-group">
+                        <?php foreach ($topLanguages as $language): ?>
+                            <div class="list-group-item d-flex justify-content-between align-items-center">
+                                <span><?= e($language['label']) ?></span>
+                                <span class="text-body-secondary"><?= e((string) $language['value']) ?> retos · <?= e((string) $language['minutes']) ?> min</span>
+                            </div>
+                        <?php endforeach; ?>
+                        <?php if (!$topLanguages): ?>
+                            <div class="list-group-item text-body-secondary">Sin lenguajes completados este mes.</div>
+                        <?php endif; ?>
+                    </div>
+                </section>
+            </div>
+        </div>
     </div>
 </div>
