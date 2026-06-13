@@ -1,6 +1,16 @@
 Options -Indexes
 DirectoryIndex index.php
 
+<IfModule mod_headers.c>
+    Header always set X-Frame-Options "SAMEORIGIN"
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set Referrer-Policy "strict-origin-when-cross-origin"
+    Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()"
+    Header always set X-Permitted-Cross-Domain-Policies "none"
+    Header always set Cross-Origin-Opener-Policy "same-origin"
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains" "expr=%{HTTPS} == 'on'"
+</IfModule>
+
 <IfModule mod_authz_core.c>
     <FilesMatch "^(\.env|\.env\..*|.*\.log|composer\.(json|lock)|package(-lock)?\.json)$">
         Require all denied
