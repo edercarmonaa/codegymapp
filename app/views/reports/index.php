@@ -13,7 +13,7 @@ $reportsJson = json_encode($reports, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERRO
 
 <div class="row g-3 mb-4">
     <?php foreach ([
-        ['Programados', $reports['compliance']['scheduled']],
+        ['Considerados', $reports['compliance']['scheduled']],
         ['Cumplidos', $reports['compliance']['completed']],
         ['Cumplimiento general', $reports['compliance']['general_percent'] . '%'],
         ['Cumplimiento puntual', $reports['compliance']['on_time_percent'] . '%'],

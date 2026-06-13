@@ -12,6 +12,7 @@ $router->get('/logout', 'AuthController', 'logout');
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/calendario', 'CalendarController', 'index');
 $router->get('/retos', 'ChallengeController', 'index');
+$router->post('/retos/manual', 'ChallengeController', 'manual');
 
 $router->get('/api/calendar/events', 'ApiCalendarController', 'events');
 $router->get('/api/calendar/challenge', 'ApiCalendarController', 'challenge');

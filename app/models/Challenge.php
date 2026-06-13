@@ -101,6 +101,45 @@ final class Challenge extends BaseModel
         return (int) self::db()->lastInsertId();
     }
 
+    /** @param array<string, mixed> $data */
+    public static function createManual(array $data): int
+    {
+        $db = self::db();
+        $db->beginTransaction();
+
+        try {
+            $stmt = $db->prepare(
+                "INSERT INTO challenges (
+                    platform_id, title, challenge_url, difficulty,
+                    scheduled_date, completed_date, status, origin,
+                    time_spent_minutes, notes, is_locked, created_at, updated_at
+                 ) VALUES (
+                    :platform_id, :title, :challenge_url, :difficulty,
+                    CURDATE(), CURDATE(), 'completed', 'manual',
+                    :time_spent_minutes, :notes, 0, NOW(), NOW()
+                 )"
+            );
+            $stmt->execute([
+                'platform_id' => (int) $data['platform_id'],
+                'title' => self::blankToNull((string) ($data['title'] ?? '')),
+                'challenge_url' => self::blankToNull((string) ($data['challenge_url'] ?? '')),
+                'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
+                'time_spent_minutes' => self::positiveIntOrNull($data['time_spent_minutes'] ?? null),
+                'notes' => self::blankToNull((string) ($data['notes'] ?? '')),
+            ]);
+
+            $id = (int) $db->lastInsertId();
+            self::replaceLanguages($id, $data['language_ids'] ?? []);
+            self::replaceGithubLinks($id, (string) ($data['github_links'] ?? ''));
+            $db->commit();
+
+            return $id;
+        } catch (Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+    }
+
     public static function updateScheduledDate(int $id, string $scheduledDate): bool
     {
         $challenge = self::find($id);
@@ -241,8 +280,8 @@ final class Challenge extends BaseModel
             'completed_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
             'expired_review' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'expired'")->fetchColumn(),
             'time_month' => (int) self::db()->query("SELECT COALESCE(SUM(time_spent_minutes), 0) FROM challenges WHERE status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
-            'scheduled_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar','routine') AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
-            'on_time_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date = scheduled_date AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
+            'scheduled_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE ((origin IN ('calendar','routine') AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())) OR (origin = 'manual' AND status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())))")->fetchColumn(),
+            'on_time_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar','routine') AND status = 'completed' AND completed_date = scheduled_date AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
         ];
     }
 
@@ -386,8 +425,8 @@ final class Challenge extends BaseModel
     /** @return array<string, float|int> */
     private static function reportCompliance(): array
     {
-        $scheduled = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine')")->fetchColumn();
-        $completed = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed'")->fetchColumn();
+        $scheduled = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') OR (origin = 'manual' AND status = 'completed')")->fetchColumn();
+        $completed = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed'")->fetchColumn();
         $onTime = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date = scheduled_date")->fetchColumn();
 
         return [
@@ -452,8 +491,8 @@ final class Challenge extends BaseModel
     private static function reportPunctuality(): array
     {
         return [
-            'on_time' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date = scheduled_date")->fetchColumn(),
-            'late' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date > scheduled_date")->fetchColumn(),
+            'on_time' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date = scheduled_date")->fetchColumn(),
+            'late' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date > scheduled_date")->fetchColumn(),
         ];
     }
 
