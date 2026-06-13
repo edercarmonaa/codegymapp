@@ -14,7 +14,12 @@ $router->get('/calendario', 'CalendarController', 'index');
 $router->get('/retos', 'ChallengeController', 'index');
 
 $router->get('/api/calendar/events', 'ApiCalendarController', 'events');
+$router->get('/api/calendar/challenge', 'ApiCalendarController', 'challenge');
 $router->post('/api/calendar/store', 'ApiCalendarController', 'store');
+$router->post('/api/calendar/save-details', 'ApiCalendarController', 'saveDetails');
+$router->post('/api/calendar/complete', 'ApiCalendarController', 'complete');
+$router->post('/api/calendar/miss', 'ApiCalendarController', 'miss');
+$router->post('/api/calendar/cancel', 'ApiCalendarController', 'cancel');
 $router->post('/api/calendar/update-date', 'ApiCalendarController', 'updateDate');
 
 $router->get('/plataformas', 'PlatformController', 'index');

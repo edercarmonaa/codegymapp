@@ -61,10 +61,29 @@ final class Challenge extends BaseModel
     /** @return array<string, mixed>|null */
     public static function find(int $id): ?array
     {
-        $stmt = self::db()->prepare('SELECT * FROM challenges WHERE id = :id LIMIT 1');
+        $stmt = self::db()->prepare('SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.id = :id LIMIT 1');
         $stmt->execute(['id' => $id]);
         $challenge = $stmt->fetch();
         return is_array($challenge) ? $challenge : null;
+    }
+
+    /** @return array<string, mixed>|null */
+    public static function detail(int $id): ?array
+    {
+        $challenge = self::find($id);
+        if (!$challenge) {
+            return null;
+        }
+
+        $languageStmt = self::db()->prepare('SELECT language_id FROM challenge_languages WHERE challenge_id = :id ORDER BY language_id ASC');
+        $languageStmt->execute(['id' => $id]);
+        $challenge['language_ids'] = array_map('intval', array_column($languageStmt->fetchAll(), 'language_id'));
+
+        $linkStmt = self::db()->prepare('SELECT github_url, description FROM challenge_github_links WHERE challenge_id = :id ORDER BY id ASC');
+        $linkStmt->execute(['id' => $id]);
+        $challenge['github_links'] = $linkStmt->fetchAll();
+
+        return $challenge;
     }
 
     public static function createFromCalendar(int $platformId, string $scheduledDate): int
@@ -101,6 +120,111 @@ final class Challenge extends BaseModel
         );
 
         return $stmt->execute(['id' => $id, 'scheduled_date' => $scheduledDate]);
+    }
+
+    /** @param array<string, mixed> $data */
+    public static function saveDetails(int $id, array $data): bool
+    {
+        $challenge = self::find($id);
+        if (!$challenge || ((int) $challenge['is_locked'] === 1 && (string) $challenge['status'] !== 'completed')) {
+            return false;
+        }
+
+        $db = self::db();
+        $db->beginTransaction();
+        try {
+            $stmt = $db->prepare(
+                'UPDATE challenges
+                 SET title = :title,
+                     challenge_url = :challenge_url,
+                     difficulty = :difficulty,
+                     time_spent_minutes = :time_spent_minutes,
+                     notes = :notes,
+                     updated_at = NOW()
+                 WHERE id = :id'
+            );
+            $stmt->execute([
+                'id' => $id,
+                'title' => self::blankToNull((string) ($data['title'] ?? '')),
+                'challenge_url' => self::blankToNull((string) ($data['challenge_url'] ?? '')),
+                'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
+                'time_spent_minutes' => self::positiveIntOrNull($data['time_spent_minutes'] ?? null),
+                'notes' => self::blankToNull((string) ($data['notes'] ?? '')),
+            ]);
+
+            self::replaceLanguages($id, $data['language_ids'] ?? []);
+            self::replaceGithubLinks($id, (string) ($data['github_links'] ?? ''));
+            $db->commit();
+            return true;
+        } catch (Throwable $exception) {
+            $db->rollBack();
+            throw $exception;
+        }
+    }
+
+    /** @return array<int, string> */
+    public static function completionErrors(int $id): array
+    {
+        $detail = self::detail($id);
+        if (!$detail) {
+            return ['El reto no existe.'];
+        }
+
+        $errors = [];
+        if (trim((string) ($detail['title'] ?? '')) === '') {
+            $errors[] = 'Captura el nombre del reto.';
+        }
+        if (trim((string) ($detail['difficulty'] ?? '')) === '') {
+            $errors[] = 'Captura la dificultad.';
+        }
+        if ((int) ($detail['time_spent_minutes'] ?? 0) <= 0) {
+            $errors[] = 'Captura el tiempo invertido.';
+        }
+        if (empty($detail['language_ids'])) {
+            $errors[] = 'Selecciona al menos un lenguaje.';
+        }
+
+        return $errors;
+    }
+
+    public static function complete(int $id): bool
+    {
+        $challenge = self::find($id);
+        if (!$challenge || !in_array((string) $challenge['status'], ['pending', 'expired'], true)) {
+            return false;
+        }
+
+        $stmt = self::db()->prepare(
+            "UPDATE challenges
+             SET status = 'completed',
+                 completed_date = CURDATE(),
+                 is_locked = 0,
+                 updated_at = NOW()
+             WHERE id = :id"
+        );
+        return $stmt->execute(['id' => $id]);
+    }
+
+    public static function miss(int $id): bool
+    {
+        $challenge = self::find($id);
+        if (!$challenge || !in_array((string) $challenge['status'], ['pending', 'expired'], true)) {
+            return false;
+        }
+
+        $stmt = self::db()->prepare("UPDATE challenges SET status = 'missed', is_locked = 1, updated_at = NOW() WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
+    }
+
+    public static function cancel(int $id): bool
+    {
+        $challenge = self::find($id);
+        if (!$challenge || !in_array((string) $challenge['status'], ['pending', 'expired'], true)) {
+            return false;
+        }
+
+        $stmt = self::db()->prepare("UPDATE challenges SET status = 'cancelled', is_locked = 1, updated_at = NOW() WHERE id = :id");
+        return $stmt->execute(['id' => $id]);
     }
 
     /** @param array<string, mixed> $challenge */
@@ -148,5 +272,52 @@ final class Challenge extends BaseModel
 
         $parsed = DateTimeImmutable::createFromFormat('Y-m-d', substr($date, 0, 10));
         return $parsed instanceof DateTimeImmutable && $parsed->format('Y-m-d') === substr($date, 0, 10);
+    }
+
+    private static function blankToNull(string $value): ?string
+    {
+        $value = trim($value);
+        return $value === '' ? null : $value;
+    }
+
+    private static function positiveIntOrNull(mixed $value): ?int
+    {
+        $int = (int) $value;
+        return $int > 0 ? $int : null;
+    }
+
+    /** @param mixed $languageIds */
+    private static function replaceLanguages(int $challengeId, mixed $languageIds): void
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', is_array($languageIds) ? $languageIds : []))));
+        $db = self::db();
+        $delete = $db->prepare('DELETE FROM challenge_languages WHERE challenge_id = :challenge_id');
+        $delete->execute(['challenge_id' => $challengeId]);
+
+        if (!$ids) {
+            return;
+        }
+
+        $insert = $db->prepare('INSERT INTO challenge_languages (challenge_id, language_id) SELECT :challenge_id, id FROM languages WHERE id = :language_id');
+        foreach ($ids as $languageId) {
+            $insert->execute(['challenge_id' => $challengeId, 'language_id' => $languageId]);
+        }
+    }
+
+    private static function replaceGithubLinks(int $challengeId, string $links): void
+    {
+        $db = self::db();
+        $delete = $db->prepare('DELETE FROM challenge_github_links WHERE challenge_id = :challenge_id');
+        $delete->execute(['challenge_id' => $challengeId]);
+
+        $rows = preg_split('/\R+/', trim($links)) ?: [];
+        $insert = $db->prepare('INSERT INTO challenge_github_links (challenge_id, github_url, created_at) VALUES (:challenge_id, :github_url, NOW())');
+        foreach ($rows as $row) {
+            $url = trim($row);
+            if ($url === '') {
+                continue;
+            }
+            $insert->execute(['challenge_id' => $challengeId, 'github_url' => $url]);
+        }
     }
 }

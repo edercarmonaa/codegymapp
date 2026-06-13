@@ -24,10 +24,27 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalTitle = document.getElementById('challengeModalTitle');
     const alertBox = document.getElementById('challengeAlert');
     const submitButton = document.getElementById('challengeSubmitButton');
+    const completeButton = document.getElementById('challengeCompleteButton');
+    const missButton = document.getElementById('challengeMissButton');
+    const cancelButton = document.getElementById('challengeCancelButton');
+    const challengeId = document.getElementById('challengeId');
     const scheduledDate = document.getElementById('challengeScheduledDate');
     const scheduledDateLabel = document.getElementById('challengeScheduledDateLabel');
     const platform = document.getElementById('challengePlatform');
+    const title = document.getElementById('challengeTitle');
+    const difficulty = document.getElementById('challengeDifficulty');
+    const timeSpent = document.getElementById('challengeTime');
+    const challengeUrl = document.getElementById('challengeUrl');
+    const notes = document.getElementById('challengeNotes');
+    const githubLinks = document.getElementById('challengeGithubLinks');
+    const statusBadge = document.getElementById('challengeStatusBadge');
+    const dataTab = document.getElementById('challengeDataTab');
+    const languageChecks = Array.from(document.querySelectorAll('.challenge-language'));
+    const editableFields = Array.from(document.querySelectorAll('#challengeForm input, #challengeForm select, #challengeForm textarea'));
+    const editOnly = Array.from(document.querySelectorAll('.edit-only'));
+    const editActions = Array.from(document.querySelectorAll('.edit-actions'));
     const csrfToken = el.dataset.csrfToken || '';
+    let currentMode = 'create';
 
     const showMessage = (message, type = 'success') => {
         const wrapper = document.createElement('div');
@@ -44,27 +61,149 @@ document.addEventListener('DOMContentLoaded', () => {
         alertBox.classList.remove('d-none');
     };
 
+    const setEditVisible = (visible) => {
+        editOnly.forEach((node) => node.classList.toggle('d-none', !visible));
+        editActions.forEach((node) => node.classList.toggle('d-none', !visible));
+    };
+
+    const activateDataTab = () => {
+        if (dataTab && window.bootstrap) {
+            bootstrap.Tab.getOrCreateInstance(dataTab).show();
+        }
+    };
+
+    const setFormLocked = (locked, allowCompletedEdit = false) => {
+        editableFields.forEach((field) => {
+            if (field.name === '_token' || field.id === 'challengeId') return;
+            field.disabled = locked && !allowCompletedEdit;
+        });
+        if (platform && currentMode === 'edit') platform.disabled = true;
+    };
+
+    const setInactivePlatformOptions = (disabled) => {
+        if (!platform) return;
+        Array.from(platform.options).forEach((option) => {
+            if (option.dataset.active === '0') {
+                option.disabled = disabled;
+            }
+        });
+    };
+
+    const setStatusBadge = (status) => {
+        const labels = {
+            pending: 'Pendiente',
+            completed: 'Cumplido',
+            expired: 'Vencido',
+            missed: 'No cumplido',
+            cancelled: 'Cancelado'
+        };
+        const classes = {
+            pending: 'text-bg-primary',
+            completed: 'text-bg-success',
+            expired: 'text-bg-secondary',
+            missed: 'text-bg-danger',
+            cancelled: 'text-bg-dark'
+        };
+        if (!statusBadge) return;
+        statusBadge.className = `badge ${classes[status] || 'text-bg-secondary'}`;
+        statusBadge.textContent = labels[status] || status;
+    };
+
     const resetCreateForm = (date) => {
+        currentMode = 'create';
         form?.reset();
         alertBox?.classList.add('d-none');
+        activateDataTab();
+        setEditVisible(false);
+        setFormLocked(false);
+        setInactivePlatformOptions(true);
         if (modalTitle) modalTitle.textContent = 'Crear reto';
-        if (submitButton) submitButton.classList.remove('d-none');
+        if (challengeId) challengeId.value = '';
+        if (submitButton) {
+            submitButton.classList.remove('d-none');
+            submitButton.textContent = 'Guardar reto';
+        }
         if (scheduledDate) scheduledDate.value = date;
         if (scheduledDateLabel) scheduledDateLabel.value = date;
         if (platform) platform.disabled = false;
     };
 
-    const showEventDetails = (event) => {
+    const fillChallengeForm = (challenge) => {
+        currentMode = 'edit';
+        form?.reset();
         alertBox?.classList.add('d-none');
-        if (modalTitle) modalTitle.textContent = event.title;
-        if (submitButton) submitButton.classList.add('d-none');
-        if (scheduledDate) scheduledDate.value = event.startStr.substring(0, 10);
-        if (scheduledDateLabel) scheduledDateLabel.value = event.startStr.substring(0, 10);
+        activateDataTab();
+        setEditVisible(true);
+        if (modalTitle) modalTitle.textContent = challenge.platform_name + (challenge.title ? ' - ' + challenge.title : '');
+        if (challengeId) challengeId.value = challenge.id || '';
+        if (scheduledDate) scheduledDate.value = challenge.scheduled_date || '';
+        if (scheduledDateLabel) scheduledDateLabel.value = challenge.scheduled_date || '';
         if (platform) {
+            setInactivePlatformOptions(false);
+            platform.value = challenge.platform_id || '';
             platform.disabled = true;
-            platform.value = '';
         }
+        if (title) title.value = challenge.title || '';
+        if (difficulty) difficulty.value = challenge.difficulty || '';
+        if (timeSpent) timeSpent.value = challenge.time_spent_minutes || '';
+        if (challengeUrl) challengeUrl.value = challenge.challenge_url || '';
+        if (notes) notes.value = challenge.notes || '';
+        if (githubLinks) githubLinks.value = (challenge.github_links || []).map((link) => link.github_url).join('\n');
+        languageChecks.forEach((check) => {
+            check.checked = (challenge.language_ids || []).map(Number).includes(Number(check.value));
+        });
+        setStatusBadge(challenge.status);
+
+        const isClosed = ['missed', 'cancelled'].includes(challenge.status);
+        const isCompleted = challenge.status === 'completed';
+        setFormLocked(isClosed, isCompleted);
+        if (submitButton) {
+            submitButton.classList.toggle('d-none', isClosed);
+            submitButton.textContent = isCompleted ? 'Guardar correcciones' : 'Guardar datos';
+        }
+        [completeButton, missButton, cancelButton].forEach((button) => button?.classList.toggle('d-none', isClosed || isCompleted));
         modal?.show();
+    };
+
+    const showEventDetails = async (event) => {
+        try {
+            const response = await fetch(`/api/calendar/challenge?id=${encodeURIComponent(event.id)}`);
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+                showMessage(payload.message || 'No se pudo cargar el reto.', 'danger');
+                return;
+            }
+            fillChallengeForm(payload.challenge);
+        } catch (error) {
+            showMessage('No se pudo cargar el reto.', 'danger');
+        }
+    };
+
+    const postForm = async (url) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            body: new FormData(form)
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+            throw new Error(payload.message || 'No se pudo guardar.');
+        }
+        return payload;
+    };
+
+    const closeAction = async (url, saveFirst = false) => {
+        alertBox?.classList.add('d-none');
+        try {
+            if (saveFirst) {
+                await postForm('/api/calendar/save-details');
+            }
+            const payload = await postForm(url);
+            modal?.hide();
+            showMessage(payload.message || 'Acción realizada.');
+            calendar.refetchEvents();
+        } catch (error) {
+            showFormError(error.message);
+        }
     };
 
     const calendar = new FullCalendar.Calendar(el, {
@@ -123,23 +262,19 @@ document.addEventListener('DOMContentLoaded', () => {
         if (submitButton) submitButton.disabled = true;
 
         try {
-            const response = await fetch('/api/calendar/store', {
-                method: 'POST',
-                body: new FormData(form)
-            });
-            const payload = await response.json();
-            if (!response.ok || !payload.ok) {
-                showFormError(payload.message || 'No se pudo guardar el reto.');
-                return;
-            }
+            const payload = await postForm(currentMode === 'create' ? '/api/calendar/store' : '/api/calendar/save-details');
             modal?.hide();
-            showMessage(payload.message || 'Reto guardado correctamente.');
+            showMessage(payload.message || 'Reto guardado.');
             calendar.refetchEvents();
         } catch (error) {
-            showFormError('No se pudo guardar el reto.');
+            showFormError(error.message || 'No se pudo guardar el reto.');
         } finally {
             if (submitButton) submitButton.disabled = false;
         }
     });
+
+    completeButton?.addEventListener('click', () => closeAction('/api/calendar/complete', true));
+    missButton?.addEventListener('click', () => closeAction('/api/calendar/miss'));
+    cancelButton?.addEventListener('click', () => closeAction('/api/calendar/cancel'));
 });
 </script>

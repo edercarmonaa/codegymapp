@@ -9,7 +9,8 @@ final class CalendarController
         Challenge::expirePending();
         View::render('calendar/index', [
             'title' => 'Calendario',
-            'platforms' => Platform::active(),
+            'platforms' => Platform::all(),
+            'languages' => Language::all(),
         ], 'main');
     }
 }
