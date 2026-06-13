@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class Response
 {
     public static function redirect(string $path): never
@@ -23,3 +25,6 @@ final class Response
     }
 }
 
+if (!\class_exists('Response', false)) {
+    \class_alias(Response::class, 'Response');
+}

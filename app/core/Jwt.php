@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class Jwt
 {
     private static ?string $lastError = null;
@@ -63,4 +65,8 @@ final class Jwt
     {
         return base64_decode(strtr($value, '-_', '+/')) ?: '';
     }
+}
+
+if (!\class_exists('Jwt', false)) {
+    \class_alias(Jwt::class, 'Jwt');
 }

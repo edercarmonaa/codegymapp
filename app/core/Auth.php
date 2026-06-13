@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class Auth
 {
     public const COOKIE = 'codegymapp_token';
@@ -18,16 +20,16 @@ final class Auth
         if ($payload === null) {
             $error = Jwt::lastError();
             if ($error === 'expired') {
-                SecurityLog::record(null, 'session_expired', 'failure', 'Sesión expirada por tiempo.');
+                \SecurityLog::record(null, 'session_expired', 'failure', 'Sesión expirada por tiempo.');
                 $_SESSION['flash_error'] = 'Tu sesión expiró por seguridad. Inicia sesión nuevamente.';
             } else {
-                SecurityLog::record(null, 'token_invalid', 'failure', 'Token inválido, alterado o no legible.');
+                \SecurityLog::record(null, 'token_invalid', 'failure', 'Token inválido, alterado o no legible.');
             }
             self::logoutCookie();
             return null;
         }
 
-        return User::find((int) $payload['sub']);
+        return \User::find((int) $payload['sub']);
     }
 
     public static function check(): bool
@@ -65,4 +67,8 @@ final class Auth
             'samesite' => 'Lax',
         ]);
     }
+}
+
+if (!\class_exists('Auth', false)) {
+    \class_alias(Auth::class, 'Auth');
 }

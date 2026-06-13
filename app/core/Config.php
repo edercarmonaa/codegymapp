@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class Config
 {
     public static function validate(): void
@@ -26,10 +28,14 @@ final class Config
             http_response_code(500);
             $message = 'Configuracion incompleta: ' . implode(', ', array_unique($missing)) . '. Revisa el archivo .env.';
             if ((bool) Env::get('APP_DEBUG', false)) {
-                throw new RuntimeException($message);
+                throw new \RuntimeException($message);
             }
 
             exit('Configuracion incompleta. Revisa el archivo .env.');
         }
     }
+}
+
+if (!\class_exists('Config', false)) {
+    \class_alias(Config::class, 'Config');
 }

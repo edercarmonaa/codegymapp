@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class View
 {
     /** @param array<string, mixed> $data */
@@ -31,3 +33,6 @@ final class View
     }
 }
 
+if (!\class_exists('View', false)) {
+    \class_alias(View::class, 'View');
+}

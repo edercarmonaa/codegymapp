@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class RateLimiter
 {
     public static function enforce(): void
@@ -66,4 +68,8 @@ final class RateLimiter
         $ip = (string) ($_SERVER['REMOTE_ADDR'] ?? '');
         return filter_var($ip, FILTER_VALIDATE_IP) ? $ip : '';
     }
+}
+
+if (!\class_exists('RateLimiter', false)) {
+    \class_alias(RateLimiter::class, 'RateLimiter');
 }

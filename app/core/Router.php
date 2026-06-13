@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class Router
 {
     /** @var array<string, array<string, array{0: string, 1: string, 2: bool}>> */
@@ -35,7 +37,7 @@ final class Router
 
         [$controllerName, $action, $private] = $route;
         if ($private && !Auth::check()) {
-            SecurityLog::record(null, 'unauthorized_access', 'failure', 'Acceso no autorizado a ' . $path);
+            \SecurityLog::record(null, 'unauthorized_access', 'failure', 'Acceso no autorizado a ' . $path);
             Response::redirect('/login');
         }
 
@@ -50,3 +52,6 @@ final class Router
     }
 }
 
+if (!\class_exists('Router', false)) {
+    \class_alias(Router::class, 'Router');
+}

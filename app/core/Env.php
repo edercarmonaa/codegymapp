@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace CodeGymApp\Core;
+
 final class Env
 {
     /** @var array<string, string> */
@@ -41,3 +43,6 @@ final class Env
     }
 }
 
+if (!\class_exists('Env', false)) {
+    \class_alias(Env::class, 'Env');
+}

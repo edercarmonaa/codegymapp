@@ -113,7 +113,7 @@ El arranque en `app/core/bootstrap.php` usa un autoload compatible con PSR-4 par
 - `CodeGymApp\Models\` apunta a `app/models/`
 - `CodeGymApp\Helpers\` apunta a `app/helpers/`
 
-El autoload mantiene compatibilidad con las clases actuales sin namespace para no romper despliegues en cPanel. Las nuevas clases pueden agregarse con namespace siguiendo esas rutas.
+El autoload mantiene compatibilidad con las clases actuales sin namespace para no romper despliegues en cPanel. Las nuevas clases pueden agregarse con namespace siguiendo esas rutas. `composer.json` declara el mismo mapeo para herramientas modernas, pero el proyecto no requiere dependencias Composer para ejecutarse.
 
 ## Seguridad
 
