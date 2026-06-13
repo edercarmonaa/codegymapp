@@ -1,6 +1,6 @@
 <section class="login-panel w-100">
     <div class="text-center mb-4">
-        <h1 class="h3 fw-semibold">CodeGymApp</h1>
+        <img class="login-logo" src="/public/assets/img/codegym-logo.png" alt="CodeGym">
         <p class="text-body-secondary mb-0">Control personal de retos de programación</p>
     </div>
 
@@ -22,4 +22,3 @@
         <button class="btn btn-primary w-100">Iniciar sesión</button>
     </form>
 </section>
-
