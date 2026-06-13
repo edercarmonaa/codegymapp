@@ -174,23 +174,128 @@ final class Routine extends BaseModel
         }
 
         $dates = self::datesForRoutine($routine, $monthStart, $monthEnd);
-        $cancel = self::db()->prepare(
-            "UPDATE challenges
-             SET status = 'cancelled', is_locked = 1, updated_at = NOW()
+        $available = self::pendingGeneratedForMonth($id, $monthStart, $monthEnd);
+        $usedIds = [];
+
+        foreach ($dates as $date) {
+            if (self::activeChallengeExists($id, $date)) {
+                $existingId = self::pendingGeneratedChallengeIdForDate($id, $date);
+                if ($existingId > 0) {
+                    $usedIds[] = $existingId;
+                }
+                continue;
+            }
+
+            $candidate = self::nextReusableChallenge($available, $usedIds);
+            if ($candidate !== null) {
+                self::moveGeneratedChallenge((int) $candidate['id'], $routine, $date);
+                $usedIds[] = (int) $candidate['id'];
+                continue;
+            }
+
+            if (self::restoreCancelledGeneratedChallenge($id, $date)) {
+                continue;
+            }
+
+            self::createChallengeIfMissing($routine, $date);
+        }
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private static function pendingGeneratedForMonth(int $id, DateTimeImmutable $monthStart, DateTimeImmutable $monthEnd): array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT id, scheduled_date
+             FROM challenges
              WHERE routine_id = :routine_id
                AND status = 'pending'
                AND is_rescheduled = 0
-               AND scheduled_date BETWEEN :month_start AND :month_end"
+               AND scheduled_date BETWEEN :month_start AND :month_end
+             ORDER BY scheduled_date ASC, id ASC"
         );
-        $cancel->execute([
+        $stmt->execute([
             'routine_id' => $id,
             'month_start' => $monthStart->format('Y-m-d'),
             'month_end' => $monthEnd->format('Y-m-d'),
         ]);
+        return $stmt->fetchAll();
+    }
 
-        foreach ($dates as $date) {
-            self::createChallengeIfMissing($routine, $date);
+    private static function activeChallengeExists(int $routineId, string $date): bool
+    {
+        $stmt = self::db()->prepare("SELECT COUNT(*) FROM challenges WHERE routine_id = :routine_id AND scheduled_date = :scheduled_date AND status <> 'cancelled'");
+        $stmt->execute(['routine_id' => $routineId, 'scheduled_date' => $date]);
+        return (int) $stmt->fetchColumn() > 0;
+    }
+
+    private static function pendingGeneratedChallengeIdForDate(int $routineId, string $date): int
+    {
+        $stmt = self::db()->prepare(
+            "SELECT id
+             FROM challenges
+             WHERE routine_id = :routine_id
+               AND scheduled_date = :scheduled_date
+               AND status = 'pending'
+               AND is_rescheduled = 0
+             ORDER BY id ASC
+             LIMIT 1"
+        );
+        $stmt->execute(['routine_id' => $routineId, 'scheduled_date' => $date]);
+        return (int) $stmt->fetchColumn();
+    }
+
+    /** @param array<int, array<string, mixed>> $available @param array<int, int> $usedIds @return array<string, mixed>|null */
+    private static function nextReusableChallenge(array $available, array $usedIds): ?array
+    {
+        foreach ($available as $challenge) {
+            if (!in_array((int) $challenge['id'], $usedIds, true)) {
+                return $challenge;
+            }
         }
+        return null;
+    }
+
+    /** @param array<string, mixed> $routine */
+    private static function moveGeneratedChallenge(int $challengeId, array $routine, string $date): void
+    {
+        $stmt = self::db()->prepare(
+            "UPDATE challenges
+             SET platform_id = :platform_id,
+                 scheduled_date = :scheduled_date,
+                 original_scheduled_date = :scheduled_date,
+                 updated_at = NOW()
+             WHERE id = :id
+               AND status = 'pending'
+               AND is_rescheduled = 0"
+        );
+        $stmt->execute([
+            'id' => $challengeId,
+            'platform_id' => $routine['platform_id'],
+            'scheduled_date' => $date,
+        ]);
+    }
+
+    private static function restoreCancelledGeneratedChallenge(int $routineId, string $date): bool
+    {
+        $stmt = self::db()->prepare(
+            "SELECT id
+             FROM challenges
+             WHERE routine_id = :routine_id
+               AND scheduled_date = :scheduled_date
+               AND status = 'cancelled'
+               AND is_rescheduled = 0
+             ORDER BY id DESC
+             LIMIT 1"
+        );
+        $stmt->execute(['routine_id' => $routineId, 'scheduled_date' => $date]);
+        $challengeId = (int) $stmt->fetchColumn();
+        if ($challengeId <= 0) {
+            return false;
+        }
+
+        $update = self::db()->prepare("UPDATE challenges SET status = 'pending', is_locked = 0, updated_at = NOW() WHERE id = :id");
+        $update->execute(['id' => $challengeId]);
+        return true;
     }
 
     /** @param mixed $weekDays */
