@@ -264,7 +264,7 @@ final class Routine extends BaseModel
             "UPDATE challenges
              SET platform_id = :platform_id,
                  scheduled_date = :scheduled_date,
-                 original_scheduled_date = :scheduled_date,
+                 original_scheduled_date = :original_scheduled_date,
                  updated_at = NOW()
              WHERE id = :id
                AND status = 'pending'
@@ -274,6 +274,7 @@ final class Routine extends BaseModel
             'id' => $challengeId,
             'platform_id' => $routine['platform_id'],
             'scheduled_date' => $date,
+            'original_scheduled_date' => $date,
         ]);
     }
 
