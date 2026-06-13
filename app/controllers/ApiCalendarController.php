@@ -181,6 +181,56 @@ final class ApiCalendarController
         Response::json(['ok' => true, 'message' => 'Rutina creada correctamente.']);
     }
 
+    public function updateRoutine(): void
+    {
+        verify_csrf();
+
+        $id = (int) ($_POST['id'] ?? 0);
+        $platformId = (int) ($_POST['platform_id'] ?? 0);
+        $frequency = (string) ($_POST['frequency_type'] ?? '');
+        $startDate = substr((string) ($_POST['start_date'] ?? ''), 0, 10);
+        $endDate = substr((string) ($_POST['end_date'] ?? ''), 0, 10);
+        $monthDay = (int) ($_POST['month_day'] ?? 0);
+        $weekDays = $_POST['week_days'] ?? [];
+
+        if ($id <= 0 || $platformId <= 0 || !Platform::existsActive($platformId) || !in_array($frequency, ['daily', 'weekly', 'monthly'], true) || !$this->isDate($startDate)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'Completa plataforma, frecuencia y fecha de inicio.']);
+            return;
+        }
+        if ($endDate !== '' && !$this->isDate($endDate)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'La fecha final no es válida.']);
+            return;
+        }
+        if ($endDate !== '' && $endDate < $startDate) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'La fecha final no puede ser anterior al inicio.']);
+            return;
+        }
+        if ($frequency === 'weekly' && (!is_array($weekDays) || count(array_filter($weekDays)) === 0)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'Selecciona al menos un día de la semana.']);
+            return;
+        }
+        if ($frequency === 'monthly' && ($monthDay < 1 || $monthDay > 31)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'Captura un día del mes válido.']);
+            return;
+        }
+
+        Routine::update($id, [
+            'platform_id' => $platformId,
+            'frequency_type' => $frequency,
+            'week_days' => is_array($weekDays) ? $weekDays : [],
+            'month_day' => $monthDay,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+
+        Response::json(['ok' => true, 'message' => 'Rutina actualizada correctamente.']);
+    }
+
     public function disableRoutine(): void
     {
         verify_csrf();

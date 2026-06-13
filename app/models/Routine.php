@@ -30,15 +30,33 @@ final class Routine extends BaseModel
     {
         $stmt = self::db()->prepare('UPDATE routines SET is_active = 0, updated_at = NOW() WHERE id = :id');
         $stmt->execute(['id' => $id]);
+    }
 
+    /** @param array<string, mixed> $data */
+    public static function update(int $id, array $data): void
+    {
         $stmt = self::db()->prepare(
-            "UPDATE challenges
-             SET status = 'cancelled', is_locked = 1, updated_at = NOW()
-             WHERE routine_id = :id
-               AND status = 'pending'
-               AND scheduled_date >= CURDATE()"
+            "UPDATE routines
+             SET platform_id = :platform_id,
+                 frequency_type = :frequency_type,
+                 week_days = :week_days,
+                 month_day = :month_day,
+                 start_date = :start_date,
+                 end_date = :end_date,
+                 updated_at = NOW()
+             WHERE id = :id"
         );
-        $stmt->execute(['id' => $id]);
+        $stmt->execute([
+            'id' => $id,
+            'platform_id' => (int) $data['platform_id'],
+            'frequency_type' => $data['frequency_type'],
+            'week_days' => self::weekDaysValue($data['week_days'] ?? []),
+            'month_day' => self::monthDayValue($data['month_day'] ?? null),
+            'start_date' => $data['start_date'],
+            'end_date' => self::blankToNull((string) ($data['end_date'] ?? '')),
+        ]);
+
+        self::syncPendingCurrentMonth($id);
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -120,7 +138,7 @@ final class Routine extends BaseModel
     /** @param array<string, mixed> $routine */
     private static function createChallengeIfMissing(array $routine, string $date): void
     {
-        $exists = self::db()->prepare('SELECT COUNT(*) FROM challenges WHERE routine_id = :routine_id AND scheduled_date = :scheduled_date');
+        $exists = self::db()->prepare("SELECT COUNT(*) FROM challenges WHERE routine_id = :routine_id AND scheduled_date = :scheduled_date AND status <> 'cancelled'");
         $exists->execute(['routine_id' => $routine['id'], 'scheduled_date' => $date]);
         if ((int) $exists->fetchColumn() > 0) {
             return;
@@ -141,6 +159,38 @@ final class Routine extends BaseModel
             'scheduled_date' => $date,
             'original_scheduled_date' => $date,
         ]);
+    }
+
+    private static function syncPendingCurrentMonth(int $id): void
+    {
+        $monthStart = new DateTimeImmutable('first day of this month 00:00:00');
+        $monthEnd = new DateTimeImmutable('last day of this month 00:00:00');
+        $stmt = self::db()->prepare('SELECT * FROM routines WHERE id = :id AND is_active = 1');
+        $stmt->execute(['id' => $id]);
+        $routine = $stmt->fetch();
+
+        if (!$routine) {
+            return;
+        }
+
+        $dates = self::datesForRoutine($routine, $monthStart, $monthEnd);
+        $cancel = self::db()->prepare(
+            "UPDATE challenges
+             SET status = 'cancelled', is_locked = 1, updated_at = NOW()
+             WHERE routine_id = :routine_id
+               AND status = 'pending'
+               AND is_rescheduled = 0
+               AND scheduled_date BETWEEN :month_start AND :month_end"
+        );
+        $cancel->execute([
+            'routine_id' => $id,
+            'month_start' => $monthStart->format('Y-m-d'),
+            'month_end' => $monthEnd->format('Y-m-d'),
+        ]);
+
+        foreach ($dates as $date) {
+            self::createChallengeIfMissing($routine, $date);
+        }
     }
 
     /** @param mixed $weekDays */

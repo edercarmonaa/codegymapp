@@ -11,10 +11,12 @@ final class ChallengeController
             'status' => (string) ($_GET['status'] ?? ''),
             'platform_id' => (int) ($_GET['platform_id'] ?? 0),
         ];
+        $state = TableState::fromRequest(['scheduled_date', 'platform', 'status', 'completed_date', 'time_spent_minutes'], 'scheduled_date', 'desc');
 
         View::render('challenges/index', [
             'title' => 'Retos',
-            'challenges' => Challenge::allForList($filters),
+            'challenges' => Challenge::allForList($filters, $state),
+            'pagination' => TableState::pagination($state, Challenge::countForList($filters)),
             'platforms' => Platform::all(),
             'activePlatforms' => Platform::active(),
             'activeLanguages' => Language::active(),

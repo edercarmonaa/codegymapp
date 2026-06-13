@@ -9,7 +9,57 @@ $reportsJson = json_encode($reports, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERRO
     </div>
 </div>
 
-<div id="reportsData" data-reports="<?= e($reportsJson) ?>"></div>
+<div id="reportsData" data-reports="<?= e($reportsJson) ?>" hidden></div>
+
+<form class="row g-2 align-items-end mb-4" method="get" action="/reportes">
+    <div class="col-12 col-md-2">
+        <label class="form-label" for="date_from">Desde</label>
+        <input class="form-control" id="date_from" name="date_from" type="date" value="<?= e((string) ($filters['date_from'] ?? '')) ?>">
+    </div>
+    <div class="col-12 col-md-2">
+        <label class="form-label" for="date_to">Hasta</label>
+        <input class="form-control" id="date_to" name="date_to" type="date" value="<?= e((string) ($filters['date_to'] ?? '')) ?>">
+    </div>
+    <div class="col-12 col-md-2">
+        <label class="form-label" for="platform_id">Plataforma</label>
+        <select class="form-select" id="platform_id" name="platform_id">
+            <option value="0">Todas</option>
+            <?php foreach ($platforms as $platform): ?>
+                <option value="<?= e((string) $platform['id']) ?>" <?= (int) ($filters['platform_id'] ?? 0) === (int) $platform['id'] ? 'selected' : '' ?>><?= e($platform['name']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-12 col-md-2">
+        <label class="form-label" for="language_id">Lenguaje</label>
+        <select class="form-select" id="language_id" name="language_id">
+            <option value="0">Todos</option>
+            <?php foreach ($languages as $language): ?>
+                <option value="<?= e((string) $language['id']) ?>" <?= (int) ($filters['language_id'] ?? 0) === (int) $language['id'] ? 'selected' : '' ?>><?= e($language['name']) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-12 col-md-2">
+        <label class="form-label" for="status">Estado</label>
+        <select class="form-select" id="status" name="status">
+            <option value="">Todos</option>
+            <?php foreach ($statusLabels as $value => $label): ?>
+                <option value="<?= e($value) ?>" <?= ($filters['status'] ?? '') === $value ? 'selected' : '' ?>><?= e($label) ?></option>
+            <?php endforeach; ?>
+        </select>
+    </div>
+    <div class="col-12 col-md-2">
+        <label class="form-label" for="completion_type">Cumplimiento</label>
+        <select class="form-select" id="completion_type" name="completion_type">
+            <option value="">Todos</option>
+            <option value="on_time" <?= ($filters['completion_type'] ?? '') === 'on_time' ? 'selected' : '' ?>>A tiempo</option>
+            <option value="late" <?= ($filters['completion_type'] ?? '') === 'late' ? 'selected' : '' ?>>Fuera de fecha</option>
+        </select>
+    </div>
+    <div class="col-12">
+        <button class="btn btn-primary">Aplicar filtros</button>
+        <a class="btn btn-outline-secondary" href="/reportes">Limpiar</a>
+    </div>
+</form>
 
 <div class="row g-3 mb-4">
     <?php foreach ([

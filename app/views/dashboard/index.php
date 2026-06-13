@@ -78,6 +78,30 @@
             </div>
         </section>
 
+        <section class="mb-4">
+            <h2 class="h5">Metas activas</h2>
+            <div class="list-group">
+                <?php foreach ($activeGoals as $goal): ?>
+                    <a class="list-group-item list-group-item-action" href="/metas">
+                        <div class="d-flex justify-content-between gap-3">
+                            <strong><?= e($goalTypes[$goal['goal_type']] ?? $goal['goal_type']) ?></strong>
+                            <span class="text-body-secondary"><?= e((string) $goal['progress_percent']) ?>%</span>
+                        </div>
+                        <div class="progress mt-2" role="progressbar" aria-valuenow="<?= e((string) $goal['progress_percent']) ?>" aria-valuemin="0" aria-valuemax="100">
+                            <div class="progress-bar" style="width: <?= e((string) min(100, (float) $goal['progress_percent'])) ?>%"></div>
+                        </div>
+                        <span class="small text-body-secondary">
+                            <?= e((string) $goal['current_value']) ?>/<?= e((string) $goal['target_value']) ?>
+                            · vence <?= e((string) $goal['period_end']) ?>
+                        </span>
+                    </a>
+                <?php endforeach; ?>
+                <?php if (!$activeGoals): ?>
+                    <div class="list-group-item text-body-secondary">No hay metas activas.</div>
+                <?php endif; ?>
+            </div>
+        </section>
+
         <section>
             <h2 class="h5">Retos vencidos pendientes de revisar</h2>
             <div class="list-group">

@@ -437,20 +437,18 @@ final class Challenge extends BaseModel
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function allForList(array $filters = []): array
+    public static function allForList(array $filters = [], array $state = []): array
     {
-        $where = [];
-        $params = [];
-
-        if (!empty($filters['status'])) {
-            $where[] = 'c.status = :status';
-            $params['status'] = $filters['status'];
-        }
-
-        if (!empty($filters['platform_id'])) {
-            $where[] = 'c.platform_id = :platform_id';
-            $params['platform_id'] = (int) $filters['platform_id'];
-        }
+        [$where, $params] = self::listFilterParts($filters);
+        $columns = [
+            'scheduled_date' => 'c.scheduled_date',
+            'platform' => 'p.name',
+            'status' => 'c.status',
+            'completed_date' => 'c.completed_date',
+            'time_spent_minutes' => 'c.time_spent_minutes',
+        ];
+        $orderBy = $columns[(string) ($state['sort'] ?? 'scheduled_date')] ?? 'c.scheduled_date';
+        $dir = (string) ($state['dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
 
         $sql = "SELECT
                 c.*,
@@ -478,11 +476,28 @@ final class Challenge extends BaseModel
             $sql .= ' WHERE ' . implode(' AND ', $where);
         }
 
-        $sql .= ' ORDER BY c.scheduled_date DESC, c.id DESC LIMIT 100';
+        $sql .= " ORDER BY {$orderBy} {$dir}, c.id DESC LIMIT :limit OFFSET :offset";
 
         $stmt = self::db()->prepare($sql);
-        $stmt->execute($params);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value);
+        }
+        $stmt->bindValue(':limit', (int) ($state['per_page'] ?? 20), PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) ($state['offset'] ?? 0), PDO::PARAM_INT);
+        $stmt->execute();
         return $stmt->fetchAll();
+    }
+
+    public static function countForList(array $filters = []): int
+    {
+        [$where, $params] = self::listFilterParts($filters);
+        $sql = 'SELECT COUNT(*) FROM challenges c JOIN platforms p ON p.id = c.platform_id';
+        if ($where) {
+            $sql .= ' WHERE ' . implode(' AND ', $where);
+        }
+        $stmt = self::db()->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
     }
 
     /** @return array<string, string> */
@@ -509,25 +524,53 @@ final class Challenge extends BaseModel
         ];
     }
 
+    /** @return array{0: array<int, string>, 1: array<string, mixed>} */
+    private static function listFilterParts(array $filters): array
+    {
+        $where = [];
+        $params = [];
+
+        if (!empty($filters['status'])) {
+            $where[] = 'c.status = :status';
+            $params['status'] = (string) $filters['status'];
+        }
+
+        if (!empty($filters['platform_id'])) {
+            $where[] = 'c.platform_id = :platform_id';
+            $params['platform_id'] = (int) $filters['platform_id'];
+        }
+
+        return [$where, $params];
+    }
+
     /** @return array<string, mixed> */
-    public static function reportData(): array
+    public static function reportData(array $filters = []): array
     {
         return [
-            'compliance' => self::reportCompliance(),
-            'timeByMonth' => self::reportTimeByMonth(),
-            'platforms' => self::reportCompletedByPlatform(),
-            'languages' => self::reportCompletedByLanguage(),
-            'punctuality' => self::reportPunctuality(),
-            'history' => self::reportHistoryTotals(),
+            'compliance' => self::reportCompliance($filters),
+            'timeByMonth' => self::reportTimeByMonth($filters),
+            'platforms' => self::reportCompletedByPlatform($filters),
+            'languages' => self::reportCompletedByLanguage($filters),
+            'punctuality' => self::reportPunctuality($filters),
+            'history' => self::reportHistoryTotals($filters),
         ];
     }
 
     /** @return array<string, float|int> */
-    private static function reportCompliance(): array
+    private static function reportCompliance(array $filters): array
     {
-        $scheduled = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') OR (origin = 'manual' AND status = 'completed')")->fetchColumn();
-        $completed = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed'")->fetchColumn();
-        $onTime = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date = scheduled_date")->fetchColumn();
+        [$joins, $where, $params] = self::reportFilterParts($filters, 'scheduled_date', false);
+        $scheduledWhere = $where;
+        $scheduledWhere[] = "(c.origin IN ('calendar', 'routine') OR (c.origin = 'manual' AND c.status = 'completed'))";
+        $scheduled = self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', $scheduledWhere), $params);
+
+        [$joins, $where, $params] = self::reportFilterParts($filters, 'completed_date', true);
+        $where[] = "c.status = 'completed'";
+        $completed = self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', $where), $params);
+
+        $where[] = "c.origin IN ('calendar', 'routine')";
+        $where[] = 'c.completed_date = c.scheduled_date';
+        $onTime = self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', $where), $params);
 
         return [
             'scheduled' => $scheduled,
@@ -539,73 +582,139 @@ final class Challenge extends BaseModel
     }
 
     /** @return array<int, array<string, mixed>> */
-    private static function reportTimeByMonth(): array
+    private static function reportTimeByMonth(array $filters): array
     {
-        $stmt = self::db()->query(
+        [$joins, $where, $params] = self::reportFilterParts($filters, 'completed_date', true);
+        $where[] = "c.status = 'completed'";
+        $stmt = self::db()->prepare(
             "SELECT label, value
              FROM (
-                 SELECT DATE_FORMAT(completed_date, '%Y-%m') AS label, COALESCE(SUM(time_spent_minutes), 0) AS value
-                 FROM challenges
-                 WHERE status = 'completed' AND completed_date IS NOT NULL
-                 GROUP BY DATE_FORMAT(completed_date, '%Y-%m')
+                 SELECT DATE_FORMAT(c.completed_date, '%Y-%m') AS label, COALESCE(SUM(c.time_spent_minutes), 0) AS value
+                 FROM challenges c" . $joins . "
+                 WHERE " . implode(' AND ', $where) . "
+                 GROUP BY DATE_FORMAT(c.completed_date, '%Y-%m')
                  ORDER BY label DESC
                  LIMIT 12
              ) monthly
              ORDER BY label ASC"
         );
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
     /** @return array<int, array<string, mixed>> */
-    private static function reportCompletedByPlatform(): array
+    private static function reportCompletedByPlatform(array $filters): array
     {
-        $stmt = self::db()->query(
+        [$joins, $where, $params] = self::reportFilterParts($filters, 'completed_date', true);
+        $where[] = "c.status = 'completed'";
+        $stmt = self::db()->prepare(
             "SELECT p.name AS label, COUNT(*) AS value
              FROM challenges c
              JOIN platforms p ON p.id = c.platform_id
-             WHERE c.status = 'completed'
+             " . $joins . "
+             WHERE " . implode(' AND ', $where) . "
              GROUP BY p.id, p.name
              ORDER BY value DESC, p.name ASC
              LIMIT 10"
         );
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
     /** @return array<int, array<string, mixed>> */
-    private static function reportCompletedByLanguage(): array
+    private static function reportCompletedByLanguage(array $filters): array
     {
-        $stmt = self::db()->query(
+        [$extraJoins, $where, $params] = self::reportFilterParts($filters, 'completed_date', true, 'filter_cl');
+        $where[] = "c.status = 'completed'";
+        $stmt = self::db()->prepare(
             "SELECT l.name AS label, COUNT(DISTINCT c.id) AS value
              FROM challenges c
              JOIN challenge_languages cl ON cl.challenge_id = c.id
              JOIN languages l ON l.id = cl.language_id
-             WHERE c.status = 'completed'
+             " . $extraJoins . "
+             WHERE " . implode(' AND ', $where) . "
              GROUP BY l.id, l.name
              ORDER BY value DESC, l.name ASC
              LIMIT 10"
         );
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
     /** @return array<string, int> */
-    private static function reportPunctuality(): array
+    private static function reportPunctuality(array $filters): array
     {
+        [$joins, $where, $params] = self::reportFilterParts($filters, 'completed_date', true);
+        $where[] = "c.origin IN ('calendar', 'routine')";
+        $where[] = "c.status = 'completed'";
         return [
-            'on_time' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date = scheduled_date")->fetchColumn(),
-            'late' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date > scheduled_date")->fetchColumn(),
+            'on_time' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ['c.completed_date = c.scheduled_date'])), $params),
+            'late' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ['c.completed_date > c.scheduled_date'])), $params),
         ];
     }
 
     /** @return array<string, int> */
-    private static function reportHistoryTotals(): array
+    private static function reportHistoryTotals(array $filters): array
     {
+        [$joins, $where, $params] = self::reportFilterParts($filters, 'scheduled_date', false);
         return [
-            'completed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed'")->fetchColumn(),
-            'missed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'missed'")->fetchColumn(),
-            'expired' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'expired'")->fetchColumn(),
-            'cancelled' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'cancelled'")->fetchColumn(),
-            'pending' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'pending'")->fetchColumn(),
+            'completed' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'completed'"])), $params),
+            'missed' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'missed'"])), $params),
+            'expired' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'expired'"])), $params),
+            'cancelled' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'cancelled'"])), $params),
+            'pending' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'pending'"])), $params),
         ];
+    }
+
+    /** @return array{0: string, 1: array<int, string>, 2: array<string, mixed>} */
+    private static function reportFilterParts(array $filters, string $dateColumn, bool $requireDate, string $languageJoinAlias = 'cl_filter'): array
+    {
+        $joins = '';
+        $where = ['1 = 1'];
+        $params = [];
+
+        if (!empty($filters['date_from']) && self::validDate((string) $filters['date_from'])) {
+            $where[] = 'c.' . $dateColumn . ' >= :date_from';
+            $params['date_from'] = substr((string) $filters['date_from'], 0, 10);
+        }
+        if (!empty($filters['date_to']) && self::validDate((string) $filters['date_to'])) {
+            $where[] = 'c.' . $dateColumn . ' <= :date_to';
+            $params['date_to'] = substr((string) $filters['date_to'], 0, 10);
+        }
+        if ($requireDate) {
+            $where[] = 'c.' . $dateColumn . ' IS NOT NULL';
+        }
+        if (!empty($filters['platform_id'])) {
+            $where[] = 'c.platform_id = :platform_id';
+            $params['platform_id'] = (int) $filters['platform_id'];
+        }
+        if (!empty($filters['language_id'])) {
+            $joins .= ' JOIN challenge_languages ' . $languageJoinAlias . ' ON ' . $languageJoinAlias . '.challenge_id = c.id';
+            $where[] = $languageJoinAlias . '.language_id = :language_id';
+            $params['language_id'] = (int) $filters['language_id'];
+        }
+        if (!empty($filters['status'])) {
+            $where[] = 'c.status = :status';
+            $params['status'] = (string) $filters['status'];
+        }
+        if (($filters['completion_type'] ?? '') === 'on_time') {
+            $where[] = "c.origin IN ('calendar', 'routine')";
+            $where[] = 'c.completed_date = c.scheduled_date';
+        }
+        if (($filters['completion_type'] ?? '') === 'late') {
+            $where[] = "c.origin IN ('calendar', 'routine')";
+            $where[] = 'c.completed_date > c.scheduled_date';
+        }
+
+        return [$joins, $where, $params];
+    }
+
+    /** @param array<string, mixed> $params */
+    private static function reportCount(string $sql, array $params): int
+    {
+        $stmt = self::db()->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
     }
 
     private static function validDate(?string $date): bool

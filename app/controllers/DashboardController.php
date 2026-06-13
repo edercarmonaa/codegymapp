@@ -25,6 +25,7 @@ final class DashboardController
             'topLanguages' => Challenge::dashboardTopLanguages(),
             'attention' => Challenge::dashboardAttention(),
             'goalAlerts' => Goal::dashboardAtRisk(),
+            'activeGoals' => Goal::dashboardActive(),
             'goalTypes' => Goal::goalTypes(),
             'todayChallenges' => Challenge::todayPending(),
             'expiredChallenges' => Challenge::expiredForReview(),

@@ -25,13 +25,20 @@ final class SecurityLog extends BaseModel
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function paginate(int $limit = 20, int $offset = 0): array
+    public static function paginate(int $limit = 20, int $offset = 0, string $sort = 'created_at', string $dir = 'desc'): array
     {
-        $stmt = self::db()->prepare('SELECT sl.*, u.username FROM security_logs sl LEFT JOIN users u ON u.id = sl.user_id ORDER BY sl.created_at DESC LIMIT :limit OFFSET :offset');
+        $columns = ['created_at' => 'sl.created_at', 'event_type' => 'sl.event_type', 'result' => 'sl.result', 'ip_address' => 'sl.ip_address'];
+        $orderBy = $columns[$sort] ?? 'sl.created_at';
+        $direction = $dir === 'asc' ? 'ASC' : 'DESC';
+        $stmt = self::db()->prepare("SELECT sl.*, u.username FROM security_logs sl LEFT JOIN users u ON u.id = sl.user_id ORDER BY {$orderBy} {$direction}, sl.id DESC LIMIT :limit OFFSET :offset");
         $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
         $stmt->bindValue(':offset', $offset, PDO::PARAM_INT);
         $stmt->execute();
         return $stmt->fetchAll();
     }
-}
 
+    public static function countAll(): int
+    {
+        return (int) self::db()->query('SELECT COUNT(*) FROM security_logs')->fetchColumn();
+    }
+}

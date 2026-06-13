@@ -10,6 +10,24 @@ final class Language extends BaseModel
         return self::db()->query('SELECT * FROM languages ORDER BY is_active DESC, name ASC')->fetchAll();
     }
 
+    /** @param array<string, mixed> $state @return array<int, array<string, mixed>> */
+    public static function paginated(array $state): array
+    {
+        $columns = ['name' => 'name', 'is_active' => 'is_active', 'created_at' => 'created_at'];
+        $orderBy = $columns[(string) $state['sort']] ?? 'name';
+        $dir = (string) $state['dir'] === 'desc' ? 'DESC' : 'ASC';
+        $stmt = self::db()->prepare("SELECT * FROM languages ORDER BY {$orderBy} {$dir}, id DESC LIMIT :limit OFFSET :offset");
+        $stmt->bindValue(':limit', (int) $state['per_page'], PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) $state['offset'], PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public static function countAll(): int
+    {
+        return (int) self::db()->query('SELECT COUNT(*) FROM languages')->fetchColumn();
+    }
+
     /** @return array<int, array<string, mixed>> */
     public static function active(): array
     {

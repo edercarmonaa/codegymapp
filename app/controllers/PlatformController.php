@@ -6,7 +6,12 @@ final class PlatformController
 {
     public function index(): void
     {
-        View::render('platforms/index', ['title' => 'Plataformas', 'platforms' => Platform::all()], 'main');
+        $state = TableState::fromRequest(['name', 'is_active', 'created_at'], 'name', 'asc');
+        View::render('platforms/index', [
+            'title' => 'Plataformas',
+            'platforms' => Platform::paginated($state),
+            'pagination' => TableState::pagination($state, Platform::countAll()),
+        ], 'main');
     }
 
     public function save(): void
@@ -35,4 +40,3 @@ final class PlatformController
         Response::redirect('/plataformas');
     }
 }
-

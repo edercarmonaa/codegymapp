@@ -1,4 +1,49 @@
+window.CodeGymConfirm = (message = '¿Deseas continuar?') => new Promise((resolve) => {
+    const modalEl = document.getElementById('confirmModal');
+    const messageEl = document.getElementById('confirmModalMessage');
+    const acceptButton = document.getElementById('confirmModalAccept');
+    if (!modalEl || !acceptButton || !window.bootstrap) {
+        resolve(window.confirm(message));
+        return;
+    }
+
+    const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+    const cleanup = () => {
+        acceptButton.removeEventListener('click', onAccept);
+        modalEl.removeEventListener('hidden.bs.modal', onHide);
+    };
+    const onAccept = () => {
+        cleanup();
+        modal.hide();
+        resolve(true);
+    };
+    const onHide = () => {
+        cleanup();
+        resolve(false);
+    };
+
+    if (messageEl) {
+        messageEl.textContent = message;
+    }
+    acceptButton.addEventListener('click', onAccept, { once: true });
+    modalEl.addEventListener('hidden.bs.modal', onHide, { once: true });
+    modal.show();
+});
+
 document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('form[data-confirm]').forEach((form) => {
+        form.addEventListener('submit', async (event) => {
+            if (form.dataset.confirmed === '1') {
+                return;
+            }
+            event.preventDefault();
+            if (await window.CodeGymConfirm(form.dataset.confirm || '¿Deseas continuar?')) {
+                form.dataset.confirmed = '1';
+                form.submit();
+            }
+        });
+    });
+
     const dashboardDataNode = document.getElementById('dashboardData');
     let dashboardWeekly = [];
     if (dashboardDataNode) {

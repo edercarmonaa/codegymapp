@@ -8,7 +8,7 @@
 <div class="table-responsive">
     <table class="table align-middle">
         <thead>
-            <tr><th>Fecha</th><th>Usuario</th><th>Evento</th><th>Resultado</th><th>IP</th><th>Descripción</th></tr>
+            <tr><th><a href="?sort=created_at&dir=desc">Fecha</a></th><th>Usuario</th><th><a href="?sort=event_type&dir=asc">Evento</a></th><th><a href="?sort=result&dir=asc">Resultado</a></th><th><a href="?sort=ip_address&dir=asc">IP</a></th><th>Descripción</th></tr>
         </thead>
         <tbody>
             <?php foreach ($logs as $log): ?>
@@ -28,3 +28,4 @@
     </table>
 </div>
 
+<?php require __DIR__ . '/../partials/table_pagination.php'; ?>

@@ -2,11 +2,11 @@
     <table class="table align-middle table-hover">
         <thead>
             <tr>
-                <th>Meta</th>
-                <th>Periodo</th>
+                <th><a href="?sort=goal_type&dir=asc">Meta</a></th>
+                <th><a href="?sort=period_end&dir=asc">Periodo</a></th>
                 <th>Alcance</th>
-                <th>Avance</th>
-                <th>Estado</th>
+                <th><a href="?sort=progress_percent&dir=desc">Avance</a></th>
+                <th><a href="?sort=status&dir=asc">Estado</a></th>
                 <th class="text-end">Acciones</th>
             </tr>
         </thead>
@@ -47,7 +47,7 @@
                     </td>
                     <td class="text-end">
                         <?php if ($goal['status'] === 'active'): ?>
-                            <form class="d-inline" action="/metas/desactivar" method="post">
+                            <form class="d-inline" action="/metas/desactivar" method="post" data-confirm="¿Desactivar esta meta?">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= e((string) $goal['id']) ?>">
                                 <button class="btn btn-sm btn-outline-secondary">Desactivar</button>
@@ -64,3 +64,5 @@
         </tbody>
     </table>
 </div>
+
+<?php require __DIR__ . '/../partials/table_pagination.php'; ?>

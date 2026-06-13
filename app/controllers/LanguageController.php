@@ -6,7 +6,12 @@ final class LanguageController
 {
     public function index(): void
     {
-        View::render('languages/index', ['title' => 'Lenguajes', 'languages' => Language::all()], 'main');
+        $state = TableState::fromRequest(['name', 'is_active', 'created_at'], 'name', 'asc');
+        View::render('languages/index', [
+            'title' => 'Lenguajes',
+            'languages' => Language::paginated($state),
+            'pagination' => TableState::pagination($state, Language::countAll()),
+        ], 'main');
     }
 
     public function save(): void
@@ -30,4 +35,3 @@ final class LanguageController
         Response::redirect('/lenguajes');
     }
 }
-

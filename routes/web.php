@@ -23,6 +23,7 @@ $router->post('/api/calendar/miss', 'ApiCalendarController', 'miss');
 $router->post('/api/calendar/cancel', 'ApiCalendarController', 'cancel');
 $router->post('/api/calendar/update-date', 'ApiCalendarController', 'updateDate');
 $router->post('/api/calendar/routine/store', 'ApiCalendarController', 'storeRoutine');
+$router->post('/api/calendar/routine/update', 'ApiCalendarController', 'updateRoutine');
 $router->post('/api/calendar/routine/disable', 'ApiCalendarController', 'disableRoutine');
 
 $router->get('/plataformas', 'PlatformController', 'index');

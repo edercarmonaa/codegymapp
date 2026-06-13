@@ -100,15 +100,16 @@
     <table class="table align-middle table-hover">
         <thead>
             <tr>
-                <th>Fecha programada</th>
-                <th>Plataforma</th>
+                <th><a href="?<?= e(http_build_query(array_merge($_GET, ['sort' => 'scheduled_date', 'dir' => 'desc', 'page' => 1]))) ?>">Fecha programada</a></th>
+                <th><a href="?<?= e(http_build_query(array_merge($_GET, ['sort' => 'platform', 'dir' => 'asc', 'page' => 1]))) ?>">Plataforma</a></th>
                 <th>Nombre del reto</th>
-                <th>Estado</th>
+                <th><a href="?<?= e(http_build_query(array_merge($_GET, ['sort' => 'status', 'dir' => 'asc', 'page' => 1]))) ?>">Estado</a></th>
                 <th>Dificultad</th>
                 <th>Lenguajes</th>
-                <th>Tiempo</th>
-                <th>Fecha de cumplimiento</th>
+                <th><a href="?<?= e(http_build_query(array_merge($_GET, ['sort' => 'time_spent_minutes', 'dir' => 'desc', 'page' => 1]))) ?>">Tiempo</a></th>
+                <th><a href="?<?= e(http_build_query(array_merge($_GET, ['sort' => 'completed_date', 'dir' => 'desc', 'page' => 1]))) ?>">Fecha de cumplimiento</a></th>
                 <th>GitHub</th>
+                <th class="text-end">Acciones</th>
             </tr>
         </thead>
         <tbody>
@@ -161,11 +162,16 @@
                             <span class="text-body-secondary">-</span>
                         <?php endif; ?>
                     </td>
+                    <td class="text-end">
+                        <a class="btn btn-sm btn-outline-primary" href="/calendario">Editar</a>
+                    </td>
                 </tr>
             <?php endforeach; ?>
             <?php if (!$challenges): ?>
-                <tr><td colspan="9" class="text-body-secondary">No hay retos con esos filtros.</td></tr>
+                <tr><td colspan="10" class="text-body-secondary">No hay retos con esos filtros.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>
 </div>
+
+<?php require __DIR__ . '/../partials/table_pagination.php'; ?>

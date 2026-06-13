@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 final class Jwt
 {
+    private static ?string $lastError = null;
+
     /** @param array<string, mixed> $payload */
     public static function encode(array $payload): string
     {
@@ -20,23 +22,36 @@ final class Jwt
     /** @return array<string, mixed>|null */
     public static function decode(string $token): ?array
     {
+        self::$lastError = null;
         $parts = explode('.', $token);
         if (count($parts) !== 3) {
+            self::$lastError = 'invalid';
             return null;
         }
 
         [$header, $payload, $signature] = $parts;
         $expected = self::base64UrlEncode(hash_hmac('sha256', $header . '.' . $payload, (string) Env::get('JWT_SECRET', ''), true));
         if (!hash_equals($expected, $signature)) {
+            self::$lastError = 'invalid';
             return null;
         }
 
         $data = json_decode(self::base64UrlDecode($payload), true);
-        if (!is_array($data) || (int) ($data['exp'] ?? 0) < time()) {
+        if (!is_array($data)) {
+            self::$lastError = 'invalid';
+            return null;
+        }
+        if ((int) ($data['exp'] ?? 0) < time()) {
+            self::$lastError = 'expired';
             return null;
         }
 
         return $data;
+    }
+
+    public static function lastError(): ?string
+    {
+        return self::$lastError;
     }
 
     private static function base64UrlEncode(string $value): string
@@ -49,4 +64,3 @@ final class Jwt
         return base64_decode(strtr($value, '-_', '+/')) ?: '';
     }
 }
-

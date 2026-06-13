@@ -7,9 +7,11 @@ final class GoalController
     public function index(): void
     {
         Goal::refreshActiveProgress();
+        $state = TableState::fromRequest(['goal_type', 'period_end', 'progress_percent', 'status'], 'period_end', 'asc');
         View::render('goals/index', [
             'title' => 'Metas',
-            'goals' => Goal::allForList(),
+            'goals' => Goal::paginated($state),
+            'pagination' => TableState::pagination($state, Goal::countAll()),
             'platforms' => Platform::active(),
             'languages' => Language::active(),
             'goalTypes' => Goal::goalTypes(),

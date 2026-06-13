@@ -10,6 +10,7 @@
                 <div id="routineAlert" class="alert alert-danger d-none"></div>
                 <form id="routineForm" class="border rounded-2 p-3 mb-4">
                     <?= csrf_field() ?>
+                    <input id="routineId" name="id" type="hidden">
                     <div class="row g-3">
                         <div class="col-12 col-md-4">
                             <label class="form-label" for="routinePlatform">Plataforma</label>
@@ -55,6 +56,7 @@
                         </div>
                         <div class="col-12">
                             <button class="btn btn-primary" id="routineSubmitButton">Crear rutina</button>
+                            <button class="btn btn-outline-secondary d-none" id="routineResetButton" type="button">Nueva rutina</button>
                         </div>
                     </div>
                 </form>
@@ -91,7 +93,20 @@
                                     <td><span class="badge <?= (int) $routine['is_active'] === 1 ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= (int) $routine['is_active'] === 1 ? 'Activa' : 'Inactiva' ?></span></td>
                                     <td class="text-end">
                                         <?php if ((int) $routine['is_active'] === 1): ?>
-                                            <button class="btn btn-sm btn-outline-secondary routine-disable-button" data-id="<?= e((string) $routine['id']) ?>">Desactivar</button>
+                                            <div class="d-flex gap-2 justify-content-end">
+                                                <button
+                                                    class="btn btn-sm btn-outline-primary routine-edit-button"
+                                                    type="button"
+                                                    data-id="<?= e((string) $routine['id']) ?>"
+                                                    data-platform-id="<?= e((string) $routine['platform_id']) ?>"
+                                                    data-frequency-type="<?= e((string) $routine['frequency_type']) ?>"
+                                                    data-week-days="<?= e((string) $routine['week_days']) ?>"
+                                                    data-month-day="<?= e((string) $routine['month_day']) ?>"
+                                                    data-start-date="<?= e((string) $routine['start_date']) ?>"
+                                                    data-end-date="<?= e((string) ($routine['end_date'] ?? '')) ?>"
+                                                >Editar</button>
+                                                <button class="btn btn-sm btn-outline-secondary routine-disable-button" data-id="<?= e((string) $routine['id']) ?>">Desactivar</button>
+                                            </div>
                                         <?php else: ?>
                                             <span class="text-body-secondary">-</span>
                                         <?php endif; ?>

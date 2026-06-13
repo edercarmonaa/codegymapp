@@ -8,10 +8,12 @@ final class NotificationController
     {
         Challenge::expirePending();
         Notification::generateSystemNotifications();
+        $state = TableState::fromRequest(['title', 'is_read', 'created_at'], 'created_at', 'desc');
 
         View::render('notifications/index', [
             'title' => 'Notificaciones',
-            'notifications' => Notification::allForList(),
+            'notifications' => Notification::paginated($state),
+            'pagination' => TableState::pagination($state, Notification::countAll()),
         ], 'main');
     }
 

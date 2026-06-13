@@ -5,12 +5,11 @@
                 <h2 class="modal-title fs-5">Confirmar acción</h2>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
             </div>
-            <div class="modal-body">¿Deseas continuar?</div>
+            <div class="modal-body" id="confirmModalMessage">¿Deseas continuar?</div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger">Confirmar</button>
+                <button type="button" class="btn btn-danger" id="confirmModalAccept">Confirmar</button>
             </div>
         </div>
     </div>
 </div>
-

@@ -16,6 +16,13 @@ final class Auth
 
         $payload = Jwt::decode($token);
         if ($payload === null) {
+            $error = Jwt::lastError();
+            if ($error === 'expired') {
+                SecurityLog::record(null, 'session_expired', 'failure', 'Sesión expirada por tiempo.');
+                $_SESSION['flash_error'] = 'Tu sesión expiró por seguridad. Inicia sesión nuevamente.';
+            } else {
+                SecurityLog::record(null, 'token_invalid', 'failure', 'Token inválido, alterado o no legible.');
+            }
             self::logoutCookie();
             return null;
         }
@@ -59,4 +66,3 @@ final class Auth
         ]);
     }
 }
-

@@ -2,9 +2,9 @@
     <table class="table align-middle table-hover">
         <thead>
             <tr>
-                <th>Notificación</th>
-                <th>Estado</th>
-                <th>Fecha</th>
+                <th><a href="?sort=title&dir=asc">Notificación</a></th>
+                <th><a href="?sort=is_read&dir=asc">Estado</a></th>
+                <th><a href="?sort=created_at&dir=desc">Fecha</a></th>
                 <th class="text-end">Acciones</th>
             </tr>
         </thead>
@@ -37,7 +37,7 @@
                                 <button class="btn btn-sm btn-outline-primary">Marcar leída</button>
                             </form>
                         <?php else: ?>
-                            <form class="d-inline" action="/notificaciones/eliminar" method="post">
+                            <form class="d-inline" action="/notificaciones/eliminar" method="post" data-confirm="¿Eliminar esta notificación del historial?">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= e((string) $notification['id']) ?>">
                                 <button class="btn btn-sm btn-outline-danger">Eliminar</button>
@@ -52,3 +52,5 @@
         </tbody>
     </table>
 </div>
+
+<?php require __DIR__ . '/../partials/table_pagination.php'; ?>

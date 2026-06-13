@@ -79,6 +79,31 @@ final class Goal extends BaseModel
         return self::db()->query($sql)->fetchAll();
     }
 
+    /** @param array<string, mixed> $state @return array<int, array<string, mixed>> */
+    public static function paginated(array $state): array
+    {
+        $columns = ['goal_type' => 'g.goal_type', 'period_end' => 'g.period_end', 'progress_percent' => 'g.progress_percent', 'status' => 'g.status'];
+        $orderBy = $columns[(string) $state['sort']] ?? 'g.period_end';
+        $dir = (string) $state['dir'] === 'desc' ? 'DESC' : 'ASC';
+        $stmt = self::db()->prepare(
+            "SELECT g.*, p.name AS platform_name, l.name AS language_name
+             FROM goals g
+             LEFT JOIN platforms p ON p.id = g.platform_id
+             LEFT JOIN languages l ON l.id = g.language_id
+             ORDER BY {$orderBy} {$dir}, g.id DESC
+             LIMIT :limit OFFSET :offset"
+        );
+        $stmt->bindValue(':limit', (int) $state['per_page'], PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) $state['offset'], PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public static function countAll(): int
+    {
+        return (int) self::db()->query('SELECT COUNT(*) FROM goals')->fetchColumn();
+    }
+
     public static function close(int $id): void
     {
         if ($id <= 0) {
@@ -101,6 +126,23 @@ final class Goal extends BaseModel
              ORDER BY g.period_end ASC, g.progress_percent ASC
              LIMIT 3"
         )->fetchAll();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    public static function dashboardActive(int $limit = 5): array
+    {
+        $stmt = self::db()->prepare(
+            "SELECT g.*, p.name AS platform_name, l.name AS language_name
+             FROM goals g
+             LEFT JOIN platforms p ON p.id = g.platform_id
+             LEFT JOIN languages l ON l.id = g.language_id
+             WHERE g.status = 'active'
+             ORDER BY g.period_end ASC, g.progress_percent DESC
+             LIMIT :limit"
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -128,6 +170,13 @@ final class Goal extends BaseModel
             'current_value' => $current,
             'progress_percent' => $percent,
         ]);
+
+        Notification::createOnceToday(
+            'goal_closed_' . (string) $goal['id'],
+            'Meta cerrada',
+            'Una meta terminó con avance de ' . $percent . '%.',
+            '/metas'
+        );
 
         if ((int) $goal['auto_renew'] === 1) {
             self::renew($goal);
@@ -160,6 +209,13 @@ final class Goal extends BaseModel
             'auto_renew' => $goal['auto_renew'],
             'source_goal_id' => $goal['id'],
         ]);
+
+        Notification::createOnceToday(
+            'goal_renewed_' . (string) $goal['id'],
+            'Meta renovada',
+            'Se creó automáticamente una nueva meta para el siguiente periodo.',
+            '/metas'
+        );
     }
 
     /** @param array<string, mixed> $goal */

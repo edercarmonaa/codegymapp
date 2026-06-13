@@ -25,10 +25,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const routineModal = routineModalEl ? new bootstrap.Modal(routineModalEl) : null;
     const routineForm = document.getElementById('routineForm');
     const routineFrequency = document.getElementById('routineFrequency');
+    const routineId = document.getElementById('routineId');
+    const routinePlatform = document.getElementById('routinePlatform');
+    const routineStartDate = document.getElementById('routineStartDate');
+    const routineEndDate = document.getElementById('routineEndDate');
+    const routineMonthDay = document.getElementById('routineMonthDay');
     const routineWeekly = Array.from(document.querySelectorAll('.routine-weekly'));
+    const routineWeekDayChecks = Array.from(document.querySelectorAll('input[name="week_days[]"]'));
     const routineMonthly = Array.from(document.querySelectorAll('.routine-monthly'));
     const routineAlert = document.getElementById('routineAlert');
     const routineSubmitButton = document.getElementById('routineSubmitButton');
+    const routineResetButton = document.getElementById('routineResetButton');
     const form = document.getElementById('challengeForm');
     const modalTitle = document.getElementById('challengeModalTitle');
     const alertBox = document.getElementById('challengeAlert');
@@ -80,6 +87,32 @@ document.addEventListener('DOMContentLoaded', () => {
         const value = routineFrequency?.value || 'daily';
         routineWeekly.forEach((node) => node.classList.toggle('d-none', value !== 'weekly'));
         routineMonthly.forEach((node) => node.classList.toggle('d-none', value !== 'monthly'));
+    };
+
+    const resetRoutineForm = () => {
+        routineForm?.reset();
+        if (routineId) routineId.value = '';
+        routineAlert?.classList.add('d-none');
+        if (routineSubmitButton) routineSubmitButton.textContent = 'Crear rutina';
+        routineResetButton?.classList.add('d-none');
+        updateRoutineFrequencyFields();
+    };
+
+    const fillRoutineForm = (button) => {
+        routineAlert?.classList.add('d-none');
+        if (routineId) routineId.value = button.dataset.id || '';
+        if (routinePlatform) routinePlatform.value = button.dataset.platformId || '';
+        if (routineFrequency) routineFrequency.value = button.dataset.frequencyType || 'daily';
+        if (routineStartDate) routineStartDate.value = button.dataset.startDate || '';
+        if (routineEndDate) routineEndDate.value = button.dataset.endDate || '';
+        if (routineMonthDay) routineMonthDay.value = button.dataset.monthDay || '';
+        const selectedDays = (button.dataset.weekDays || '').split(',').filter(Boolean);
+        routineWeekDayChecks.forEach((check) => {
+            check.checked = selectedDays.includes(check.value);
+        });
+        if (routineSubmitButton) routineSubmitButton.textContent = 'Guardar cambios';
+        routineResetButton?.classList.remove('d-none');
+        updateRoutineFrequencyFields();
     };
 
     const setEditVisible = (visible) => {
@@ -296,9 +329,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     completeButton?.addEventListener('click', () => closeAction('/api/calendar/complete', true));
     missButton?.addEventListener('click', () => closeAction('/api/calendar/miss'));
-    cancelButton?.addEventListener('click', () => closeAction('/api/calendar/cancel'));
+    cancelButton?.addEventListener('click', async () => {
+        if (await window.CodeGymConfirm('¿Cancelar este reto?')) {
+            closeAction('/api/calendar/cancel');
+        }
+    });
 
     routineFrequency?.addEventListener('change', updateRoutineFrequencyFields);
+    routineResetButton?.addEventListener('click', resetRoutineForm);
     updateRoutineFrequencyFields();
 
     routineForm?.addEventListener('submit', async (event) => {
@@ -306,7 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         routineAlert?.classList.add('d-none');
         if (routineSubmitButton) routineSubmitButton.disabled = true;
         try {
-            const response = await fetch('/api/calendar/routine/store', {
+            const response = await fetch(routineId?.value ? '/api/calendar/routine/update' : '/api/calendar/routine/store', {
                 method: 'POST',
                 body: new FormData(routineForm)
             });
@@ -328,6 +366,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     document.querySelectorAll('.routine-disable-button').forEach((button) => {
         button.addEventListener('click', async () => {
+            if (!await window.CodeGymConfirm('¿Desactivar esta rutina?')) {
+                return;
+            }
             const data = new FormData();
             data.append('_token', csrfToken);
             data.append('id', button.dataset.id || '');
@@ -347,6 +388,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.disabled = false;
             }
         });
+    });
+
+    document.querySelectorAll('.routine-edit-button').forEach((button) => {
+        button.addEventListener('click', () => fillRoutineForm(button));
     });
 });
 </script>

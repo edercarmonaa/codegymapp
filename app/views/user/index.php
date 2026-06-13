@@ -26,7 +26,7 @@
         </form>
     </div>
     <div class="col-12 col-xl-6">
-        <form class="border rounded-2 p-3" action="/usuario/cambiar-password" method="post">
+        <form class="border rounded-2 p-3" action="/usuario/cambiar-password" method="post" data-confirm="¿Cambiar la contraseña?">
             <?= csrf_field() ?>
             <h2 class="h5">Cambiar contraseña</h2>
             <div class="mb-3">
@@ -45,4 +45,3 @@
         </div>
     </div>
 </div>
-
