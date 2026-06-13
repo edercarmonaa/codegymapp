@@ -10,5 +10,6 @@
     </form>
 </div>
 
-<?php require __DIR__ . '/table.php'; ?>
-
+<div id="tablePanel">
+    <?php require __DIR__ . '/table.php'; ?>
+</div>

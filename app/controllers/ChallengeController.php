@@ -13,7 +13,7 @@ final class ChallengeController
         ];
         $state = TableState::fromRequest(['scheduled_date', 'platform', 'status', 'completed_date', 'time_spent_minutes'], 'scheduled_date', 'desc');
 
-        View::render('challenges/index', [
+        $data = [
             'title' => 'Retos',
             'challenges' => Challenge::allForList($filters, $state),
             'pagination' => TableState::pagination($state, Challenge::countForList($filters)),
@@ -23,7 +23,12 @@ final class ChallengeController
             'statusLabels' => Challenge::statusLabels(),
             'statusBadgeClasses' => Challenge::statusBadgeClasses(),
             'filters' => $filters,
-        ], 'main');
+        ];
+        if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
+            View::render('challenges/table', $data);
+            return;
+        }
+        View::render('challenges/index', $data, 'main');
     }
 
     public function manual(): void

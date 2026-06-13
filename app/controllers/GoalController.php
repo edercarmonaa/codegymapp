@@ -8,7 +8,7 @@ final class GoalController
     {
         Goal::refreshActiveProgress();
         $state = TableState::fromRequest(['goal_type', 'period_end', 'progress_percent', 'status'], 'period_end', 'asc');
-        View::render('goals/index', [
+        $data = [
             'title' => 'Metas',
             'goals' => Goal::paginated($state),
             'pagination' => TableState::pagination($state, Goal::countAll()),
@@ -16,7 +16,12 @@ final class GoalController
             'languages' => Language::active(),
             'goalTypes' => Goal::goalTypes(),
             'periodTypes' => Goal::periodTypes(),
-        ], 'main');
+        ];
+        if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
+            View::render('goals/table', $data);
+            return;
+        }
+        View::render('goals/index', $data, 'main');
     }
 
     public function save(): void

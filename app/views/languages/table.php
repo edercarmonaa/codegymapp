@@ -1,3 +1,5 @@
+<?php require __DIR__ . '/../partials/table_pagination.php'; ?>
+
 <div class="table-responsive">
     <table class="table align-middle">
         <thead>

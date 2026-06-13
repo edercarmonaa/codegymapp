@@ -7,11 +7,16 @@ final class PlatformController
     public function index(): void
     {
         $state = TableState::fromRequest(['name', 'is_active', 'created_at'], 'name', 'asc');
-        View::render('platforms/index', [
+        $data = [
             'title' => 'Plataformas',
             'platforms' => Platform::paginated($state),
             'pagination' => TableState::pagination($state, Platform::countAll()),
-        ], 'main');
+        ];
+        if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
+            View::render('platforms/table', $data);
+            return;
+        }
+        View::render('platforms/index', $data, 'main');
     }
 
     public function save(): void

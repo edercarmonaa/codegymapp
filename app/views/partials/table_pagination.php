@@ -14,8 +14,8 @@ $perPageUrl = static function (int $perPage) use ($baseParams): string {
         <?= e((string) $pagination['total']) ?> registros
     </div>
     <div class="d-flex flex-wrap gap-2 align-items-center">
-        <label class="form-label mb-0 small" for="perPageSelect">Por página</label>
-        <select class="form-select form-select-sm w-auto" id="perPageSelect" onchange="window.location.href=this.value">
+        <label class="form-label mb-0 small">Por página</label>
+        <select class="form-select form-select-sm w-auto table-per-page">
             <?php foreach ([10, 20, 25, 50] as $option): ?>
                 <option value="<?= e($perPageUrl($option)) ?>" <?= (int) $pagination['per_page'] === $option ? 'selected' : '' ?>><?= e((string) $option) ?></option>
             <?php endforeach; ?>
@@ -23,13 +23,13 @@ $perPageUrl = static function (int $perPage) use ($baseParams): string {
         <nav aria-label="Paginación">
             <ul class="pagination pagination-sm mb-0">
                 <li class="page-item <?= (int) $pagination['page'] <= 1 ? 'disabled' : '' ?>">
-                    <a class="page-link" href="<?= e($pageUrl(max(1, (int) $pagination['page'] - 1))) ?>">Anterior</a>
+                    <a class="page-link" data-table-link="1" href="<?= e($pageUrl(max(1, (int) $pagination['page'] - 1))) ?>">Anterior</a>
                 </li>
                 <li class="page-item disabled">
                     <span class="page-link"><?= e((string) $pagination['page']) ?> / <?= e((string) $pagination['pages']) ?></span>
                 </li>
                 <li class="page-item <?= (int) $pagination['page'] >= (int) $pagination['pages'] ? 'disabled' : '' ?>">
-                    <a class="page-link" href="<?= e($pageUrl(min((int) $pagination['pages'], (int) $pagination['page'] + 1))) ?>">Siguiente</a>
+                    <a class="page-link" data-table-link="1" href="<?= e($pageUrl(min((int) $pagination['pages'], (int) $pagination['page'] + 1))) ?>">Siguiente</a>
                 </li>
             </ul>
         </nav>

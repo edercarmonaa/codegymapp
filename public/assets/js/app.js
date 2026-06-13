@@ -31,17 +31,51 @@ window.CodeGymConfirm = (message = '¿Deseas continuar?') => new Promise((resolv
 });
 
 document.addEventListener('DOMContentLoaded', () => {
-    document.querySelectorAll('form[data-confirm]').forEach((form) => {
-        form.addEventListener('submit', async (event) => {
-            if (form.dataset.confirmed === '1') {
-                return;
-            }
-            event.preventDefault();
-            if (await window.CodeGymConfirm(form.dataset.confirm || '¿Deseas continuar?')) {
-                form.dataset.confirmed = '1';
-                form.submit();
-            }
+    const tablePanel = document.getElementById('tablePanel');
+    const loadTablePanel = (url) => {
+        if (!tablePanel || !window.htmx) {
+            window.location.href = url;
+            return;
+        }
+        htmx.ajax('GET', url, {
+            target: '#tablePanel',
+            swap: 'innerHTML'
         });
+        window.history.pushState({}, '', url);
+    };
+
+    document.body.addEventListener('click', (event) => {
+        const link = event.target.closest('#tablePanel a[data-table-link], #tablePanel th a[href^="?"]');
+        if (!link) return;
+        event.preventDefault();
+        loadTablePanel(link.href);
+    });
+
+    document.body.addEventListener('change', (event) => {
+        const select = event.target.closest('#tablePanel .table-per-page');
+        if (!select) return;
+        event.preventDefault();
+        loadTablePanel(select.value);
+    });
+
+    document.body.addEventListener('submit', (event) => {
+        const confirmForm = event.target.closest('form[data-confirm]');
+        if (confirmForm && confirmForm.dataset.confirmed !== '1') {
+            event.preventDefault();
+            window.CodeGymConfirm(confirmForm.dataset.confirm || '¿Deseas continuar?').then((confirmed) => {
+                if (confirmed) {
+                    confirmForm.dataset.confirmed = '1';
+                    confirmForm.submit();
+                }
+            });
+            return;
+        }
+
+        const form = event.target.closest('#tablePanel form[method="get"]');
+        if (!form) return;
+        event.preventDefault();
+        const query = new URLSearchParams(new FormData(form)).toString();
+        loadTablePanel(form.action + (query ? '?' + query : ''));
     });
 
     const dashboardDataNode = document.getElementById('dashboardData');

@@ -10,11 +10,16 @@ final class NotificationController
         Notification::generateSystemNotifications();
         $state = TableState::fromRequest(['title', 'is_read', 'created_at'], 'created_at', 'desc');
 
-        View::render('notifications/index', [
+        $data = [
             'title' => 'Notificaciones',
             'notifications' => Notification::paginated($state),
             'pagination' => TableState::pagination($state, Notification::countAll()),
-        ], 'main');
+        ];
+        if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
+            View::render('notifications/table', $data);
+            return;
+        }
+        View::render('notifications/index', $data, 'main');
     }
 
     public function markRead(): void

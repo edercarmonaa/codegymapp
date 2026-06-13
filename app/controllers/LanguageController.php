@@ -7,11 +7,16 @@ final class LanguageController
     public function index(): void
     {
         $state = TableState::fromRequest(['name', 'is_active', 'created_at'], 'name', 'asc');
-        View::render('languages/index', [
+        $data = [
             'title' => 'Lenguajes',
             'languages' => Language::paginated($state),
             'pagination' => TableState::pagination($state, Language::countAll()),
-        ], 'main');
+        ];
+        if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
+            View::render('languages/table', $data);
+            return;
+        }
+        View::render('languages/index', $data, 'main');
     }
 
     public function save(): void
