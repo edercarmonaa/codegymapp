@@ -370,6 +370,105 @@ final class Challenge extends BaseModel
         ];
     }
 
+    /** @return array<string, mixed> */
+    public static function reportData(): array
+    {
+        return [
+            'compliance' => self::reportCompliance(),
+            'timeByMonth' => self::reportTimeByMonth(),
+            'platforms' => self::reportCompletedByPlatform(),
+            'languages' => self::reportCompletedByLanguage(),
+            'punctuality' => self::reportPunctuality(),
+            'history' => self::reportHistoryTotals(),
+        ];
+    }
+
+    /** @return array<string, float|int> */
+    private static function reportCompliance(): array
+    {
+        $scheduled = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine')")->fetchColumn();
+        $completed = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed'")->fetchColumn();
+        $onTime = (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date = scheduled_date")->fetchColumn();
+
+        return [
+            'scheduled' => $scheduled,
+            'completed' => $completed,
+            'on_time' => $onTime,
+            'general_percent' => $scheduled > 0 ? round(($completed / $scheduled) * 100, 2) : 0,
+            'on_time_percent' => $scheduled > 0 ? round(($onTime / $scheduled) * 100, 2) : 0,
+        ];
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private static function reportTimeByMonth(): array
+    {
+        $stmt = self::db()->query(
+            "SELECT label, value
+             FROM (
+                 SELECT DATE_FORMAT(completed_date, '%Y-%m') AS label, COALESCE(SUM(time_spent_minutes), 0) AS value
+                 FROM challenges
+                 WHERE status = 'completed' AND completed_date IS NOT NULL
+                 GROUP BY DATE_FORMAT(completed_date, '%Y-%m')
+                 ORDER BY label DESC
+                 LIMIT 12
+             ) monthly
+             ORDER BY label ASC"
+        );
+        return $stmt->fetchAll();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private static function reportCompletedByPlatform(): array
+    {
+        $stmt = self::db()->query(
+            "SELECT p.name AS label, COUNT(*) AS value
+             FROM challenges c
+             JOIN platforms p ON p.id = c.platform_id
+             WHERE c.status = 'completed'
+             GROUP BY p.id, p.name
+             ORDER BY value DESC, p.name ASC
+             LIMIT 10"
+        );
+        return $stmt->fetchAll();
+    }
+
+    /** @return array<int, array<string, mixed>> */
+    private static function reportCompletedByLanguage(): array
+    {
+        $stmt = self::db()->query(
+            "SELECT l.name AS label, COUNT(DISTINCT c.id) AS value
+             FROM challenges c
+             JOIN challenge_languages cl ON cl.challenge_id = c.id
+             JOIN languages l ON l.id = cl.language_id
+             WHERE c.status = 'completed'
+             GROUP BY l.id, l.name
+             ORDER BY value DESC, l.name ASC
+             LIMIT 10"
+        );
+        return $stmt->fetchAll();
+    }
+
+    /** @return array<string, int> */
+    private static function reportPunctuality(): array
+    {
+        return [
+            'on_time' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date = scheduled_date")->fetchColumn(),
+            'late' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date > scheduled_date")->fetchColumn(),
+        ];
+    }
+
+    /** @return array<string, int> */
+    private static function reportHistoryTotals(): array
+    {
+        return [
+            'completed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed'")->fetchColumn(),
+            'missed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'missed'")->fetchColumn(),
+            'expired' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'expired'")->fetchColumn(),
+            'cancelled' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'cancelled'")->fetchColumn(),
+            'pending' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'pending'")->fetchColumn(),
+        ];
+    }
+
     private static function validDate(?string $date): bool
     {
         if (!$date) {

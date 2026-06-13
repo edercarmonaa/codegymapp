@@ -6,7 +6,10 @@ final class ReportController
 {
     public function index(): void
     {
-        View::render('reports/index', ['title' => 'Reportes'], 'main');
+        Challenge::expirePending();
+        View::render('reports/index', [
+            'title' => 'Reportes',
+            'reports' => Challenge::reportData(),
+        ], 'main');
     }
 }
-
