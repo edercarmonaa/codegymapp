@@ -15,9 +15,10 @@ final class DashboardController
         View::render('dashboard/index', [
             'title' => 'Dashboard',
             'stats' => $stats,
+            'streaks' => Challenge::streakStats(),
+            'distribution' => Challenge::dashboardDistribution(),
             'todayChallenges' => Challenge::todayPending(),
             'expiredChallenges' => Challenge::expiredForReview(),
         ], 'main');
     }
 }
-

@@ -11,9 +11,12 @@
         ['Cumplimiento general', $stats['general_percent'] . '%'],
         ['Cumplimiento puntual', $stats['on_time_percent'] . '%'],
         ['Tiempo practicado', $stats['time_month'] . ' min'],
+        ['Racha actual', $streaks['current'] . ' días'],
+        ['Mejor racha', $streaks['best'] . ' días'],
+        ['Racha del mes', $streaks['month'] . ' días'],
         ['Retos vencidos', $stats['expired_review']],
     ] as $card): ?>
-        <div class="col-12 col-sm-6 col-xl">
+        <div class="col-12 col-sm-6 col-xl-3">
             <div class="metric-card border rounded-2 p-3 h-100">
                 <div class="text-body-secondary small"><?= e((string) $card[0]) ?></div>
                 <div class="fs-3 fw-semibold"><?= e((string) $card[1]) ?></div>
@@ -58,9 +61,14 @@
         <section>
             <h2 class="h5">Cumplimiento</h2>
             <div class="chart-frame border rounded-2 p-3">
-                <canvas id="dashboardComplianceChart" data-completed="<?= e((string) $stats['completed_month']) ?>" data-expired="<?= e((string) $stats['expired_review']) ?>"></canvas>
+                <canvas
+                    id="dashboardComplianceChart"
+                    data-completed="<?= e((string) $distribution['completed']) ?>"
+                    data-missed="<?= e((string) $distribution['missed']) ?>"
+                    data-expired="<?= e((string) $distribution['expired']) ?>"
+                    data-cancelled="<?= e((string) $distribution['cancelled']) ?>"
+                ></canvas>
             </div>
         </section>
     </div>
 </div>
-

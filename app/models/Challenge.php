@@ -246,6 +246,45 @@ final class Challenge extends BaseModel
         ];
     }
 
+    /** @return array<string, int> */
+    public static function dashboardDistribution(): array
+    {
+        return [
+            'completed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
+            'missed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'missed' AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
+            'expired' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'expired' AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
+            'cancelled' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'cancelled' AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
+        ];
+    }
+
+    /** @return array<string, int> */
+    public static function streakStats(): array
+    {
+        $scheduledDates = self::dateSet(
+            "SELECT DISTINCT scheduled_date AS date_value
+             FROM challenges
+             WHERE origin IN ('calendar', 'routine') AND scheduled_date <= CURDATE()"
+        );
+        $completedDates = self::dateSet(
+            "SELECT DISTINCT completed_date AS date_value
+             FROM challenges
+             WHERE origin IN ('calendar', 'routine') AND status = 'completed' AND completed_date IS NOT NULL AND completed_date <= CURDATE()"
+        );
+
+        if (!$scheduledDates && !$completedDates) {
+            return ['current' => 0, 'best' => 0, 'month' => 0];
+        }
+
+        $today = new DateTimeImmutable('today');
+        $earliest = self::earliestDate(array_merge(array_keys($scheduledDates), array_keys($completedDates))) ?? $today;
+
+        return [
+            'current' => self::currentStreak($scheduledDates, $completedDates, $today, $earliest),
+            'best' => self::bestStreak($scheduledDates, $completedDates, $today, $earliest),
+            'month' => self::currentStreak($scheduledDates, $completedDates, $today, new DateTimeImmutable('first day of this month')),
+        ];
+    }
+
     /** @return array<int, array<string, mixed>> */
     public static function todayPending(): array
     {
@@ -351,6 +390,65 @@ final class Challenge extends BaseModel
     {
         $int = (int) $value;
         return $int > 0 ? $int : null;
+    }
+
+    /** @return array<string, bool> */
+    private static function dateSet(string $sql): array
+    {
+        $dates = [];
+        foreach (self::db()->query($sql)->fetchAll() as $row) {
+            if (!empty($row['date_value'])) {
+                $dates[(string) $row['date_value']] = true;
+            }
+        }
+        return $dates;
+    }
+
+    /** @param array<int, string> $dates */
+    private static function earliestDate(array $dates): ?DateTimeImmutable
+    {
+        $dates = array_filter($dates);
+        if (!$dates) {
+            return null;
+        }
+        sort($dates);
+        return new DateTimeImmutable((string) $dates[0]);
+    }
+
+    /** @param array<string, bool> $scheduledDates @param array<string, bool> $completedDates */
+    private static function currentStreak(array $scheduledDates, array $completedDates, DateTimeImmutable $today, DateTimeImmutable $stopAt): int
+    {
+        $streak = 0;
+        for ($day = $today; $day >= $stopAt; $day = $day->modify('-1 day')) {
+            $key = $day->format('Y-m-d');
+            if (isset($completedDates[$key])) {
+                $streak++;
+                continue;
+            }
+            if (isset($scheduledDates[$key]) && $key < $today->format('Y-m-d')) {
+                break;
+            }
+        }
+        return $streak;
+    }
+
+    /** @param array<string, bool> $scheduledDates @param array<string, bool> $completedDates */
+    private static function bestStreak(array $scheduledDates, array $completedDates, DateTimeImmutable $today, DateTimeImmutable $startAt): int
+    {
+        $current = 0;
+        $best = 0;
+        for ($day = $startAt; $day <= $today; $day = $day->modify('+1 day')) {
+            $key = $day->format('Y-m-d');
+            if (isset($completedDates[$key])) {
+                $current++;
+                $best = max($best, $current);
+                continue;
+            }
+            if (isset($scheduledDates[$key]) && $key < $today->format('Y-m-d')) {
+                $current = 0;
+            }
+        }
+        return $best;
     }
 
     /** @param mixed $languageIds */

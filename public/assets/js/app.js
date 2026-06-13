@@ -4,13 +4,15 @@ document.addEventListener('DOMContentLoaded', () => {
         new Chart(dashboardChart, {
             type: 'doughnut',
             data: {
-                labels: ['Cumplidos', 'Vencidos'],
+                labels: ['Cumplidos', 'No cumplidos', 'Vencidos', 'Cancelados'],
                 datasets: [{
                     data: [
                         Number(dashboardChart.dataset.completed || 0),
-                        Number(dashboardChart.dataset.expired || 0)
+                        Number(dashboardChart.dataset.missed || 0),
+                        Number(dashboardChart.dataset.expired || 0),
+                        Number(dashboardChart.dataset.cancelled || 0)
                     ],
-                    backgroundColor: ['#198754', '#6c757d']
+                    backgroundColor: ['#198754', '#dc3545', '#6c757d', '#842029']
                 }]
             },
             options: { responsive: true, maintainAspectRatio: false }
@@ -39,4 +41,3 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
-
