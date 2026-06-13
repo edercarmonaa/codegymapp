@@ -6,6 +6,7 @@ final class DashboardController
 {
     public function index(): void
     {
+        Routine::generateCurrentMonth();
         Challenge::expirePending();
         Notification::generateSystemNotifications();
         $stats = Challenge::dashboardStats();

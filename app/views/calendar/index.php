@@ -3,6 +3,7 @@
         <h1 class="h3 mb-1">Calendario</h1>
         <p class="text-body-secondary mb-0">Programación mensual, semanal y diaria</p>
     </div>
+    <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#routineModal">Rutinas</button>
 </div>
 
 <div class="border rounded-2 p-3">
@@ -20,6 +21,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!el || typeof FullCalendar === 'undefined') return;
     const modalEl = document.getElementById('challengeModal');
     const modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+    const routineModalEl = document.getElementById('routineModal');
+    const routineModal = routineModalEl ? new bootstrap.Modal(routineModalEl) : null;
+    const routineForm = document.getElementById('routineForm');
+    const routineFrequency = document.getElementById('routineFrequency');
+    const routineWeekly = Array.from(document.querySelectorAll('.routine-weekly'));
+    const routineMonthly = Array.from(document.querySelectorAll('.routine-monthly'));
+    const routineAlert = document.getElementById('routineAlert');
+    const routineSubmitButton = document.getElementById('routineSubmitButton');
     const form = document.getElementById('challengeForm');
     const modalTitle = document.getElementById('challengeModalTitle');
     const alertBox = document.getElementById('challengeAlert');
@@ -59,6 +68,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!alertBox) return;
         alertBox.textContent = message;
         alertBox.classList.remove('d-none');
+    };
+
+    const showRoutineError = (message) => {
+        if (!routineAlert) return;
+        routineAlert.textContent = message;
+        routineAlert.classList.remove('d-none');
+    };
+
+    const updateRoutineFrequencyFields = () => {
+        const value = routineFrequency?.value || 'daily';
+        routineWeekly.forEach((node) => node.classList.toggle('d-none', value !== 'weekly'));
+        routineMonthly.forEach((node) => node.classList.toggle('d-none', value !== 'monthly'));
     };
 
     const setEditVisible = (visible) => {
@@ -276,5 +297,56 @@ document.addEventListener('DOMContentLoaded', () => {
     completeButton?.addEventListener('click', () => closeAction('/api/calendar/complete', true));
     missButton?.addEventListener('click', () => closeAction('/api/calendar/miss'));
     cancelButton?.addEventListener('click', () => closeAction('/api/calendar/cancel'));
+
+    routineFrequency?.addEventListener('change', updateRoutineFrequencyFields);
+    updateRoutineFrequencyFields();
+
+    routineForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        routineAlert?.classList.add('d-none');
+        if (routineSubmitButton) routineSubmitButton.disabled = true;
+        try {
+            const response = await fetch('/api/calendar/routine/store', {
+                method: 'POST',
+                body: new FormData(routineForm)
+            });
+            const payload = await response.json();
+            if (!response.ok || !payload.ok) {
+                showRoutineError(payload.message || 'No se pudo guardar la rutina.');
+                return;
+            }
+            routineModal?.hide();
+            showMessage(payload.message || 'Rutina guardada.');
+            calendar.refetchEvents();
+            window.setTimeout(() => window.location.reload(), 800);
+        } catch (error) {
+            showRoutineError('No se pudo guardar la rutina.');
+        } finally {
+            if (routineSubmitButton) routineSubmitButton.disabled = false;
+        }
+    });
+
+    document.querySelectorAll('.routine-disable-button').forEach((button) => {
+        button.addEventListener('click', async () => {
+            const data = new FormData();
+            data.append('_token', csrfToken);
+            data.append('id', button.dataset.id || '');
+            button.disabled = true;
+            try {
+                const response = await fetch('/api/calendar/routine/disable', { method: 'POST', body: data });
+                const payload = await response.json();
+                if (!response.ok || !payload.ok) {
+                    showRoutineError(payload.message || 'No se pudo desactivar la rutina.');
+                    button.disabled = false;
+                    return;
+                }
+                showMessage(payload.message || 'Rutina desactivada.');
+                window.setTimeout(() => window.location.reload(), 800);
+            } catch (error) {
+                showRoutineError('No se pudo desactivar la rutina.');
+                button.disabled = false;
+            }
+        });
+    });
 });
 </script>

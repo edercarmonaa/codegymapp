@@ -6,6 +6,7 @@ final class ApiCalendarController
 {
     public function events(): void
     {
+        Routine::generateCurrentMonth();
         Challenge::expirePending();
         Response::json(Challenge::calendarEvents(
             isset($_GET['start']) ? substr((string) $_GET['start'], 0, 10) : null,
@@ -128,6 +129,63 @@ final class ApiCalendarController
     public function cancel(): void
     {
         $this->closeWith(fn (int $id): bool => Challenge::cancel($id), 'Reto cancelado.', 'Este reto no se puede cancelar.');
+    }
+
+    public function storeRoutine(): void
+    {
+        verify_csrf();
+
+        $platformId = (int) ($_POST['platform_id'] ?? 0);
+        $frequency = (string) ($_POST['frequency_type'] ?? '');
+        $startDate = substr((string) ($_POST['start_date'] ?? ''), 0, 10);
+        $endDate = substr((string) ($_POST['end_date'] ?? ''), 0, 10);
+        $monthDay = (int) ($_POST['month_day'] ?? 0);
+        $weekDays = $_POST['week_days'] ?? [];
+
+        if ($platformId <= 0 || !Platform::existsActive($platformId) || !in_array($frequency, ['daily', 'weekly', 'monthly'], true) || !$this->isDate($startDate)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'Completa plataforma, frecuencia y fecha de inicio.']);
+            return;
+        }
+        if ($endDate !== '' && !$this->isDate($endDate)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'La fecha final no es válida.']);
+            return;
+        }
+        if ($endDate !== '' && $endDate < $startDate) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'La fecha final no puede ser anterior al inicio.']);
+            return;
+        }
+        if ($frequency === 'weekly' && (!is_array($weekDays) || count(array_filter($weekDays)) === 0)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'Selecciona al menos un día de la semana.']);
+            return;
+        }
+        if ($frequency === 'monthly' && ($monthDay < 1 || $monthDay > 31)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'Captura un día del mes válido.']);
+            return;
+        }
+
+        Routine::create([
+            'platform_id' => $platformId,
+            'frequency_type' => $frequency,
+            'week_days' => is_array($weekDays) ? $weekDays : [],
+            'month_day' => $monthDay,
+            'start_date' => $startDate,
+            'end_date' => $endDate,
+        ]);
+        Routine::generateCurrentMonth();
+
+        Response::json(['ok' => true, 'message' => 'Rutina creada correctamente.']);
+    }
+
+    public function disableRoutine(): void
+    {
+        verify_csrf();
+        Routine::disable((int) ($_POST['id'] ?? 0));
+        Response::json(['ok' => true, 'message' => 'Rutina desactivada.']);
     }
 
     private function isDate(string $date): bool
