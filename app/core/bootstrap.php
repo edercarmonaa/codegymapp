@@ -9,6 +9,7 @@ spl_autoload_register(static function (string $class): void {
         'CodeGymApp\\Controllers\\' => $base . 'controllers/',
         'CodeGymApp\\Models\\' => $base . 'models/',
         'CodeGymApp\\Helpers\\' => $base . 'helpers/',
+        'CodeGymApp\\Services\\' => $base . 'services/',
     ];
 
     foreach ($prefixes as $prefix => $directory) {
@@ -25,7 +26,7 @@ spl_autoload_register(static function (string $class): void {
         return;
     }
 
-    foreach (['core', 'controllers', 'models', 'helpers'] as $folder) {
+    foreach (['core', 'controllers', 'models', 'helpers', 'services'] as $folder) {
         $file = $base . $folder . '/' . $class . '.php';
         if (is_file($file)) {
             require_once $file;

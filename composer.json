@@ -10,7 +10,8 @@
       "CodeGymApp\\Core\\": "app/core/",
       "CodeGymApp\\Controllers\\": "app/controllers/",
       "CodeGymApp\\Models\\": "app/models/",
-      "CodeGymApp\\Helpers\\": "app/helpers/"
+      "CodeGymApp\\Helpers\\": "app/helpers/",
+      "CodeGymApp\\Services\\": "app/services/"
     }
   }
 }

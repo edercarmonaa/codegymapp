@@ -2,63 +2,33 @@
 
 declare(strict_types=1);
 
+use CodeGymApp\Services\DashboardService;
+use CodeGymApp\Services\ReportService;
+
 final class DashboardController
 {
+    public function __construct(
+        private readonly DashboardService $dashboardService = new DashboardService(),
+        private readonly ReportService $reportService = new ReportService()
+    ) {
+    }
+
     public function index(): void
     {
-        Routine::generateCurrentMonth();
-        Challenge::expirePending();
-        Goal::refreshActiveProgress();
-        Notification::generateSystemNotifications();
-        $stats = Challenge::dashboardStats();
-        $scheduled = max(1, (int) $stats['scheduled_month']);
-        $stats['general_percent'] = round(((int) $stats['completed_month'] / $scheduled) * 100, 1);
-        $stats['on_time_percent'] = round(((int) $stats['on_time_month'] / $scheduled) * 100, 1);
+        $this->dashboardService->refreshDashboardData();
 
-        View::render('dashboard/index', array_merge([
-            'title' => 'Dashboard',
-            'stats' => $stats,
-            'streaks' => Challenge::streakStats(),
-            'distribution' => Challenge::dashboardDistribution(),
-            'weeklyCompliance' => Challenge::dashboardWeeklyCompliance(),
-            'topPlatforms' => Challenge::dashboardTopPlatforms(),
-            'topLanguages' => Challenge::dashboardTopLanguages(),
-            'attention' => Challenge::dashboardAttention(),
-            'goalAlerts' => Goal::dashboardAtRisk(),
-            'activeGoals' => Goal::dashboardActive(),
-            'goalTypes' => Goal::goalTypes(),
-            'todayChallenges' => Challenge::todayPending(),
-            'expiredChallenges' => Challenge::expiredForReview(),
-            'notifications' => Notification::unread(5),
-        ], $this->reportPayload()), 'main');
+        View::render('dashboard/index', array_merge(
+            $this->dashboardService->dashboardPayload(),
+            $this->reportService->reportPayload($_GET)
+        ), 'main');
     }
 
     public function reportsTab(): void
     {
-        Challenge::expirePending();
-        View::render('dashboard/_reports_tab', array_merge($this->reportPayload(), [
+        $this->reportService->refreshReportData();
+
+        View::render('dashboard/_reports_tab', array_merge($this->reportService->reportPayload($_GET), [
             'reportsTabActive' => true,
         ]));
-    }
-
-    /** @return array<string, mixed> */
-    private function reportPayload(): array
-    {
-        $filters = [
-            'date_from' => substr((string) ($_GET['date_from'] ?? ''), 0, 10),
-            'date_to' => substr((string) ($_GET['date_to'] ?? ''), 0, 10),
-            'platform_id' => (int) ($_GET['platform_id'] ?? 0),
-            'language_id' => (int) ($_GET['language_id'] ?? 0),
-            'status' => (string) ($_GET['status'] ?? ''),
-            'completion_type' => (string) ($_GET['completion_type'] ?? ''),
-        ];
-
-        return [
-            'reports' => Challenge::reportData($filters),
-            'filters' => $filters,
-            'platforms' => Platform::all(),
-            'languages' => Language::all(),
-            'statusLabels' => Challenge::statusLabels(),
-        ];
     }
 }
