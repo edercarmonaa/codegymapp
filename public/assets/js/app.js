@@ -105,6 +105,10 @@ document.addEventListener('DOMContentLoaded', () => {
             if (chart) chart.destroy();
         });
     };
+    const isReportsHtmxEvent = (event) => {
+        const path = event.detail?.requestConfig?.path || event.detail?.pathInfo?.requestPath || '';
+        return event.detail?.target?.id === 'reportes' || String(path).includes('/dashboard/reportes');
+    };
     const resizeDashboardCharts = () => {
         if (!window.Chart || typeof Chart.getChart !== 'function') return;
 
@@ -271,19 +275,27 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
+    const refreshReportCharts = () => {
+        if (!document.getElementById('reportes') || !document.getElementById('reportsData')) return;
+        destroyCharts(reportChartIds);
+        initializeReportCharts();
+        window.setTimeout(resizeDashboardCharts, 80);
+    };
 
     document.body.addEventListener('htmx:beforeSwap', (event) => {
-        if (event.detail?.target?.id !== 'reportes') return;
+        if (!isReportsHtmxEvent(event)) return;
         destroyCharts(reportChartIds);
     });
 
     document.body.addEventListener('htmx:afterSwap', (event) => {
-        if (event.detail?.target?.id !== 'reportes') return;
+        if (!isReportsHtmxEvent(event)) return;
         window.history.replaceState(null, '', '#reportes');
-        window.setTimeout(() => {
-            initializeReportCharts();
-            resizeDashboardCharts();
-        }, 50);
+        window.setTimeout(refreshReportCharts, 50);
+    });
+
+    document.body.addEventListener('htmx:afterSettle', (event) => {
+        if (!isReportsHtmxEvent(event)) return;
+        window.setTimeout(refreshReportCharts, 50);
     });
 
     if (dashboardDataNode) {

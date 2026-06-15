@@ -25,6 +25,6 @@ $pageTitle = $title ?? 'CodeGymApp';
     <?php require __DIR__ . '/../partials/confirm_modal.php'; ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script src="/public/assets/js/app.js"></script>
+    <script src="/public/assets/js/app.js?v=4"></script>
 </body>
 </html>
