@@ -79,22 +79,39 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const dashboardTabHashes = ['#datos-generales', '#graficas', '#reportes'];
+    const reportChartIds = [
+        'reportComplianceChart',
+        'reportTimeChart',
+        'reportPlatformsChart',
+        'reportLanguagesChart',
+        'reportPunctualityChart',
+        'reportHistoryChart'
+    ];
+    const dashboardChartIds = [
+        'dashboardWeeklyChart',
+        'dashboardComplianceChart',
+        ...reportChartIds
+    ];
+    const getChartInstance = (idOrCanvas) => {
+        if (!window.Chart || typeof Chart.getChart !== 'function') return null;
+        return Chart.getChart(idOrCanvas) || null;
+    };
+    const destroyCharts = (ids) => {
+        if (!window.Chart) return;
+
+        ids.forEach((id) => {
+            const canvas = document.getElementById(id);
+            const chart = (canvas ? getChartInstance(canvas) : null) || getChartInstance(id);
+            if (chart) chart.destroy();
+        });
+    };
     const resizeDashboardCharts = () => {
         if (!window.Chart || typeof Chart.getChart !== 'function') return;
 
-        [
-            'dashboardWeeklyChart',
-            'dashboardComplianceChart',
-            'reportComplianceChart',
-            'reportTimeChart',
-            'reportPlatformsChart',
-            'reportLanguagesChart',
-            'reportPunctualityChart',
-            'reportHistoryChart'
-        ].forEach((id) => {
+        dashboardChartIds.forEach((id) => {
             const canvas = document.getElementById(id);
             if (!canvas) return;
-            const chart = Chart.getChart(canvas);
+            const chart = getChartInstance(canvas) || getChartInstance(id);
             if (chart) chart.resize();
         });
     };
@@ -120,7 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let dashboardWeekly = [];
     const createChart = (canvas, config) => {
         if (!canvas || !window.Chart) return null;
-        const currentChart = typeof Chart.getChart === 'function' ? Chart.getChart(canvas) : null;
+        const currentChart = getChartInstance(canvas) || getChartInstance(canvas.id);
         if (currentChart) currentChart.destroy();
         return new Chart(canvas, config);
     };
@@ -254,6 +271,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     };
+
+    document.body.addEventListener('htmx:beforeSwap', (event) => {
+        if (event.detail?.target?.id !== 'reportes') return;
+        destroyCharts(reportChartIds);
+    });
 
     document.body.addEventListener('htmx:afterSwap', (event) => {
         if (event.detail?.target?.id !== 'reportes') return;
