@@ -10,6 +10,7 @@ $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
 
 $router->get('/dashboard', 'DashboardController', 'index');
+$router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');
 $router->get('/calendario', 'CalendarController', 'index');
 $router->get('/retos', 'ChallengeController', 'index');
 $router->post('/retos/manual', 'ChallengeController', 'manual');
