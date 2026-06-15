@@ -7,7 +7,7 @@ final class AuthController
     public function showLogin(): void
     {
         if (Auth::check()) {
-            Response::redirect('/dashboard');
+            Response::redirect('/calendario');
         }
 
         View::render('auth/login', ['title' => 'Iniciar sesión'], 'auth');
@@ -47,7 +47,7 @@ final class AuthController
         unset($_SESSION['csrf_token']);
         Auth::login($user);
         SecurityLog::record((int) $user['id'], 'login_success', 'success', 'Inicio de sesión exitoso.');
-        Response::redirect('/dashboard');
+        Response::redirect('/calendario');
     }
 
     public function logout(): void

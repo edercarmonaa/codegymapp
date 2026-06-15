@@ -78,6 +78,44 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTablePanel(form.action + (query ? '?' + query : ''));
     });
 
+    const dashboardTabHashes = ['#datos-generales', '#graficas', '#reportes'];
+    const resizeDashboardCharts = () => {
+        if (!window.Chart || typeof Chart.getChart !== 'function') return;
+
+        [
+            'dashboardWeeklyChart',
+            'dashboardComplianceChart',
+            'reportComplianceChart',
+            'reportTimeChart',
+            'reportPlatformsChart',
+            'reportLanguagesChart',
+            'reportPunctualityChart',
+            'reportHistoryChart'
+        ].forEach((id) => {
+            const canvas = document.getElementById(id);
+            if (!canvas) return;
+            const chart = Chart.getChart(canvas);
+            if (chart) chart.resize();
+        });
+    };
+
+    if (dashboardTabHashes.includes(window.location.hash) && window.bootstrap) {
+        const tabButton = document.querySelector(`#dashboardTabs [data-bs-target="${window.location.hash}"]`);
+        if (tabButton) {
+            bootstrap.Tab.getOrCreateInstance(tabButton).show();
+        }
+    }
+
+    document.querySelectorAll('#dashboardTabs button[data-bs-toggle="tab"]').forEach((button) => {
+        button.addEventListener('shown.bs.tab', (event) => {
+            const target = event.target?.dataset?.bsTarget;
+            if (dashboardTabHashes.includes(target)) {
+                window.history.replaceState(null, '', target);
+            }
+            window.setTimeout(resizeDashboardCharts, 50);
+        });
+    });
+
     const dashboardDataNode = document.getElementById('dashboardData');
     let dashboardWeekly = [];
     if (dashboardDataNode) {

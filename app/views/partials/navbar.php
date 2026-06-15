@@ -17,7 +17,6 @@
                     '/plataformas' => 'Plataformas',
                     '/lenguajes' => 'Lenguajes',
                     '/metas' => 'Metas',
-                    '/reportes' => 'Reportes',
                     '/notificaciones' => 'Notificaciones',
                     '/usuario' => 'Mi usuario',
                     '/seguridad' => 'Seguridad',
