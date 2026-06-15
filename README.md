@@ -115,6 +115,18 @@ El arranque en `app/core/bootstrap.php` usa un autoload compatible con PSR-4 par
 
 El autoload mantiene compatibilidad con las clases actuales sin namespace para no romper despliegues en cPanel. Las nuevas clases pueden agregarse con namespace siguiendo esas rutas. `composer.json` declara el mismo mapeo para herramientas modernas, pero el proyecto no requiere dependencias Composer para ejecutarse.
 
+## Versión Android
+
+La carpeta `android/` contiene una primera versión móvil nativa para Android basada en WebView controlado. Carga `https://codegym.karedit.com.mx/login` y limita la navegación interna al dominio `codegym.karedit.com.mx`; enlaces externos se abren fuera de la app.
+
+Para compilar:
+
+1. Abre la carpeta `android/` en Android Studio.
+2. Deja que Android Studio sincronice Gradle.
+3. Ejecuta `app` en un emulador o dispositivo físico.
+
+La app Android no permite tráfico HTTP claro (`usesCleartextTraffic=false`) y no habilita acceso a archivos locales desde WebView.
+
 ## Seguridad
 
 `.htaccess` bloquea acceso directo a:
