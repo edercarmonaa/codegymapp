@@ -2,17 +2,16 @@
 
 declare(strict_types=1);
 
+use CodeGymApp\Services\CalendarPageService;
+
 final class CalendarController
 {
+    public function __construct(private readonly CalendarPageService $calendarPageService = new CalendarPageService())
+    {
+    }
+
     public function index(): void
     {
-        Routine::generateCurrentMonth();
-        Challenge::expirePending();
-        View::render('calendar/index', [
-            'title' => 'Calendario',
-            'platforms' => Platform::all(),
-            'languages' => Language::all(),
-            'routines' => Routine::allForList(),
-        ], 'main');
+        View::render('calendar/index', $this->calendarPageService->pagePayload(), 'main');
     }
 }
