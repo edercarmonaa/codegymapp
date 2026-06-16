@@ -2,19 +2,17 @@
 
 declare(strict_types=1);
 
+use CodeGymApp\Services\NotificationService;
+
 final class NotificationController
 {
+    public function __construct(private readonly NotificationService $notificationService = new NotificationService())
+    {
+    }
+
     public function index(): void
     {
-        Challenge::expirePending();
-        Notification::generateSystemNotifications();
-        $state = TableState::fromRequest(['title', 'is_read', 'created_at'], 'created_at', 'desc');
-
-        $data = [
-            'title' => 'Notificaciones',
-            'notifications' => Notification::paginated($state),
-            'pagination' => TableState::pagination($state, Notification::countAll()),
-        ];
+        $data = $this->notificationService->indexPayload();
         if (($_SERVER['HTTP_HX_REQUEST'] ?? '') === 'true') {
             View::render('notifications/table', $data);
             return;
@@ -25,7 +23,7 @@ final class NotificationController
     public function markRead(): void
     {
         verify_csrf();
-        Notification::markRead((int) ($_POST['id'] ?? 0));
+        $this->notificationService->markRead((int) ($_POST['id'] ?? 0));
         $_SESSION['flash_success'] = 'Notificación marcada como leída.';
         Response::redirect('/notificaciones');
     }
@@ -33,7 +31,7 @@ final class NotificationController
     public function delete(): void
     {
         verify_csrf();
-        Notification::delete((int) ($_POST['id'] ?? 0));
+        $this->notificationService->delete((int) ($_POST['id'] ?? 0));
         $_SESSION['flash_success'] = 'Notificación eliminada.';
         Response::redirect('/notificaciones');
     }
