@@ -18,7 +18,7 @@
                     <td><?= e($platform['description']) ?></td>
                     <td><span class="badge <?= $platform['is_active'] ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= $platform['is_active'] ? 'Activa' : 'Inactiva' ?></span></td>
                     <td class="text-end">
-                        <form class="d-inline" action="<?= $platform['is_active'] ? '/api/platforms/deactivate' : '/api/platforms/activate' ?>" method="post" data-api-form <?= $platform['is_active'] ? 'data-confirm="¿Desactivar esta plataforma?"' : '' ?>>
+                        <form class="d-inline" action="<?= $platform['is_active'] ? '/api/platforms/deactivate' : '/api/platforms/activate' ?>" method="post" data-api-form data-api-refresh-catalog="platforms" <?= $platform['is_active'] ? 'data-confirm="¿Desactivar esta plataforma?"' : '' ?>>
                             <?= csrf_field() ?>
                             <input type="hidden" name="id" value="<?= e((string) $platform['id']) ?>">
                             <button class="btn btn-sm btn-outline-secondary"><?= $platform['is_active'] ? 'Desactivar' : 'Activar' ?></button>

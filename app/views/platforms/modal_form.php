@@ -1,4 +1,4 @@
-<form action="/api/platforms/save" method="post" class="vstack gap-3" data-api-form>
+<form action="/api/platforms/save" method="post" class="vstack gap-3" data-api-form data-api-refresh-catalog="platforms">
     <?= csrf_field() ?>
     <input class="form-control" name="name" placeholder="Nombre" required>
     <input class="form-control" name="url" placeholder="URL">

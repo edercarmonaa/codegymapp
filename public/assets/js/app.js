@@ -32,6 +32,220 @@ window.CodeGymConfirm = (message = '¿Deseas continuar?') => new Promise((resolv
 
 document.addEventListener('DOMContentLoaded', () => {
     const tablePanel = document.getElementById('tablePanel');
+    const csrfToken = () => document.querySelector('input[name="_token"]')?.value || '';
+    const catalogEndpoint = (panel, url = null) => {
+        const base = panel?.dataset?.catalogUrl || '';
+        if (!base) return '';
+        const source = url ? new URL(url, window.location.origin) : new URL(window.location.href);
+        return base + source.search;
+    };
+    const makeElement = (tag, className = '', text = '') => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        if (text !== '') node.textContent = text;
+        return node;
+    };
+    const catalogUrl = (pagination, params) => {
+        const query = new URLSearchParams();
+        query.set('page', String(params.page || pagination.page || 1));
+        query.set('per_page', String(params.per_page || pagination.per_page || 20));
+        query.set('sort', String(params.sort || pagination.sort || 'name'));
+        query.set('dir', String(params.dir || pagination.dir || 'asc'));
+        return '?' + query.toString();
+    };
+    const renderCatalogPagination = (pagination) => {
+        const wrapper = makeElement('div', 'd-flex flex-wrap gap-2 align-items-center justify-content-between my-3');
+        const total = makeElement('div', 'text-body-secondary small', `${pagination.total || 0} registros`);
+        wrapper.appendChild(total);
+
+        const controls = makeElement('div', 'd-flex flex-wrap gap-2 align-items-center');
+        controls.appendChild(makeElement('label', 'form-label mb-0 small', 'Por página'));
+        const select = makeElement('select', 'form-select form-select-sm w-auto table-per-page');
+        [10, 20, 25, 50].forEach((option) => {
+            const optionNode = document.createElement('option');
+            optionNode.value = catalogUrl(pagination, { page: 1, per_page: option });
+            optionNode.textContent = String(option);
+            optionNode.selected = Number(pagination.per_page || 20) === option;
+            select.appendChild(optionNode);
+        });
+        controls.appendChild(select);
+
+        const nav = document.createElement('nav');
+        nav.setAttribute('aria-label', 'Paginación');
+        const list = makeElement('ul', 'pagination pagination-sm mb-0');
+        const page = Number(pagination.page || 1);
+        const pages = Number(pagination.pages || 1);
+        [
+            ['Anterior', Math.max(1, page - 1), page <= 1],
+            [`${page} / ${pages}`, page, true],
+            ['Siguiente', Math.min(pages, page + 1), page >= pages]
+        ].forEach(([label, targetPage, disabled]) => {
+            const item = makeElement('li', `page-item ${disabled ? 'disabled' : ''}`.trim());
+            if (label.includes('/')) {
+                item.appendChild(makeElement('span', 'page-link', label));
+            } else {
+                const link = makeElement('a', 'page-link', label);
+                link.href = catalogUrl(pagination, { page: targetPage });
+                link.dataset.tableLink = '1';
+                item.appendChild(link);
+            }
+            list.appendChild(item);
+        });
+        nav.appendChild(list);
+        controls.appendChild(nav);
+        wrapper.appendChild(controls);
+        return wrapper;
+    };
+    const sortLink = (label, sort, dir = 'asc') => {
+        const link = document.createElement('a');
+        link.href = `?sort=${encodeURIComponent(sort)}&dir=${encodeURIComponent(dir)}`;
+        link.textContent = label;
+        return link;
+    };
+    const hiddenToken = () => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = '_token';
+        input.value = csrfToken();
+        return input;
+    };
+    const hiddenId = (id) => {
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'id';
+        input.value = String(id || 0);
+        return input;
+    };
+    const statusBadge = (active, activeLabel, inactiveLabel) => {
+        const badge = makeElement('span', `badge ${active ? 'text-bg-success' : 'text-bg-secondary'}`, active ? activeLabel : inactiveLabel);
+        return badge;
+    };
+    const actionForm = (row, type) => {
+        const active = Boolean(row.is_active);
+        const form = makeElement('form', 'd-inline');
+        form.method = 'post';
+        form.action = `/api/${type}/${active ? 'deactivate' : 'activate'}`;
+        form.dataset.apiForm = '1';
+        form.dataset.apiRefreshCatalog = type === 'platforms' ? 'platforms' : 'languages';
+        if (active) {
+            form.dataset.confirm = type === 'platforms' ? '¿Desactivar esta plataforma?' : '¿Desactivar este lenguaje?';
+        }
+        form.appendChild(hiddenToken());
+        form.appendChild(hiddenId(row.id));
+        const button = makeElement('button', 'btn btn-sm btn-outline-secondary', active ? 'Desactivar' : 'Activar');
+        form.appendChild(button);
+        return form;
+    };
+    const renderPlatformsTable = (panel, payload) => {
+        clearNode(panel);
+        const pagination = payload.pagination || {};
+        panel.appendChild(renderCatalogPagination(pagination));
+        const responsive = makeElement('div', 'table-responsive');
+        const table = makeElement('table', 'table align-middle');
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        ['Nombre', 'URL', 'Descripción', 'Estado', 'Acciones'].forEach((label, index) => {
+            const th = document.createElement('th');
+            if (index === 0) th.appendChild(sortLink(label, 'name', 'asc'));
+            else if (index === 3) th.appendChild(sortLink(label, 'is_active', 'desc'));
+            else th.textContent = label;
+            if (index === 4) th.className = 'text-end';
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        (payload.platforms || []).forEach((platform) => {
+            const row = document.createElement('tr');
+            row.appendChild(makeElement('td', '', platform.name || ''));
+            const urlCell = document.createElement('td');
+            if (platform.url) {
+                const link = document.createElement('a');
+                link.href = platform.url;
+                link.target = '_blank';
+                link.rel = 'noopener';
+                link.textContent = 'Abrir';
+                urlCell.appendChild(link);
+            }
+            row.appendChild(urlCell);
+            row.appendChild(makeElement('td', '', platform.description || ''));
+            const status = document.createElement('td');
+            status.appendChild(statusBadge(Boolean(platform.is_active), 'Activa', 'Inactiva'));
+            row.appendChild(status);
+            const actions = makeElement('td', 'text-end');
+            actions.appendChild(actionForm(platform, 'platforms'));
+            row.appendChild(actions);
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        responsive.appendChild(table);
+        panel.appendChild(responsive);
+        panel.appendChild(renderCatalogPagination(pagination));
+    };
+    const renderLanguagesTable = (panel, payload) => {
+        clearNode(panel);
+        const pagination = payload.pagination || {};
+        panel.appendChild(renderCatalogPagination(pagination));
+        const responsive = makeElement('div', 'table-responsive');
+        const table = makeElement('table', 'table align-middle');
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        ['Nombre', 'Estado', 'Acciones'].forEach((label, index) => {
+            const th = document.createElement('th');
+            if (index === 0) th.appendChild(sortLink(label, 'name', 'asc'));
+            else if (index === 1) th.appendChild(sortLink(label, 'is_active', 'desc'));
+            else th.textContent = label;
+            if (index === 2) th.className = 'text-end';
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        (payload.languages || []).forEach((language) => {
+            const row = document.createElement('tr');
+            row.appendChild(makeElement('td', '', language.name || ''));
+            const status = document.createElement('td');
+            status.appendChild(statusBadge(Boolean(language.is_active), 'Activo', 'Inactivo'));
+            row.appendChild(status);
+            const actions = makeElement('td', 'text-end');
+            actions.appendChild(actionForm(language, 'languages'));
+            row.appendChild(actions);
+            tbody.appendChild(row);
+        });
+        table.appendChild(tbody);
+        responsive.appendChild(table);
+        panel.appendChild(responsive);
+        panel.appendChild(renderCatalogPagination(pagination));
+    };
+    const loadCatalogPanel = async (url = null) => {
+        if (!tablePanel?.dataset?.catalogPanel) return false;
+        const endpoint = catalogEndpoint(tablePanel, url);
+        if (!endpoint) return false;
+
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+            window.alert(payload.message || 'No se pudo cargar el catálogo.');
+            return true;
+        }
+
+        if (tablePanel.dataset.catalogPanel === 'platforms') {
+            renderPlatformsTable(tablePanel, payload);
+        } else if (tablePanel.dataset.catalogPanel === 'languages') {
+            renderLanguagesTable(tablePanel, payload);
+        }
+        if (url) {
+            const historyUrl = new URL(url, window.location.href);
+            window.history.pushState({}, '', historyUrl.pathname + historyUrl.search);
+        }
+        return true;
+    };
     const submitApiForm = async (form) => {
         const submitButton = form.querySelector('[type="submit"], button:not([type])');
         if (submitButton) submitButton.disabled = true;
@@ -54,12 +268,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
+            if (form.dataset.apiRefreshCatalog && await loadCatalogPanel()) {
+                if (!form.closest('#tablePanel')) form.reset();
+                return;
+            }
+
             window.location.reload();
         } finally {
             if (submitButton) submitButton.disabled = false;
         }
     };
     const loadTablePanel = (url) => {
+        if (tablePanel?.dataset?.catalogPanel) {
+            loadCatalogPanel(url);
+            return;
+        }
+
         if (!tablePanel || !window.htmx) {
             window.location.href = url;
             return;
@@ -119,6 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const query = new URLSearchParams(new FormData(form)).toString();
         loadTablePanel(form.action + (query ? '?' + query : ''));
     });
+
+    loadCatalogPanel();
 
     const dashboardTabHashes = ['#datos-generales', '#graficas', '#reportes'];
     const reportChartIds = [

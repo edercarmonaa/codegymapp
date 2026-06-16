@@ -152,8 +152,10 @@ En Apache/cPanel, `.htaccess` preserva el header `Authorization` para que PHP pu
 Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie web activa:
 
 - `GET /api/me`: usuario autenticado.
+- `GET /api/catalogs/platforms/list`: plataformas paginadas para la tabla web.
 - `GET /api/catalogs/platforms`: plataformas registradas.
 - `GET /api/catalogs/platforms/active`: plataformas activas.
+- `GET /api/catalogs/languages/list`: lenguajes paginados para la tabla web.
 - `GET /api/catalogs/languages`: lenguajes registrados.
 - `GET /api/catalogs/languages/active`: lenguajes activos.
 - `GET /api/dashboard/summary`: resumen, métricas, rachas, atención, metas y datos de gráficas.

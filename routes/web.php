@@ -28,8 +28,10 @@ $router->post('/api/calendar/update-date', 'ApiCalendarController', 'updateDate'
 $router->post('/api/calendar/routine/store', 'ApiCalendarController', 'storeRoutine');
 $router->post('/api/calendar/routine/update', 'ApiCalendarController', 'updateRoutine');
 $router->post('/api/calendar/routine/disable', 'ApiCalendarController', 'disableRoutine');
+$router->get('/api/catalogs/platforms/list', 'ApiCatalogController', 'platformList');
 $router->get('/api/catalogs/platforms', 'ApiCatalogController', 'platforms');
 $router->get('/api/catalogs/platforms/active', 'ApiCatalogController', 'activePlatforms');
+$router->get('/api/catalogs/languages/list', 'ApiCatalogController', 'languageList');
 $router->get('/api/catalogs/languages', 'ApiCatalogController', 'languages');
 $router->get('/api/catalogs/languages/active', 'ApiCatalogController', 'activeLanguages');
 $router->get('/api/dashboard/summary', 'ApiDashboardController', 'summary');

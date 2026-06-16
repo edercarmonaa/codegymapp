@@ -2,8 +2,27 @@
 
 declare(strict_types=1);
 
+use CodeGymApp\Services\LanguageService;
+use CodeGymApp\Services\PlatformService;
+
 final class ApiCatalogController
 {
+    public function __construct(
+        private readonly PlatformService $platformService = new PlatformService(),
+        private readonly LanguageService $languageService = new LanguageService()
+    ) {
+    }
+
+    public function platformList(): void
+    {
+        $data = $this->platformService->indexPayload();
+        Response::json([
+            'ok' => true,
+            'platforms' => array_map([$this, 'platformResource'], $data['platforms']),
+            'pagination' => $data['pagination'],
+        ]);
+    }
+
     public function platforms(): void
     {
         Response::json([
@@ -17,6 +36,16 @@ final class ApiCatalogController
         Response::json([
             'ok' => true,
             'platforms' => array_map([$this, 'platformResource'], Platform::active()),
+        ]);
+    }
+
+    public function languageList(): void
+    {
+        $data = $this->languageService->indexPayload();
+        Response::json([
+            'ok' => true,
+            'languages' => array_map([$this, 'languageResource'], $data['languages']),
+            'pagination' => $data['pagination'],
         ]);
     }
 
@@ -45,6 +74,7 @@ final class ApiCatalogController
             'description' => (string) ($platform['description'] ?? ''),
             'url' => safe_url($platform['url'] ?? null),
             'is_active' => (int) ($platform['is_active'] ?? 0) === 1,
+            'created_at' => (string) ($platform['created_at'] ?? ''),
         ];
     }
 
@@ -55,6 +85,7 @@ final class ApiCatalogController
             'id' => (int) ($language['id'] ?? 0),
             'name' => (string) ($language['name'] ?? ''),
             'is_active' => (int) ($language['is_active'] ?? 0) === 1,
+            'created_at' => (string) ($language['created_at'] ?? ''),
         ];
     }
 }
