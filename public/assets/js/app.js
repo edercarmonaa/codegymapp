@@ -196,6 +196,194 @@ document.addEventListener('DOMContentLoaded', () => {
             values: rows.map((row) => Number(row.value || 0))
         };
     };
+    const appendText = (parent, tag, className, text) => {
+        const node = document.createElement(tag);
+        if (className) node.className = className;
+        node.textContent = text;
+        parent.appendChild(node);
+        return node;
+    };
+    const safePath = (value, fallback = '#') => {
+        const path = String(value || '');
+        return path.startsWith('/') && !path.startsWith('//') ? path : fallback;
+    };
+    const clearNode = (node) => {
+        while (node.firstChild) node.removeChild(node.firstChild);
+    };
+    const emptyListItem = (message) => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item text-body-secondary';
+        item.textContent = message;
+        return item;
+    };
+    const linkListItem = (href = '#') => {
+        const item = document.createElement('a');
+        item.className = 'list-group-item list-group-item-action';
+        item.href = safePath(href);
+        return item;
+    };
+    const updateDashboardMetrics = (dashboard) => {
+        const stats = dashboard?.stats || {};
+        const streaks = dashboard?.streaks || {};
+        const values = {
+            completed_month: String(stats.completed_month || 0),
+            general_percent: `${Number(stats.general_percent || 0)}%`,
+            on_time_percent: `${Number(stats.on_time_percent || 0)}%`,
+            time_month: `${Number(stats.time_month || 0)} min`,
+            current_streak: `${Number(streaks.current || 0)} días`,
+            best_streak: `${Number(streaks.best || 0)} días`,
+            month_streak: `${Number(streaks.month || 0)} días`,
+            expired_review: String(stats.expired_review || 0)
+        };
+
+        Object.entries(values).forEach(([key, value]) => {
+            const node = document.querySelector(`[data-dashboard-metric="${key}"]`);
+            if (node) node.textContent = value;
+        });
+    };
+    const renderAttentionList = (dashboard) => {
+        const list = document.querySelector('[data-dashboard-list="attention"]');
+        if (!list) return;
+
+        clearNode(list);
+        const attention = dashboard?.attention || {};
+        const expired = linkListItem('/retos?status=expired');
+        appendText(expired, 'span', '', 'Retos vencidos por revisar');
+        appendText(expired, 'span', 'badge text-bg-secondary', String(attention.expired || 0));
+        expired.classList.add('d-flex', 'justify-content-between', 'align-items-center');
+        list.appendChild(expired);
+
+        const pending = linkListItem('/calendario');
+        appendText(pending, 'span', '', 'Pendientes próximos 7 días');
+        appendText(pending, 'span', 'badge text-bg-primary', String(attention.pending_week || 0));
+        pending.classList.add('d-flex', 'justify-content-between', 'align-items-center');
+        list.appendChild(pending);
+
+        const days = document.createElement('div');
+        days.className = 'list-group-item d-flex justify-content-between align-items-center';
+        appendText(days, 'span', '', 'Días sin práctica registrada');
+        appendText(
+            days,
+            'span',
+            `badge text-bg-${Number(attention.days_without_practice || 0) > 2 ? 'warning' : 'success'}`,
+            String(attention.days_without_practice || 0)
+        );
+        list.appendChild(days);
+
+        (dashboard?.goalAlerts || []).forEach((goal) => {
+            const item = linkListItem('/metas');
+            appendText(item, 'strong', '', dashboard?.goalTypes?.[goal.goal_type] || String(goal.goal_type || 'Meta'));
+            const detail = [
+                `${goal.current_value || 0}/${goal.target_value || 0}`,
+                `${goal.progress_percent || 0}%`,
+                [goal.platform_name, goal.language_name].filter(Boolean).join(' ')
+            ].filter(Boolean).join(' · ');
+            appendText(item, 'span', 'text-body-secondary', detail);
+            list.appendChild(item);
+        });
+    };
+    const renderTodayChallenges = (rows) => {
+        const list = document.querySelector('[data-dashboard-list="todayChallenges"]');
+        if (!list) return;
+        clearNode(list);
+        if (!Array.isArray(rows) || rows.length === 0) {
+            list.appendChild(emptyListItem('No hay retos pendientes para hoy.'));
+            return;
+        }
+        rows.forEach((challenge) => {
+            const item = linkListItem('/retos');
+            appendText(item, 'strong', '', String(challenge.platform_name || 'Plataforma'));
+            appendText(item, 'span', 'text-body-secondary', String(challenge.title || 'Pendiente por detallar'));
+            list.appendChild(item);
+        });
+    };
+    const renderActiveGoals = (dashboard) => {
+        const list = document.querySelector('[data-dashboard-list="activeGoals"]');
+        if (!list) return;
+        clearNode(list);
+        const rows = dashboard?.activeGoals || [];
+        if (!Array.isArray(rows) || rows.length === 0) {
+            list.appendChild(emptyListItem('No hay metas activas.'));
+            return;
+        }
+        rows.forEach((goal) => {
+            const item = linkListItem('/metas');
+            const row = document.createElement('div');
+            row.className = 'd-flex justify-content-between gap-3';
+            appendText(row, 'strong', '', dashboard?.goalTypes?.[goal.goal_type] || String(goal.goal_type || 'Meta'));
+            appendText(row, 'span', 'text-body-secondary', `${goal.progress_percent || 0}%`);
+            item.appendChild(row);
+
+            const progress = document.createElement('div');
+            progress.className = 'progress mt-2';
+            progress.setAttribute('role', 'progressbar');
+            progress.setAttribute('aria-valuenow', String(goal.progress_percent || 0));
+            progress.setAttribute('aria-valuemin', '0');
+            progress.setAttribute('aria-valuemax', '100');
+            const bar = document.createElement('div');
+            bar.className = 'progress-bar';
+            bar.style.width = `${Math.min(100, Number(goal.progress_percent || 0))}%`;
+            progress.appendChild(bar);
+            item.appendChild(progress);
+            appendText(item, 'span', 'small text-body-secondary', `${goal.current_value || 0}/${goal.target_value || 0} · vence ${goal.period_end || ''}`);
+            list.appendChild(item);
+        });
+    };
+    const renderExpiredChallenges = (rows) => {
+        const list = document.querySelector('[data-dashboard-list="expiredChallenges"]');
+        if (!list) return;
+        clearNode(list);
+        if (!Array.isArray(rows) || rows.length === 0) {
+            list.appendChild(emptyListItem('No hay retos vencidos pendientes.'));
+            return;
+        }
+        rows.forEach((challenge) => {
+            const item = linkListItem('/retos');
+            appendText(item, 'strong', '', String(challenge.platform_name || 'Plataforma'));
+            appendText(item, 'span', 'badge text-bg-secondary', String(challenge.scheduled_date || ''));
+            list.appendChild(item);
+        });
+    };
+    const renderNotifications = (rows) => {
+        const list = document.querySelector('[data-dashboard-list="notifications"]');
+        if (!list) return;
+        clearNode(list);
+        if (!Array.isArray(rows) || rows.length === 0) {
+            list.appendChild(emptyListItem('No hay notificaciones pendientes.'));
+            return;
+        }
+        rows.forEach((notification) => {
+            const item = linkListItem(notification.action_url || '/notificaciones');
+            appendText(item, 'strong', '', String(notification.title || 'Notificación'));
+            appendText(item, 'span', 'd-block text-body-secondary', String(notification.message || ''));
+            list.appendChild(item);
+        });
+    };
+    const renderTopList = (key, rows, emptyMessage) => {
+        const list = document.querySelector(`[data-dashboard-list="${key}"]`);
+        if (!list) return;
+        clearNode(list);
+        if (!Array.isArray(rows) || rows.length === 0) {
+            list.appendChild(emptyListItem(emptyMessage));
+            return;
+        }
+        rows.forEach((row) => {
+            const item = document.createElement('div');
+            item.className = 'list-group-item d-flex justify-content-between align-items-center';
+            appendText(item, 'span', '', String(row.label || 'Sin nombre'));
+            appendText(item, 'span', 'text-body-secondary', `${row.value || 0} retos · ${row.minutes || 0} min`);
+            list.appendChild(item);
+        });
+    };
+    const renderDashboardLists = (dashboard) => {
+        renderAttentionList(dashboard);
+        renderTodayChallenges(dashboard?.todayChallenges);
+        renderActiveGoals(dashboard);
+        renderExpiredChallenges(dashboard?.expiredChallenges);
+        renderNotifications(dashboard?.notifications);
+        renderTopList('topPlatforms', dashboard?.topPlatforms, 'Sin plataformas completadas este mes.');
+        renderTopList('topLanguages', dashboard?.topLanguages, 'Sin lenguajes completados este mes.');
+    };
     const setReportsData = (reports) => {
         const reportsNode = document.getElementById('reportsData');
         if (!reportsNode) return;
@@ -374,6 +562,86 @@ document.addEventListener('DOMContentLoaded', () => {
         initializeReportCharts();
         window.setTimeout(resizeDashboardCharts, 80);
     };
+    const initializeDashboardCharts = () => {
+        const dashboardWeeklyChart = document.getElementById('dashboardWeeklyChart');
+        if (dashboardWeeklyChart) {
+            createChart(dashboardWeeklyChart, {
+                type: 'bar',
+                data: {
+                    labels: dashboardWeekly.map((row) => row.label),
+                    datasets: [
+                        {
+                            label: 'Programados',
+                            data: dashboardWeekly.map((row) => Number(row.scheduled || 0)),
+                            backgroundColor: '#0d6efd'
+                        },
+                        {
+                            label: 'Cumplidos',
+                            data: dashboardWeekly.map((row) => Number(row.completed || 0)),
+                            backgroundColor: '#198754'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        const dashboardChart = document.getElementById('dashboardComplianceChart');
+        if (dashboardChart) {
+            createChart(dashboardChart, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Cumplidos', 'No cumplidos', 'Vencidos', 'Cancelados'],
+                    datasets: [{
+                        data: [
+                            Number(dashboardChart.dataset.completed || 0),
+                            Number(dashboardChart.dataset.missed || 0),
+                            Number(dashboardChart.dataset.expired || 0),
+                            Number(dashboardChart.dataset.cancelled || 0)
+                        ],
+                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#842029']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+    };
+    const applyDashboardApiPayload = (payload) => {
+        const dashboard = payload?.dashboard || null;
+        if (!dashboard) return;
+
+        updateDashboardMetrics(dashboard);
+        renderDashboardLists(dashboard);
+
+        dashboardWeekly = Array.isArray(dashboard.weeklyCompliance) ? dashboard.weeklyCompliance : [];
+        const distribution = dashboard.distribution || {};
+        const dashboardChart = document.getElementById('dashboardComplianceChart');
+        if (dashboardChart) {
+            dashboardChart.dataset.completed = String(distribution.completed || 0);
+            dashboardChart.dataset.missed = String(distribution.missed || 0);
+            dashboardChart.dataset.expired = String(distribution.expired || 0);
+            dashboardChart.dataset.cancelled = String(distribution.cancelled || 0);
+        }
+        initializeDashboardCharts();
+        window.setTimeout(resizeDashboardCharts, 80);
+    };
+    const loadDashboardFromApi = async () => {
+        if (!dashboardDataNode) return;
+
+        const response = await fetch('/api/dashboard/summary', {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) return;
+
+        applyDashboardApiPayload(payload);
+    };
 
     document.body.addEventListener('htmx:beforeSwap', (event) => {
         if (!isReportsHtmxEvent(event)) return;
@@ -425,52 +693,8 @@ document.addEventListener('DOMContentLoaded', () => {
             dashboardWeekly = [];
         }
     }
-    const dashboardWeeklyChart = document.getElementById('dashboardWeeklyChart');
-    if (dashboardWeeklyChart) {
-        createChart(dashboardWeeklyChart, {
-            type: 'bar',
-            data: {
-                labels: dashboardWeekly.map((row) => row.label),
-                datasets: [
-                    {
-                        label: 'Programados',
-                        data: dashboardWeekly.map((row) => Number(row.scheduled || 0)),
-                        backgroundColor: '#0d6efd'
-                    },
-                    {
-                        label: 'Cumplidos',
-                        data: dashboardWeekly.map((row) => Number(row.completed || 0)),
-                        backgroundColor: '#198754'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: { y: { beginAtZero: true } }
-            }
-        });
-    }
-
-    const dashboardChart = document.getElementById('dashboardComplianceChart');
-    if (dashboardChart) {
-        createChart(dashboardChart, {
-            type: 'doughnut',
-            data: {
-                labels: ['Cumplidos', 'No cumplidos', 'Vencidos', 'Cancelados'],
-                datasets: [{
-                    data: [
-                        Number(dashboardChart.dataset.completed || 0),
-                        Number(dashboardChart.dataset.missed || 0),
-                        Number(dashboardChart.dataset.expired || 0),
-                        Number(dashboardChart.dataset.cancelled || 0)
-                    ],
-                    backgroundColor: ['#198754', '#dc3545', '#6c757d', '#842029']
-                }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-    }
+    initializeDashboardCharts();
+    loadDashboardFromApi();
 
     initializeReportCharts();
 });
