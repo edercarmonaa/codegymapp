@@ -32,6 +32,33 @@ window.CodeGymConfirm = (message = '¿Deseas continuar?') => new Promise((resolv
 
 document.addEventListener('DOMContentLoaded', () => {
     const tablePanel = document.getElementById('tablePanel');
+    const submitApiForm = async (form) => {
+        const submitButton = form.querySelector('[type="submit"], button:not([type])');
+        if (submitButton) submitButton.disabled = true;
+
+        try {
+            const response = await fetch(form.action, {
+                method: (form.method || 'POST').toUpperCase(),
+                body: new FormData(form),
+                credentials: 'same-origin',
+                headers: { 'Accept': 'application/json' }
+            });
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok || payload.ok === false) {
+                window.alert(payload.message || 'No se pudo guardar el cambio.');
+                return;
+            }
+
+            if (form.dataset.apiSuccessUrl) {
+                window.location.href = form.dataset.apiSuccessUrl;
+                return;
+            }
+
+            window.location.reload();
+        } finally {
+            if (submitButton) submitButton.disabled = false;
+        }
+    };
     const loadTablePanel = (url) => {
         if (!tablePanel || !window.htmx) {
             window.location.href = url;
@@ -59,6 +86,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.body.addEventListener('submit', (event) => {
+        const apiForm = event.target.closest('form[data-api-form]');
+        if (apiForm) {
+            event.preventDefault();
+            const runSubmit = () => submitApiForm(apiForm);
+            if (apiForm.dataset.confirm && apiForm.dataset.confirmed !== '1') {
+                window.CodeGymConfirm(apiForm.dataset.confirm).then((confirmed) => {
+                    if (confirmed) runSubmit();
+                });
+                return;
+            }
+
+            runSubmit();
+            return;
+        }
+
         const confirmForm = event.target.closest('form[data-confirm]');
         if (confirmForm && confirmForm.dataset.confirmed !== '1') {
             event.preventDefault();

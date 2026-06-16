@@ -27,6 +27,20 @@ $router->post('/api/calendar/update-date', 'ApiCalendarController', 'updateDate'
 $router->post('/api/calendar/routine/store', 'ApiCalendarController', 'storeRoutine');
 $router->post('/api/calendar/routine/update', 'ApiCalendarController', 'updateRoutine');
 $router->post('/api/calendar/routine/disable', 'ApiCalendarController', 'disableRoutine');
+$router->post('/api/challenges/manual', 'ApiChallengeController', 'manual');
+$router->post('/api/platforms/save', 'ApiPlatformController', 'save');
+$router->post('/api/platforms/deactivate', 'ApiPlatformController', 'deactivate');
+$router->post('/api/platforms/activate', 'ApiPlatformController', 'activate');
+$router->post('/api/languages/save', 'ApiLanguageController', 'save');
+$router->post('/api/languages/deactivate', 'ApiLanguageController', 'deactivate');
+$router->post('/api/languages/activate', 'ApiLanguageController', 'activate');
+$router->post('/api/goals/save', 'ApiGoalController', 'save');
+$router->post('/api/goals/deactivate', 'ApiGoalController', 'deactivate');
+$router->post('/api/notifications/mark-read', 'ApiNotificationController', 'markRead');
+$router->post('/api/notifications/delete', 'ApiNotificationController', 'delete');
+$router->post('/api/user/update', 'ApiUserController', 'update');
+$router->post('/api/user/change-password', 'ApiUserController', 'changePassword');
+$router->post('/api/user/change-theme', 'ApiUserController', 'changeTheme');
 
 $router->get('/plataformas', 'PlatformController', 'index');
 $router->post('/plataformas/guardar', 'PlatformController', 'save');

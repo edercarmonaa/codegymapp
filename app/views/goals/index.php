@@ -5,7 +5,7 @@
     </div>
 </div>
 
-<form class="border rounded-2 p-3 mb-4" action="/metas/guardar" method="post">
+<form class="border rounded-2 p-3 mb-4" action="/api/goals/save" method="post" data-api-form>
     <?= csrf_field() ?>
     <div class="row g-3 align-items-end">
         <div class="col-12 col-md-3">

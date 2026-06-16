@@ -47,6 +47,13 @@ function verify_csrf(): void
     $token = $_POST['_token'] ?? ($_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
     if (!is_string($token) || !hash_equals(csrf_token(), $token)) {
         http_response_code(419);
+        $path = parse_url((string) ($_SERVER['REQUEST_URI'] ?? ''), PHP_URL_PATH);
+        if (is_string($path) && str_starts_with($path, '/api/')) {
+            header('Content-Type: application/json; charset=utf-8');
+            echo json_encode(['ok' => false, 'message' => 'Token de seguridad inválido.'], JSON_UNESCAPED_UNICODE);
+            exit;
+        }
+
         exit('Token de seguridad inválido.');
     }
 }

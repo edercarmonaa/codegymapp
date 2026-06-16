@@ -7,7 +7,7 @@
 
 <div class="row g-4">
     <div class="col-12 col-xl-6">
-        <form class="border rounded-2 p-3" action="/usuario/actualizar" method="post">
+        <form class="border rounded-2 p-3" action="/api/user/update" method="post" data-api-form>
             <?= csrf_field() ?>
             <h2 class="h5">Perfil</h2>
             <div class="mb-3">
@@ -26,7 +26,7 @@
         </form>
     </div>
     <div class="col-12 col-xl-6">
-        <form class="border rounded-2 p-3" action="/usuario/cambiar-password" method="post" data-confirm="¿Cambiar la contraseña?">
+        <form class="border rounded-2 p-3" action="/api/user/change-password" method="post" data-api-form data-confirm="¿Cambiar la contraseña?">
             <?= csrf_field() ?>
             <h2 class="h5">Cambiar contraseña</h2>
             <div class="mb-3">
