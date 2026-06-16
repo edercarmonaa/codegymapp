@@ -18,6 +18,8 @@ $router->get('/retos', 'ChallengeController', 'index');
 $router->post('/retos/manual', 'ChallengeController', 'manual');
 
 $router->get('/api/calendar/events', 'ApiCalendarController', 'events');
+$router->get('/api/calendar/bootstrap', 'ApiCalendarController', 'bootstrap');
+$router->get('/api/calendar/routines', 'ApiCalendarController', 'routines');
 $router->get('/api/calendar/challenge', 'ApiCalendarController', 'challenge');
 $router->post('/api/calendar/store', 'ApiCalendarController', 'store');
 $router->post('/api/calendar/save-details', 'ApiCalendarController', 'saveDetails');

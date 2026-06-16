@@ -67,7 +67,7 @@
                         <thead>
                             <tr><th>Plataforma</th><th>Frecuencia</th><th>Periodo</th><th>Estado</th><th class="text-end">Acciones</th></tr>
                         </thead>
-                        <tbody>
+                        <tbody id="routineTableBody">
                             <?php foreach ($routines as $routine): ?>
                                 <?php
                                 $selectedWeekDays = array_filter(array_map('intval', explode(',', (string) $routine['week_days'])));
