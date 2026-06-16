@@ -36,6 +36,7 @@ $router->get('/api/catalogs/languages', 'ApiCatalogController', 'languages');
 $router->get('/api/catalogs/languages/active', 'ApiCatalogController', 'activeLanguages');
 $router->get('/api/dashboard/summary', 'ApiDashboardController', 'summary');
 $router->get('/api/reports', 'ApiReportController', 'index');
+$router->get('/api/challenges/list', 'ApiChallengeController', 'list');
 $router->post('/api/challenges/manual', 'ApiChallengeController', 'manual');
 $router->get('/api/goals/list', 'ApiGoalController', 'list');
 $router->post('/api/platforms/save', 'ApiPlatformController', 'save');

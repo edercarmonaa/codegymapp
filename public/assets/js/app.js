@@ -400,6 +400,181 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.appendChild(responsive);
         panel.appendChild(renderCatalogPagination(pagination));
     };
+    const renderChallengeFilters = (payload) => {
+        const form = makeElement('form', 'row g-2 align-items-end mb-4');
+        form.method = 'get';
+        form.action = '/retos';
+
+        const statusWrap = makeElement('div', 'col-12 col-md-3');
+        const statusLabel = makeElement('label', 'form-label', 'Estado');
+        statusLabel.htmlFor = 'status';
+        statusWrap.appendChild(statusLabel);
+        const statusSelect = makeElement('select', 'form-select');
+        statusSelect.id = 'status';
+        statusSelect.name = 'status';
+        const allStatuses = document.createElement('option');
+        allStatuses.value = '';
+        allStatuses.textContent = 'Todos';
+        statusSelect.appendChild(allStatuses);
+        Object.entries(payload.statusLabels || {}).forEach(([value, label]) => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = String(label);
+            option.selected = (payload.filters?.status || '') === value;
+            statusSelect.appendChild(option);
+        });
+        statusWrap.appendChild(statusSelect);
+        form.appendChild(statusWrap);
+
+        const platformWrap = makeElement('div', 'col-12 col-md-4');
+        const platformLabel = makeElement('label', 'form-label', 'Plataforma');
+        platformLabel.htmlFor = 'platform_id';
+        platformWrap.appendChild(platformLabel);
+        const platformSelect = makeElement('select', 'form-select');
+        platformSelect.id = 'platform_id';
+        platformSelect.name = 'platform_id';
+        const allPlatforms = document.createElement('option');
+        allPlatforms.value = '0';
+        allPlatforms.textContent = 'Todas';
+        platformSelect.appendChild(allPlatforms);
+        (payload.platforms || []).forEach((platform) => {
+            const option = document.createElement('option');
+            option.value = String(platform.id || 0);
+            option.textContent = `${platform.name || ''}${platform.is_active ? '' : ' (inactiva)'}`;
+            option.selected = Number(payload.filters?.platform_id || 0) === Number(platform.id || 0);
+            platformSelect.appendChild(option);
+        });
+        platformWrap.appendChild(platformSelect);
+        form.appendChild(platformWrap);
+
+        const buttons = makeElement('div', 'col-12 col-md-auto');
+        buttons.appendChild(makeElement('button', 'btn btn-outline-primary', 'Filtrar'));
+        const clear = makeElement('a', 'btn btn-outline-secondary ms-1', 'Limpiar');
+        clear.href = '/retos';
+        clear.dataset.tableLink = '1';
+        buttons.appendChild(clear);
+        form.appendChild(buttons);
+        return form;
+    };
+    const challengeSortLink = (label, sort, dir, filters = {}) => {
+        const query = new URLSearchParams();
+        if (filters.status) query.set('status', String(filters.status));
+        if (Number(filters.platform_id || 0) > 0) query.set('platform_id', String(filters.platform_id));
+        query.set('sort', sort);
+        query.set('dir', dir);
+        query.set('page', '1');
+        const link = document.createElement('a');
+        link.href = '?' + query.toString();
+        link.textContent = label;
+        return link;
+    };
+    const renderChallengesTable = (panel, payload) => {
+        clearNode(panel);
+        const pagination = payload.pagination || {};
+        panel.appendChild(renderChallengeFilters(payload));
+        panel.appendChild(renderCatalogPagination(pagination));
+
+        const responsive = makeElement('div', 'table-responsive');
+        const table = makeElement('table', 'table align-middle table-hover');
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        [
+            ['Fecha programada', 'scheduled_date', 'desc'],
+            ['Plataforma', 'platform', 'asc'],
+            ['Nombre del reto', '', ''],
+            ['Estado', 'status', 'asc'],
+            ['Dificultad', '', ''],
+            ['Lenguajes', '', ''],
+            ['Tiempo', 'time_spent_minutes', 'desc'],
+            ['Fecha de cumplimiento', 'completed_date', 'desc'],
+            ['GitHub', '', ''],
+            ['Acciones', '', '']
+        ].forEach(([label, sort, dir], index) => {
+            const th = document.createElement('th');
+            if (sort) th.appendChild(challengeSortLink(label, sort, dir, payload.filters || {}));
+            else th.textContent = label;
+            if (index === 9) th.className = 'text-end';
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const rows = payload.challenges || [];
+        rows.forEach((challenge) => {
+            const row = document.createElement('tr');
+            const status = String(challenge.status || '');
+            const isLate = status === 'completed'
+                && challenge.completed_date
+                && challenge.scheduled_date
+                && String(challenge.completed_date) > String(challenge.scheduled_date);
+
+            const scheduled = document.createElement('td');
+            scheduled.appendChild(document.createTextNode(challenge.scheduled_date || ''));
+            if (challenge.is_rescheduled) scheduled.appendChild(makeElement('span', 'badge text-bg-info ms-1', 'Reprogramado'));
+            if (challenge.origin === 'manual') scheduled.appendChild(makeElement('span', 'badge text-bg-success ms-1', 'Manual'));
+            row.appendChild(scheduled);
+
+            row.appendChild(makeElement('td', '', challenge.platform_name || ''));
+
+            const title = document.createElement('td');
+            appendText(title, 'div', 'fw-semibold', challenge.title || 'Pendiente por detallar');
+            if (challenge.challenge_url) {
+                const link = makeElement('a', 'small', 'Ver reto');
+                link.href = challenge.challenge_url;
+                link.target = '_blank';
+                link.rel = 'noopener';
+                title.appendChild(link);
+            }
+            row.appendChild(title);
+
+            const statusCell = document.createElement('td');
+            statusCell.appendChild(makeElement('span', `badge ${payload.statusBadgeClasses?.[status] || 'text-bg-secondary'}`, payload.statusLabels?.[status] || status));
+            if (isLate) statusCell.appendChild(makeElement('span', 'badge text-bg-warning ms-1', 'Fuera de fecha'));
+            row.appendChild(statusCell);
+
+            row.appendChild(makeElement('td', '', challenge.difficulty || '-'));
+            row.appendChild(makeElement('td', '', challenge.language_names || '-'));
+            row.appendChild(makeElement('td', '', Number(challenge.time_spent_minutes || 0) > 0 ? `${challenge.time_spent_minutes} min` : '-'));
+            row.appendChild(makeElement('td', '', challenge.completed_date || '-'));
+
+            const github = document.createElement('td');
+            if (Array.isArray(challenge.github_urls) && challenge.github_urls.length > 0) {
+                const links = makeElement('div', 'd-flex flex-column gap-1');
+                challenge.github_urls.forEach((url, index) => {
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.target = '_blank';
+                    link.rel = 'noopener';
+                    link.textContent = `Solución ${index + 1}`;
+                    links.appendChild(link);
+                });
+                github.appendChild(links);
+            } else {
+                github.appendChild(makeElement('span', 'text-body-secondary', '-'));
+            }
+            row.appendChild(github);
+
+            const actions = makeElement('td', 'text-end');
+            const edit = makeElement('a', 'btn btn-sm btn-outline-primary', 'Editar');
+            edit.href = '/calendario';
+            actions.appendChild(edit);
+            row.appendChild(actions);
+
+            tbody.appendChild(row);
+        });
+        if (rows.length === 0) {
+            const row = document.createElement('tr');
+            const cell = makeElement('td', 'text-body-secondary', 'No hay retos con esos filtros.');
+            cell.colSpan = 10;
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+        table.appendChild(tbody);
+        responsive.appendChild(table);
+        panel.appendChild(responsive);
+        panel.appendChild(renderCatalogPagination(pagination));
+    };
     const loadCatalogPanel = async (url = null) => {
         if (!tablePanel?.dataset?.catalogPanel) return false;
         const endpoint = catalogEndpoint(tablePanel, url);
@@ -424,6 +599,8 @@ document.addEventListener('DOMContentLoaded', () => {
             renderGoalsTable(tablePanel, payload);
         } else if (tablePanel.dataset.catalogPanel === 'notifications') {
             renderNotificationsTable(tablePanel, payload);
+        } else if (tablePanel.dataset.catalogPanel === 'challenges') {
+            renderChallengesTable(tablePanel, payload);
         }
         if (url) {
             const historyUrl = new URL(url, window.location.href);
