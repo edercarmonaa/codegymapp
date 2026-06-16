@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace CodeGymApp\Core;
 
+use CodeGymApp\Core\Exceptions\RouteNotFoundException;
+
 final class Router
 {
     /** @var array<string, array<string, array{0: string, 1: string, 2: bool}>> */
@@ -31,7 +33,7 @@ final class Router
 
         if ($route === null) {
             http_response_code(404);
-            View::render('layouts/main', ['content' => '<div class="alert alert-warning">Ruta no encontrada.</div>', 'title' => 'No encontrado']);
+            View::render('errors/not_found', ['title' => 'No encontrado'], 'main');
             return;
         }
 
@@ -39,6 +41,10 @@ final class Router
         if ($private && !Auth::check()) {
             \SecurityLog::record(null, 'unauthorized_access', 'failure', 'Acceso no autorizado a ' . $path);
             Response::redirect('/login');
+        }
+
+        if (!\class_exists($controllerName) || !\method_exists($controllerName, $action)) {
+            throw new RouteNotFoundException('Controlador o accion no encontrada: ' . $controllerName . '::' . $action);
         }
 
         $controller = new $controllerName();

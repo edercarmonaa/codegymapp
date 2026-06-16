@@ -5,5 +5,8 @@ declare(strict_types=1);
 require_once __DIR__ . '/app/core/bootstrap.php';
 
 $router = require __DIR__ . '/routes/web.php';
-$router->dispatch($_SERVER['REQUEST_METHOD'] ?? 'GET', parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/');
-
+(new Application(__DIR__))->run(
+    $router,
+    $_SERVER['REQUEST_METHOD'] ?? 'GET',
+    parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH) ?: '/'
+);

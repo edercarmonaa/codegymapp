@@ -9,6 +9,7 @@ spl_autoload_register(static function (string $class): void {
         'CodeGymApp\\Controllers\\' => $base . 'controllers/',
         'CodeGymApp\\Models\\' => $base . 'models/',
         'CodeGymApp\\Helpers\\' => $base . 'helpers/',
+        'CodeGymApp\\Services\\' => $base . 'services/',
     ];
 
     foreach ($prefixes as $prefix => $directory) {
@@ -25,7 +26,7 @@ spl_autoload_register(static function (string $class): void {
         return;
     }
 
-    foreach (['core', 'controllers', 'models', 'helpers'] as $folder) {
+    foreach (['core', 'controllers', 'models', 'helpers', 'services'] as $folder) {
         $file = $base . $folder . '/' . $class . '.php';
         if (is_file($file)) {
             require_once $file;
@@ -34,30 +35,4 @@ spl_autoload_register(static function (string $class): void {
     }
 });
 
-require_once __DIR__ . '/../helpers/Security.php';
-
-Env::load(dirname(__DIR__, 2) . '/.env');
-RateLimiter::enforce();
-
-if ((bool) Env::get('APP_DEBUG', false)) {
-    ini_set('display_errors', '1');
-    error_reporting(E_ALL);
-} else {
-    ini_set('display_errors', '0');
-    ini_set('log_errors', '1');
-    error_reporting(E_ALL);
-}
-
-Config::validate();
-
-date_default_timezone_set('America/Mexico_City');
-
-session_name('codegymapp_flash');
-session_set_cookie_params([
-    'lifetime' => 0,
-    'path' => '/',
-    'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
-    'httponly' => true,
-    'samesite' => 'Lax',
-]);
-session_start();
+(new Application(dirname(__DIR__, 2)))->bootstrap();

@@ -2,7 +2,14 @@
 
 Aplicación web privada en PHP 8.3 para controlar retos de programación, calendario, rutinas, metas, reportes, notificaciones internas y bitácora de seguridad.
 
-El proyecto está pensado para un hosting tradicional con cPanel, Apache, `.htaccess`, PHP 8.3 y MySQL. No usa Composer ni frameworks.
+El proyecto está pensado para un hosting tradicional con cPanel, Apache, `.htaccess`, PHP 8.3 y MySQL. No usa frameworks. `composer.json` existe para describir el autoload PSR-4, pero la app puede ejecutarse sin instalar dependencias Composer.
+
+## Ramas Del Repositorio
+
+- `main`: proyecto completo, incluyendo la carpeta `android/`.
+- `hosting`: versión web que debe desplegarse en cPanel.
+
+Cuando actualices el hosting desde cPanel, usa siempre la rama `hosting`. Esto evita que la carpeta `android/` se copie al servidor web.
 
 ## Requisitos
 
@@ -24,7 +31,18 @@ El proyecto está pensado para un hosting tradicional con cPanel, Apache, `.htac
 8. Abre `https://tu-subdominio/tools/create_user.php` y crea el usuario inicial.
 9. Confirma que `tools/create_user.php` se borre automáticamente. Si no se borra, elimínalo manualmente.
 10. Entra a `/login`.
-11. Revisa `/dashboard`, `/calendario`, `/retos`, `/reportes`, `/notificaciones` y `/seguridad`.
+11. Revisa `/calendario`, `/dashboard`, `/retos`, `/notificaciones` y `/seguridad`.
+
+## Despliegue En cPanel Desde Git
+
+1. Entra a **Git Version Control**.
+2. Abre el repositorio de `codegymapp`.
+3. Confirma que la rama activa sea `hosting`.
+4. Usa **Actualizar desde remoto**.
+5. Usa **Desplegar commit HEAD**.
+6. Si cambiaron CSS/JS, recarga el navegador con cache limpio.
+
+Después del despliegue confirma que el commit mostrado en cPanel coincide con el último commit de `origin/hosting`.
 
 ## JWT_SECRET
 
@@ -93,27 +111,63 @@ La contraseña debe tener mínimo 10 caracteres, mayúscula, minúscula, número
 - Bloqueo por intentos fallidos.
 - Bitácora de seguridad.
 - Modo claro/oscuro.
-- Dashboard con métricas y gráficas.
+- Dashboard con pestañas de datos generales, gráficas y reportes.
 - Calendario con FullCalendar.
 - Rutinas repetitivas diarias, semanales y mensuales.
 - Registro y edición de retos calendarizados.
 - Registro manual de retos ya realizados.
 - Plataformas y lenguajes.
 - Metas semanales, mensuales y anuales.
-- Reportes con filtros y Chart.js.
+- Reportes con filtros y Chart.js integrados dentro de Dashboard.
 - Notificaciones internas.
 - Tablas con filtros, ordenamiento, paginación y actualización parcial con HTMX.
 
 ## Arquitectura PHP
 
-El arranque en `app/core/bootstrap.php` usa un autoload compatible con PSR-4 para migraciones graduales:
+El arranque en `app/core/bootstrap.php` usa un autoload compatible con PSR-4:
 
 - `CodeGymApp\Core\` apunta a `app/core/`
 - `CodeGymApp\Controllers\` apunta a `app/controllers/`
 - `CodeGymApp\Models\` apunta a `app/models/`
 - `CodeGymApp\Helpers\` apunta a `app/helpers/`
+- `CodeGymApp\Services\` apunta a `app/services/`
 
-El autoload mantiene compatibilidad con las clases actuales sin namespace para no romper despliegues en cPanel. Las nuevas clases pueden agregarse con namespace siguiendo esas rutas. `composer.json` declara el mismo mapeo para herramientas modernas, pero el proyecto no requiere dependencias Composer para ejecutarse.
+El autoload mantiene compatibilidad con clases sin namespace para no romper despliegues en cPanel. Las clases nuevas deben crearse con namespace siguiendo esas rutas. `composer.json` declara el mismo mapeo para herramientas modernas.
+
+### Capas Principales
+
+- `index.php`: punto de entrada HTTP.
+- `app/core/Application.php`: inicializa entorno, errores, rate limit, configuración y sesión.
+- `app/core/Router.php`: resuelve ruta, método y controlador.
+- `app/core/View.php`: renderiza vistas, layouts y partials.
+- `app/controllers/`: reciben request, validan CSRF cuando aplica, delegan a servicios y responden.
+- `app/services/`: concentran lógica de aplicación, validación y armado de payloads.
+- `app/models/`: encapsulan consultas SQL y operaciones de persistencia.
+- `app/views/`: HTML/PHP de presentación.
+
+### Servicios Actuales
+
+- `AuthService`: login, logout, bloqueo e intentos fallidos.
+- `DashboardService`: métricas, rachas, listas y gráficas del dashboard.
+- `ReportService`: filtros y payload de reportes.
+- `CalendarService`: eventos, retos, rutinas y acciones del calendario.
+- `CalendarPageService`: payload de la vista del calendario.
+- `ChallengeService`: tabla de retos y registro manual.
+- `GoalService`: metas, progreso y acciones.
+- `PlatformService` / `LanguageService`: catálogos.
+- `NotificationService`: generación, listado y acciones de notificaciones.
+- `UserService`: perfil, contraseña y tema.
+- `SecurityLogService`: bitácora de seguridad.
+
+### Convenciones
+
+- Archivos PHP con `declare(strict_types=1);`.
+- Clases nuevas con namespace `CodeGymApp\...`.
+- Controladores del router actual se mantienen sin namespace para compatibilidad.
+- Validaciones de formularios en servicios/validadores, no en vistas.
+- SQL en modelos; no agregar SQL directo en controladores.
+- Redirecciones y flashes se manejan en controladores.
+- Respuestas JSON de API se mantienen con `Response::json()`.
 
 ## Versión Android
 
@@ -197,14 +251,51 @@ Antes de ejecutarlo, exporta un respaldo completo de la base de datos.
 - `/login` carga correctamente.
 - El usuario inicial fue creado.
 - `tools/create_user.php` ya no existe.
-- `/dashboard` carga sin errores.
+- Después de login se abre `/calendario`.
+- `/dashboard` carga pestañas de datos generales, gráficas y reportes.
 - `/calendario` muestra eventos y permite rutinas.
 - `/retos` pagina y filtra.
-- `/reportes` muestra gráficas.
+- La pestaña Reportes muestra gráficas y filtros.
 - `/notificaciones` muestra historial.
 - `/seguridad` registra eventos.
 - `.env` no es accesible desde navegador.
 - `/app`, `/database`, `/routes` y `/storage` devuelven acceso denegado.
+
+## Checklist De Regresión Antes De Producción
+
+Ejecuta esta lista después de cambios grandes o refactors:
+
+- Login correcto redirige a `/calendario`.
+- Login incorrecto muestra error y registra evento en `/seguridad`.
+- Logout regresa a `/login`.
+- Dashboard abre las tres pestañas.
+- Reportes filtra sin perder gráficas.
+- Calendario carga eventos del mes.
+- Crear reto desde calendario.
+- Editar detalle de reto.
+- Marcar reto como cumplido, no cumplido y cancelado.
+- Crear rutina diaria, semanal y mensual.
+- Editar rutina reduciendo días y confirmar que el calendario cambia.
+- Desactivar rutina y confirmar que sus retos pendientes se cancelan.
+- `/retos` filtra, ordena y pagina.
+- Registro manual de reto valida campos obligatorios.
+- Crear meta y desactivar meta.
+- Crear, editar, activar y desactivar plataforma.
+- Crear, editar, activar y desactivar lenguaje.
+- Notificaciones: marcar leída y eliminar leída.
+- Usuario: actualizar perfil, cambiar tema y cambiar contraseña.
+- Seguridad: revisar que la bitácora liste eventos recientes.
+
+## Checklist De Deploy
+
+- Confirmar que estás en la rama local `hosting`.
+- Confirmar que `git status` está limpio.
+- Confirmar último commit en `origin/hosting`.
+- En cPanel, confirmar rama activa `hosting`.
+- Actualizar desde remoto.
+- Desplegar commit HEAD.
+- Recargar navegador con cache limpio si hubo cambios en `public/assets`.
+- Revisar `/login`, `/calendario`, `/dashboard`, `/retos`, `/metas`, `/notificaciones` y `/seguridad`.
 
 ## Solución De Problemas
 

@@ -4,12 +4,13 @@ declare(strict_types=1);
 
 $router = new Router();
 
-$router->get('/', 'DashboardController', 'index');
+$router->get('/', 'CalendarController', 'index');
 $router->get('/login', 'AuthController', 'showLogin', false);
 $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
 
 $router->get('/dashboard', 'DashboardController', 'index');
+$router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');
 $router->get('/calendario', 'CalendarController', 'index');
 $router->get('/retos', 'ChallengeController', 'index');
 $router->post('/retos/manual', 'ChallengeController', 'manual');
