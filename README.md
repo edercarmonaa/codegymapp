@@ -159,6 +159,7 @@ Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie
 - `GET /api/catalogs/languages`: lenguajes registrados.
 - `GET /api/catalogs/languages/active`: lenguajes activos.
 - `GET /api/dashboard/summary`: resumen, métricas, rachas, atención, metas y datos de gráficas.
+- `GET /api/mobile/today`: datos optimizados para la pantalla móvil Mi día, con retos pendientes de hoy y vencidos por revisar.
 - `GET /api/calendar/bootstrap`: datos base del calendario, plataformas, lenguajes y rutinas.
 - `GET /api/calendar/routines`: rutinas registradas.
 - `GET /api/calendar/events`: eventos en formato FullCalendar.
