@@ -2,23 +2,27 @@
 
 declare(strict_types=1);
 
+use CodeGymApp\Services\UserService;
+
 final class UserController
 {
+    public function __construct(private readonly UserService $userService = new UserService())
+    {
+    }
+
     public function index(): void
     {
-        View::render('user/index', ['title' => 'Mi usuario', 'user' => Auth::user()], 'main');
+        View::render('user/index', $this->userService->pagePayload(), 'main');
     }
 
     public function update(): void
     {
         verify_csrf();
-        $user = Auth::user();
-        if ($user) {
-            User::updateProfile((int) $user['id'], [
-                'name' => trim((string) ($_POST['name'] ?? '')),
-                'username' => trim((string) ($_POST['username'] ?? '')),
-                'email' => trim((string) ($_POST['email'] ?? '')),
-            ]);
+        $result = $this->userService->updateProfile(Auth::user(), $_POST);
+        if ($result['ok']) {
+            $_SESSION['flash_success'] = $result['message'] ?? 'Perfil actualizado correctamente.';
+        } else {
+            $_SESSION['flash_error'] = $result['message'] ?? 'No se pudo actualizar el perfil.';
         }
         Response::redirect('/usuario');
     }
@@ -26,38 +30,25 @@ final class UserController
     public function changePassword(): void
     {
         verify_csrf();
-        $user = Auth::user();
-        $currentPassword = (string) ($_POST['current_password'] ?? '');
-        $password = (string) ($_POST['password'] ?? '');
-
-        if (!$user || !password_verify($currentPassword, (string) ($user['password_hash'] ?? ''))) {
-            SecurityLog::record($user ? (int) $user['id'] : null, 'password_change_failed', 'failure', 'Contraseña actual incorrecta.');
-            $_SESSION['flash_error'] = 'La contraseña actual no es correcta.';
+        $result = $this->userService->changePassword(Auth::user(), $_POST);
+        if (!$result['ok']) {
+            $_SESSION['flash_error'] = $result['message'];
             Response::redirect('/usuario');
         }
 
-        $errors = password_policy_errors($password);
-        if ($errors) {
-            $_SESSION['flash_error'] = implode(' ', $errors);
-            Response::redirect('/usuario');
+        if (!empty($result['regenerateSession'])) {
+            session_regenerate_id(true);
+            unset($_SESSION['csrf_token']);
         }
-
-        User::updatePassword((int) $user['id'], password_hash($password, PASSWORD_DEFAULT));
-        session_regenerate_id(true);
-        unset($_SESSION['csrf_token']);
-        SecurityLog::record((int) $user['id'], 'password_changed', 'success', 'Cambio de contraseña.');
-        $_SESSION['flash_success'] = 'Contraseña actualizada correctamente.';
+        $_SESSION['flash_success'] = $result['message'];
         Response::redirect('/usuario');
     }
 
     public function changeTheme(): void
     {
         verify_csrf();
-        $user = Auth::user();
         $theme = (string) ($_POST['theme'] ?? 'light');
-        if ($user && in_array($theme, ['light', 'dark'], true)) {
-            User::updateTheme((int) $user['id'], $theme);
-        }
+        $this->userService->changeTheme(Auth::user(), $theme);
         $path = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_PATH);
         Response::redirect(safe_app_url(is_string($path) ? $path : '', '/dashboard'));
     }
