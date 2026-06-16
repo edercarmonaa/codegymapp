@@ -9,6 +9,7 @@ $router->get('/login', 'AuthController', 'showLogin', false);
 $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
 $router->post('/api/auth/login', 'ApiAuthController', 'login', false);
+$router->get('/api/me', 'ApiMeController', 'show');
 
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');
@@ -27,6 +28,12 @@ $router->post('/api/calendar/update-date', 'ApiCalendarController', 'updateDate'
 $router->post('/api/calendar/routine/store', 'ApiCalendarController', 'storeRoutine');
 $router->post('/api/calendar/routine/update', 'ApiCalendarController', 'updateRoutine');
 $router->post('/api/calendar/routine/disable', 'ApiCalendarController', 'disableRoutine');
+$router->get('/api/catalogs/platforms', 'ApiCatalogController', 'platforms');
+$router->get('/api/catalogs/platforms/active', 'ApiCatalogController', 'activePlatforms');
+$router->get('/api/catalogs/languages', 'ApiCatalogController', 'languages');
+$router->get('/api/catalogs/languages/active', 'ApiCatalogController', 'activeLanguages');
+$router->get('/api/dashboard/summary', 'ApiDashboardController', 'summary');
+$router->get('/api/reports', 'ApiReportController', 'index');
 $router->post('/api/challenges/manual', 'ApiChallengeController', 'manual');
 $router->post('/api/platforms/save', 'ApiPlatformController', 'save');
 $router->post('/api/platforms/deactivate', 'ApiPlatformController', 'deactivate');

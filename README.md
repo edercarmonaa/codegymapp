@@ -147,6 +147,27 @@ El backend valida un único JWT de 30 minutos de dos formas:
 
 En Apache/cPanel, `.htaccess` preserva el header `Authorization` para que PHP pueda leerlo.
 
+### Endpoints De Lectura
+
+Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie web activa:
+
+- `GET /api/me`: usuario autenticado.
+- `GET /api/catalogs/platforms`: plataformas registradas.
+- `GET /api/catalogs/platforms/active`: plataformas activas.
+- `GET /api/catalogs/languages`: lenguajes registrados.
+- `GET /api/catalogs/languages/active`: lenguajes activos.
+- `GET /api/dashboard/summary`: resumen, métricas, rachas, atención, metas y datos de gráficas.
+- `GET /api/reports`: reportes con filtros opcionales.
+
+Filtros aceptados por `/api/reports`:
+
+- `date_from`
+- `date_to`
+- `platform_id`
+- `language_id`
+- `status`
+- `completion_type`
+
 ## Usuario Inicial
 
 El sistema permite un solo usuario. El usuario inicial se crea con:
