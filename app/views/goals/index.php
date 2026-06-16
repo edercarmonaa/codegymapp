@@ -5,7 +5,7 @@
     </div>
 </div>
 
-<form class="border rounded-2 p-3 mb-4" action="/api/goals/save" method="post" data-api-form>
+<form class="border rounded-2 p-3 mb-4" action="/api/goals/save" method="post" data-api-form data-api-refresh-catalog="goals">
     <?= csrf_field() ?>
     <div class="row g-3 align-items-end">
         <div class="col-12 col-md-3">
@@ -58,6 +58,6 @@
     </div>
 </form>
 
-<div id="tablePanel">
+<div id="tablePanel" data-catalog-panel="goals" data-catalog-url="/api/goals/list">
     <?php require __DIR__ . '/table.php'; ?>
 </div>

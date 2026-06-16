@@ -136,6 +136,23 @@ document.addEventListener('DOMContentLoaded', () => {
         form.appendChild(button);
         return form;
     };
+    const postActionForm = (action, id, buttonClass, buttonText, refreshCatalog, confirm = '') => {
+        const form = makeElement('form', 'd-inline');
+        form.method = 'post';
+        form.action = action;
+        form.dataset.apiForm = '1';
+        form.dataset.apiRefreshCatalog = refreshCatalog;
+        if (confirm) form.dataset.confirm = confirm;
+        form.appendChild(hiddenToken());
+        form.appendChild(hiddenId(id));
+        form.appendChild(makeElement('button', buttonClass, buttonText));
+        return form;
+    };
+    const goalUnit = (goalType) => {
+        if (goalType === 'practice_time') return 'min';
+        if (goalType === 'streak') return 'días';
+        return 'retos';
+    };
     const renderPlatformsTable = (panel, payload) => {
         clearNode(panel);
         const pagination = payload.pagination || {};
@@ -219,6 +236,170 @@ document.addEventListener('DOMContentLoaded', () => {
         panel.appendChild(responsive);
         panel.appendChild(renderCatalogPagination(pagination));
     };
+    const renderGoalsTable = (panel, payload) => {
+        clearNode(panel);
+        const pagination = payload.pagination || {};
+        const goalTypes = payload.goalTypes || {};
+        const periodTypes = payload.periodTypes || {};
+        panel.appendChild(renderCatalogPagination(pagination));
+
+        const responsive = makeElement('div', 'table-responsive');
+        const table = makeElement('table', 'table align-middle table-hover');
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        [
+            ['Meta', 'goal_type', 'asc'],
+            ['Periodo', 'period_end', 'asc'],
+            ['Alcance', '', ''],
+            ['Avance', 'progress_percent', 'desc'],
+            ['Estado', 'status', 'asc'],
+            ['Acciones', '', '']
+        ].forEach(([label, sort, dir], index) => {
+            const th = document.createElement('th');
+            if (sort) th.appendChild(sortLink(label, sort, dir));
+            else th.textContent = label;
+            if (index === 5) th.className = 'text-end';
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const goals = payload.goals || [];
+        goals.forEach((goal) => {
+            const row = document.createElement('tr');
+            const unit = goalUnit(goal.goal_type);
+
+            const meta = document.createElement('td');
+            appendText(meta, 'div', 'fw-semibold', goalTypes[goal.goal_type] || String(goal.goal_type || 'Meta'));
+            appendText(meta, 'div', 'text-body-secondary small', `Objetivo: ${goal.target_value || 0} ${unit}`);
+            row.appendChild(meta);
+
+            const period = document.createElement('td');
+            appendText(period, 'div', '', periodTypes[goal.period_type] || String(goal.period_type || 'Periodo'));
+            appendText(period, 'div', 'text-body-secondary small', `${goal.period_start || ''} a ${goal.period_end || ''}`);
+            row.appendChild(period);
+
+            const scope = document.createElement('td');
+            appendText(scope, 'div', '', goal.platform_name || 'Todas las plataformas');
+            appendText(scope, 'div', 'text-body-secondary small', goal.language_name || 'Todos los lenguajes');
+            row.appendChild(scope);
+
+            const progressCell = document.createElement('td');
+            progressCell.style.minWidth = '220px';
+            const progressText = makeElement('div', 'd-flex justify-content-between small mb-1');
+            appendText(progressText, 'span', '', `${goal.current_value || 0} / ${goal.target_value || 0} ${unit}`);
+            appendText(progressText, 'span', '', `${goal.progress_percent || 0}%`);
+            progressCell.appendChild(progressText);
+            const progress = makeElement('div', 'progress');
+            progress.setAttribute('role', 'progressbar');
+            progress.setAttribute('aria-valuenow', String(goal.progress_percent || 0));
+            progress.setAttribute('aria-valuemin', '0');
+            progress.setAttribute('aria-valuemax', '100');
+            const bar = makeElement('div', 'progress-bar');
+            bar.style.width = `${Math.min(100, Number(goal.progress_percent || 0))}%`;
+            progress.appendChild(bar);
+            progressCell.appendChild(progress);
+            row.appendChild(progressCell);
+
+            const status = document.createElement('td');
+            status.appendChild(statusBadge(goal.status === 'active', 'Activa', 'Cerrada'));
+            if (goal.auto_renew) status.appendChild(makeElement('span', 'badge text-bg-info ms-1', 'Renovable'));
+            row.appendChild(status);
+
+            const actions = makeElement('td', 'text-end');
+            if (goal.status === 'active') {
+                actions.appendChild(postActionForm('/api/goals/deactivate', goal.id, 'btn btn-sm btn-outline-secondary', 'Desactivar', 'goals', '¿Desactivar esta meta?'));
+            } else {
+                actions.appendChild(makeElement('span', 'text-body-secondary', '-'));
+            }
+            row.appendChild(actions);
+            tbody.appendChild(row);
+        });
+        if (goals.length === 0) {
+            const row = document.createElement('tr');
+            const cell = makeElement('td', 'text-body-secondary', 'No hay metas registradas.');
+            cell.colSpan = 6;
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+        table.appendChild(tbody);
+        responsive.appendChild(table);
+        panel.appendChild(responsive);
+        panel.appendChild(renderCatalogPagination(pagination));
+    };
+    const renderNotificationsTable = (panel, payload) => {
+        clearNode(panel);
+        const pagination = payload.pagination || {};
+        panel.appendChild(renderCatalogPagination(pagination));
+
+        const responsive = makeElement('div', 'table-responsive');
+        const table = makeElement('table', 'table align-middle table-hover');
+        const thead = document.createElement('thead');
+        const headRow = document.createElement('tr');
+        [
+            ['Notificación', 'title', 'asc'],
+            ['Estado', 'is_read', 'asc'],
+            ['Fecha', 'created_at', 'desc'],
+            ['Acciones', '', '']
+        ].forEach(([label, sort, dir], index) => {
+            const th = document.createElement('th');
+            if (sort) th.appendChild(sortLink(label, sort, dir));
+            else th.textContent = label;
+            if (index === 3) th.className = 'text-end';
+            headRow.appendChild(th);
+        });
+        thead.appendChild(headRow);
+        table.appendChild(thead);
+
+        const tbody = document.createElement('tbody');
+        const notifications = payload.notifications || [];
+        notifications.forEach((notification) => {
+            const row = document.createElement('tr');
+            const content = document.createElement('td');
+            appendText(content, 'div', 'fw-semibold', notification.title || '');
+            appendText(content, 'div', 'text-body-secondary', notification.message || '');
+            if (notification.action_url) {
+                const link = makeElement('a', 'small', 'Abrir');
+                link.href = safePath(notification.action_url, '/notificaciones');
+                content.appendChild(link);
+            }
+            row.appendChild(content);
+
+            const status = document.createElement('td');
+            status.appendChild(makeElement(
+                'span',
+                `badge ${notification.is_read ? 'text-bg-secondary' : 'text-bg-primary'}`,
+                notification.is_read ? 'Leída' : 'Pendiente'
+            ));
+            row.appendChild(status);
+
+            const date = document.createElement('td');
+            appendText(date, 'div', '', notification.created_at || '');
+            if (notification.read_at) appendText(date, 'div', 'small text-body-secondary', `Leída: ${notification.read_at}`);
+            row.appendChild(date);
+
+            const actions = makeElement('td', 'text-end');
+            if (!notification.is_read) {
+                actions.appendChild(postActionForm('/api/notifications/mark-read', notification.id, 'btn btn-sm btn-outline-primary', 'Marcar leída', 'notifications'));
+            } else {
+                actions.appendChild(postActionForm('/api/notifications/delete', notification.id, 'btn btn-sm btn-outline-danger', 'Eliminar', 'notifications', '¿Eliminar esta notificación del historial?'));
+            }
+            row.appendChild(actions);
+            tbody.appendChild(row);
+        });
+        if (notifications.length === 0) {
+            const row = document.createElement('tr');
+            const cell = makeElement('td', 'text-body-secondary', 'No hay notificaciones registradas.');
+            cell.colSpan = 4;
+            row.appendChild(cell);
+            tbody.appendChild(row);
+        }
+        table.appendChild(tbody);
+        responsive.appendChild(table);
+        panel.appendChild(responsive);
+        panel.appendChild(renderCatalogPagination(pagination));
+    };
     const loadCatalogPanel = async (url = null) => {
         if (!tablePanel?.dataset?.catalogPanel) return false;
         const endpoint = catalogEndpoint(tablePanel, url);
@@ -239,6 +420,10 @@ document.addEventListener('DOMContentLoaded', () => {
             renderPlatformsTable(tablePanel, payload);
         } else if (tablePanel.dataset.catalogPanel === 'languages') {
             renderLanguagesTable(tablePanel, payload);
+        } else if (tablePanel.dataset.catalogPanel === 'goals') {
+            renderGoalsTable(tablePanel, payload);
+        } else if (tablePanel.dataset.catalogPanel === 'notifications') {
+            renderNotificationsTable(tablePanel, payload);
         }
         if (url) {
             const historyUrl = new URL(url, window.location.href);

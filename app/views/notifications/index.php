@@ -5,6 +5,6 @@
     </div>
 </div>
 
-<div id="tablePanel">
+<div id="tablePanel" data-catalog-panel="notifications" data-catalog-url="/api/notifications/list">
     <?php require __DIR__ . '/table.php'; ?>
 </div>

@@ -37,6 +37,7 @@ $router->get('/api/catalogs/languages/active', 'ApiCatalogController', 'activeLa
 $router->get('/api/dashboard/summary', 'ApiDashboardController', 'summary');
 $router->get('/api/reports', 'ApiReportController', 'index');
 $router->post('/api/challenges/manual', 'ApiChallengeController', 'manual');
+$router->get('/api/goals/list', 'ApiGoalController', 'list');
 $router->post('/api/platforms/save', 'ApiPlatformController', 'save');
 $router->post('/api/platforms/deactivate', 'ApiPlatformController', 'deactivate');
 $router->post('/api/platforms/activate', 'ApiPlatformController', 'activate');
@@ -45,6 +46,7 @@ $router->post('/api/languages/deactivate', 'ApiLanguageController', 'deactivate'
 $router->post('/api/languages/activate', 'ApiLanguageController', 'activate');
 $router->post('/api/goals/save', 'ApiGoalController', 'save');
 $router->post('/api/goals/deactivate', 'ApiGoalController', 'deactivate');
+$router->get('/api/notifications/list', 'ApiNotificationController', 'list');
 $router->post('/api/notifications/mark-read', 'ApiNotificationController', 'markRead');
 $router->post('/api/notifications/delete', 'ApiNotificationController', 'delete');
 $router->post('/api/user/update', 'ApiUserController', 'update');
