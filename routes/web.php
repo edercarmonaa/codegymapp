@@ -8,6 +8,7 @@ $router->get('/', 'CalendarController', 'index');
 $router->get('/login', 'AuthController', 'showLogin', false);
 $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
+$router->post('/api/auth/login', 'ApiAuthController', 'login', false);
 
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');
