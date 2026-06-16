@@ -196,6 +196,57 @@ document.addEventListener('DOMContentLoaded', () => {
             values: rows.map((row) => Number(row.value || 0))
         };
     };
+    const setReportsData = (reports) => {
+        const reportsNode = document.getElementById('reportsData');
+        if (!reportsNode) return;
+
+        reportsNode.dataset.reports = JSON.stringify(reports || {});
+    };
+    const updateReportsSummary = (reports) => {
+        const compliance = reports?.compliance || {};
+        const values = {
+            scheduled: String(compliance.scheduled || 0),
+            completed: String(compliance.completed || 0),
+            general_percent: `${Number(compliance.general_percent || 0)}%`,
+            on_time_percent: `${Number(compliance.on_time_percent || 0)}%`
+        };
+
+        Object.entries(values).forEach(([key, value]) => {
+            const node = document.querySelector(`[data-report-metric="${key}"]`);
+            if (node) node.textContent = value;
+        });
+
+        const totalTime = Array.isArray(reports?.timeByMonth)
+            ? reports.timeByMonth.reduce((total, row) => total + Number(row.value || 0), 0)
+            : 0;
+        const totalNode = document.querySelector('[data-report-time-total]');
+        if (totalNode) totalNode.textContent = `${totalTime} min`;
+    };
+    const applyReportApiPayload = (payload) => {
+        const reports = payload?.report?.reports || null;
+        if (!reports) return;
+
+        setReportsData(reports);
+        updateReportsSummary(reports);
+        refreshReportCharts();
+        window.history.replaceState(null, '', '#reportes');
+    };
+    const loadReportsFromApi = async (form) => {
+        const query = new URLSearchParams(new FormData(form)).toString();
+        const endpoint = `${form.dataset.reportApiUrl || '/api/reports'}${query ? '?' + query : ''}`;
+        const response = await fetch(endpoint, {
+            method: 'GET',
+            credentials: 'same-origin',
+            headers: { 'Accept': 'application/json' }
+        });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok || payload.ok === false) {
+            window.alert(payload.message || 'No se pudieron cargar los reportes.');
+            return;
+        }
+
+        applyReportApiPayload(payload);
+    };
     const initializeReportCharts = () => {
         const reportsNode = document.getElementById('reportsData');
         let reports = null;
@@ -338,6 +389,33 @@ document.addEventListener('DOMContentLoaded', () => {
     document.body.addEventListener('htmx:afterSettle', (event) => {
         if (!isReportsHtmxEvent(event)) return;
         window.setTimeout(refreshReportCharts, 50);
+    });
+
+    document.body.addEventListener('submit', (event) => {
+        const form = event.target.closest('form[data-report-api-form]');
+        if (!form) return;
+
+        event.preventDefault();
+        loadReportsFromApi(form);
+    });
+
+    document.body.addEventListener('click', (event) => {
+        const clear = event.target.closest('[data-report-api-clear]');
+        if (!clear) return;
+
+        const form = clear.closest('#reportes')?.querySelector('form[data-report-api-form]');
+        if (!form) return;
+
+        event.preventDefault();
+        form.reset();
+        form.querySelectorAll('input, select, textarea').forEach((field) => {
+            if (field.type === 'checkbox' || field.type === 'radio') {
+                field.checked = false;
+                return;
+            }
+            field.value = field.tagName === 'SELECT' ? field.querySelector('option')?.value || '' : '';
+        });
+        loadReportsFromApi(form);
     });
 
     if (dashboardDataNode) {
