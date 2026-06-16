@@ -11,8 +11,8 @@ final class Auth
     /** @return array<string, mixed>|null */
     public static function user(): ?array
     {
-        $token = $_COOKIE[self::COOKIE] ?? '';
-        if (!is_string($token) || $token === '') {
+        [$token, $source] = self::tokenFromRequest();
+        if ($token === '') {
             return null;
         }
 
@@ -25,7 +25,9 @@ final class Auth
             } else {
                 \SecurityLog::record(null, 'token_invalid', 'failure', 'Token inválido, alterado o no legible.');
             }
-            self::logoutCookie();
+            if ($source === 'cookie') {
+                self::logoutCookie();
+            }
             return null;
         }
 
@@ -41,19 +43,37 @@ final class Auth
     public static function login(array $user): void
     {
         $minutes = (int) Env::get('JWT_EXPIRES_MINUTES', 30);
-        $token = Jwt::encode([
+        $token = self::tokenForUser($user);
+
+        self::setLoginCookie($token, $minutes);
+    }
+
+    /** @param array<string, mixed> $user */
+    public static function tokenForUser(array $user): string
+    {
+        $minutes = (int) Env::get('JWT_EXPIRES_MINUTES', 30);
+
+        return Jwt::encode([
             'sub' => (int) $user['id'],
             'username' => (string) $user['username'],
             'iat' => time(),
             'exp' => time() + ($minutes * 60),
         ]);
+    }
 
+    public static function tokenTtlSeconds(): int
+    {
+        return max(1, (int) Env::get('JWT_EXPIRES_MINUTES', 30)) * 60;
+    }
+
+    private static function setLoginCookie(string $token, int $minutes): void
+    {
         setcookie(self::COOKIE, $token, [
             'expires' => time() + ($minutes * 60),
             'path' => '/',
             'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
             'httponly' => true,
-            'samesite' => 'Lax',
+            'samesite' => 'Strict',
         ]);
     }
 
@@ -64,8 +84,39 @@ final class Auth
             'path' => '/',
             'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
             'httponly' => true,
-            'samesite' => 'Lax',
+            'samesite' => 'Strict',
         ]);
+    }
+
+    /** @return array{0: string, 1: string} */
+    private static function tokenFromRequest(): array
+    {
+        $header = self::authorizationHeader();
+        if (preg_match('/^Bearer\s+(.+)$/i', $header, $matches) === 1) {
+            return [trim($matches[1]), 'bearer'];
+        }
+
+        $cookie = $_COOKIE[self::COOKIE] ?? '';
+        return is_string($cookie) ? [$cookie, 'cookie'] : ['', ''];
+    }
+
+    private static function authorizationHeader(): string
+    {
+        $header = $_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '';
+        if (is_string($header) && $header !== '') {
+            return trim($header);
+        }
+
+        if (function_exists('apache_request_headers')) {
+            $headers = apache_request_headers();
+            foreach ($headers as $name => $value) {
+                if (strtolower((string) $name) === 'authorization') {
+                    return trim((string) $value);
+                }
+            }
+        }
+
+        return '';
     }
 }
 

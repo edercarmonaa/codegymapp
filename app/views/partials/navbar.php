@@ -31,7 +31,7 @@
                     </li>
                 <?php endforeach; ?>
             </ul>
-            <form class="d-flex align-items-center gap-2 me-3" action="/usuario/cambiar-tema" method="post">
+            <form class="d-flex align-items-center gap-2 me-3" action="/api/user/change-theme" method="post" data-api-form>
                 <?= csrf_field() ?>
                 <input type="hidden" name="theme" value="<?= ($theme ?? 'light') === 'dark' ? 'light' : 'dark' ?>">
                 <button class="btn btn-outline-secondary btn-sm" title="Cambiar tema" aria-label="Cambiar tema">

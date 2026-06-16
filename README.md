@@ -6,10 +6,10 @@ El proyecto está pensado para un hosting tradicional con cPanel, Apache, `.htac
 
 ## Ramas Del Repositorio
 
-- `main`: proyecto completo, incluyendo la carpeta `android/`.
-- `hosting`: versión web que debe desplegarse en cPanel.
+- `main`: aplicación móvil Android nativa en Kotlin.
+- `hosting`: API PHP y frontend web que deben desplegarse en cPanel.
 
-Cuando actualices el hosting desde cPanel, usa siempre la rama `hosting`. Esto evita que la carpeta `android/` se copie al servidor web.
+Cuando actualices el hosting desde cPanel, usa siempre la rama `hosting`. La rama `main` queda reservada para el proyecto móvil Android.
 
 ## Requisitos
 
@@ -86,6 +86,95 @@ RATE_LIMIT_WINDOW_SECONDS=60
 ```
 
 Nunca subas `.env` a GitHub.
+
+## API Inicial
+
+La API vive en el mismo dominio de la web usando rutas `/api/...`.
+
+### Autenticación
+
+La web conserva el login tradicional:
+
+- `GET /login`: muestra formulario web.
+- `POST /login`: valida credenciales, crea cookie JWT `HttpOnly`, `Secure`, `SameSite=Strict` y redirige a `/calendario`.
+
+Android usa un endpoint JSON:
+
+- `POST /api/auth/login`
+
+Acepta JSON:
+
+```json
+{
+  "username": "usuario",
+  "password": "password"
+}
+```
+
+También acepta `application/x-www-form-urlencoded` con los mismos campos.
+
+Respuesta correcta:
+
+```json
+{
+  "ok": true,
+  "token": "JWT",
+  "expires_in": 1800,
+  "user": {
+    "id": 1,
+    "username": "usuario",
+    "name": "Nombre",
+    "email": "correo@dominio.com"
+  }
+}
+```
+
+Respuesta incorrecta:
+
+```json
+{
+  "ok": false,
+  "message": "Usuario o contraseña incorrectos."
+}
+```
+
+### Validación Del Token
+
+El backend valida un único JWT de 30 minutos de dos formas:
+
+1. Primero busca `Authorization: Bearer <TOKEN>` para Android.
+2. Si no existe, busca la cookie `codegymapp_token` para la web.
+
+En Apache/cPanel, `.htaccess` preserva el header `Authorization` para que PHP pueda leerlo.
+
+### Endpoints De Lectura
+
+Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie web activa:
+
+- `GET /api/me`: usuario autenticado.
+- `GET /api/catalogs/platforms/list`: plataformas paginadas para la tabla web.
+- `GET /api/catalogs/platforms`: plataformas registradas.
+- `GET /api/catalogs/platforms/active`: plataformas activas.
+- `GET /api/catalogs/languages/list`: lenguajes paginados para la tabla web.
+- `GET /api/catalogs/languages`: lenguajes registrados.
+- `GET /api/catalogs/languages/active`: lenguajes activos.
+- `GET /api/dashboard/summary`: resumen, métricas, rachas, atención, metas y datos de gráficas.
+- `GET /api/calendar/bootstrap`: datos base del calendario, plataformas, lenguajes y rutinas.
+- `GET /api/calendar/routines`: rutinas registradas.
+- `GET /api/calendar/events`: eventos en formato FullCalendar.
+- `GET /api/challenges/list`: retos paginados con filtros de estado y plataforma.
+- `GET /api/goals/list`: metas paginadas para la tabla web.
+- `GET /api/notifications/list`: notificaciones paginadas para la tabla web.
+- `GET /api/reports`: reportes con filtros opcionales.
+
+Filtros aceptados por `/api/reports`:
+
+- `date_from`
+- `date_to`
+- `platform_id`
+- `language_id`
+- `status`
+- `completion_type`
 
 ## Usuario Inicial
 
@@ -171,15 +260,18 @@ El autoload mantiene compatibilidad con clases sin namespace para no romper desp
 
 ## Versión Android
 
-La carpeta `android/` contiene una primera versión móvil nativa para Android basada en WebView controlado. Carga `https://codegym.karedit.com.mx/login` y limita la navegación interna al dominio `codegym.karedit.com.mx`; enlaces externos se abren fuera de la app.
+La versión móvil Android se trabaja desde la rama `main`. La rama `hosting` se mantiene enfocada en API PHP y frontend web.
 
-Para compilar:
+La primera etapa móvil debe consumir el API del mismo dominio mediante `Authorization: Bearer <TOKEN>`. El login móvil inicia con `POST /api/auth/login`.
 
-1. Abre la carpeta `android/` en Android Studio.
+Para trabajar Android:
+
+1. Cambia a la rama `main`.
+2. Abre la carpeta Android en Android Studio.
 2. Deja que Android Studio sincronice Gradle.
 3. Ejecuta `app` en un emulador o dispositivo físico.
 
-La app Android no permite tráfico HTTP claro (`usesCleartextTraffic=false`) y no habilita acceso a archivos locales desde WebView.
+La app Android no debe usar tráfico HTTP claro y debe guardar el JWT en almacenamiento seguro del dispositivo.
 
 ## Seguridad
 

@@ -10,7 +10,7 @@
 </div>
 
 <div class="collapse mb-4" id="manualChallengeForm">
-    <form class="border rounded-2 p-3" action="/retos/manual" method="post">
+    <form class="border rounded-2 p-3" action="/api/challenges/manual" method="post" data-api-form data-api-refresh-catalog="challenges">
         <?= csrf_field() ?>
         <div class="row g-3">
             <div class="col-12 col-md-4">
@@ -69,6 +69,6 @@
     </form>
 </div>
 
-<div id="tablePanel">
+<div id="tablePanel" data-catalog-panel="challenges" data-catalog-url="/api/challenges/list">
     <?php require __DIR__ . '/table.php'; ?>
 </div>

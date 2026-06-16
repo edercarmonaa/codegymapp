@@ -9,9 +9,8 @@ $reportsJson = json_encode($reports, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERRO
         class="row g-2 align-items-end mb-4"
         method="get"
         action="/dashboard#reportes"
-        hx-get="/dashboard/reportes"
-        hx-target="#reportes"
-        hx-swap="outerHTML"
+        data-report-api-form
+        data-report-api-url="/api/reports"
     >
         <div class="col-12 col-md-2">
             <label class="form-label" for="date_from">Desde</label>
@@ -58,20 +57,20 @@ $reportsJson = json_encode($reports, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERRO
         </div>
         <div class="col-12">
             <button class="btn btn-primary">Aplicar filtros</button>
-            <a class="btn btn-outline-secondary" href="/dashboard#reportes" hx-get="/dashboard/reportes" hx-target="#reportes" hx-swap="outerHTML">Limpiar</a>
+            <a class="btn btn-outline-secondary" href="/dashboard#reportes" data-report-api-clear>Limpiar</a>
         </div>
     </form>
 
     <div class="list-group mb-4">
         <?php foreach ([
-            ['Considerados', $reports['compliance']['scheduled']],
-            ['Cumplidos', $reports['compliance']['completed']],
-            ['Cumplimiento general', $reports['compliance']['general_percent'] . '%'],
-            ['Cumplimiento puntual', $reports['compliance']['on_time_percent'] . '%'],
+            ['Considerados', 'scheduled', $reports['compliance']['scheduled']],
+            ['Cumplidos', 'completed', $reports['compliance']['completed']],
+            ['Cumplimiento general', 'general_percent', $reports['compliance']['general_percent'] . '%'],
+            ['Cumplimiento puntual', 'on_time_percent', $reports['compliance']['on_time_percent'] . '%'],
         ] as $metric): ?>
             <div class="list-group-item d-flex justify-content-between align-items-center">
                 <span><?= e((string) $metric[0]) ?></span>
-                <strong><?= e((string) $metric[1]) ?></strong>
+                <strong data-report-metric="<?= e((string) $metric[1]) ?>"><?= e((string) $metric[2]) ?></strong>
             </div>
         <?php endforeach; ?>
     </div>
@@ -89,7 +88,7 @@ $reportsJson = json_encode($reports, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERRO
             <section class="border rounded-2 p-3 h-100">
                 <div class="d-flex align-items-center justify-content-between gap-3">
                     <h3 class="h5 mb-0">Tiempo practicado por mes</h3>
-                    <span class="badge text-bg-primary">
+                    <span class="badge text-bg-primary" data-report-time-total>
                         <?= e((string) array_sum(array_map(static fn (array $row): int => (int) $row['value'], $reports['timeByMonth']))) ?> min
                     </span>
                 </div>

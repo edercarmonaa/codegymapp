@@ -33,13 +33,13 @@
                     </td>
                     <td class="text-end">
                         <?php if ((int) $notification['is_read'] === 0): ?>
-                            <form class="d-inline" action="/notificaciones/marcar-leida" method="post">
+                            <form class="d-inline" action="/api/notifications/mark-read" method="post" data-api-form data-api-refresh-catalog="notifications">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= e((string) $notification['id']) ?>">
                                 <button class="btn btn-sm btn-outline-primary">Marcar leída</button>
                             </form>
                         <?php else: ?>
-                            <form class="d-inline" action="/notificaciones/eliminar" method="post" data-confirm="¿Eliminar esta notificación del historial?">
+                            <form class="d-inline" action="/api/notifications/delete" method="post" data-api-form data-api-refresh-catalog="notifications" data-confirm="¿Eliminar esta notificación del historial?">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= e((string) $notification['id']) ?>">
                                 <button class="btn btn-sm btn-outline-danger">Eliminar</button>

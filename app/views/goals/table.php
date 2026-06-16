@@ -49,7 +49,7 @@
                     </td>
                     <td class="text-end">
                         <?php if ($goal['status'] === 'active'): ?>
-                            <form class="d-inline" action="/metas/desactivar" method="post" data-confirm="¿Desactivar esta meta?">
+                            <form class="d-inline" action="/api/goals/deactivate" method="post" data-api-form data-api-refresh-catalog="goals" data-confirm="¿Desactivar esta meta?">
                                 <?= csrf_field() ?>
                                 <input type="hidden" name="id" value="<?= e((string) $goal['id']) ?>">
                                 <button class="btn btn-sm btn-outline-secondary">Desactivar</button>

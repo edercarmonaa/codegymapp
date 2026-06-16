@@ -11,7 +11,7 @@
                     <td><?= e($language['name']) ?></td>
                     <td><span class="badge <?= $language['is_active'] ? 'text-bg-success' : 'text-bg-secondary' ?>"><?= $language['is_active'] ? 'Activo' : 'Inactivo' ?></span></td>
                     <td class="text-end">
-                        <form class="d-inline" action="<?= $language['is_active'] ? '/lenguajes/desactivar' : '/lenguajes/activar' ?>" method="post" <?= $language['is_active'] ? 'data-confirm="¿Desactivar este lenguaje?"' : '' ?>>
+                        <form class="d-inline" action="<?= $language['is_active'] ? '/api/languages/deactivate' : '/api/languages/activate' ?>" method="post" data-api-form data-api-refresh-catalog="languages" <?= $language['is_active'] ? 'data-confirm="¿Desactivar este lenguaje?"' : '' ?>>
                             <?= csrf_field() ?>
                             <input type="hidden" name="id" value="<?= e((string) $language['id']) ?>">
                             <button class="btn btn-sm btn-outline-secondary"><?= $language['is_active'] ? 'Desactivar' : 'Activar' ?></button>

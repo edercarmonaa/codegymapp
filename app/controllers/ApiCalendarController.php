@@ -15,6 +15,16 @@ final class ApiCalendarController
         Response::json($this->calendarService->events($_GET));
     }
 
+    public function bootstrap(): void
+    {
+        $this->respond($this->calendarService->bootstrapData());
+    }
+
+    public function routines(): void
+    {
+        $this->respond($this->calendarService->routines());
+    }
+
     public function challenge(): void
     {
         $this->respond($this->calendarService->challengeDetail((int) ($_GET['id'] ?? 0)));

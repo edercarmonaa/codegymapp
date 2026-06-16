@@ -6,8 +6,8 @@ namespace CodeGymApp\Services;
 
 final class AuthService
 {
-    /** @return array{ok: bool, message?: string, user?: array<string, mixed>, regenerateSession?: bool} */
-    public function attemptLogin(string $username, string $password): array
+    /** @return array{ok: bool, message?: string, user?: array<string, mixed>, token?: string, expires_in?: int, regenerateSession?: bool} */
+    public function attemptLogin(string $username, string $password, bool $issueCookie = true): array
     {
         $username = trim($username);
         $user = \User::findByUsername($username);
@@ -35,12 +35,17 @@ final class AuthService
         }
 
         \User::updateLoginSuccess((int) $user['id']);
-        \Auth::login($user);
+        $token = \Auth::tokenForUser($user);
+        if ($issueCookie) {
+            \Auth::login($user);
+        }
         \SecurityLog::record((int) $user['id'], 'login_success', 'success', 'Inicio de sesión exitoso.');
 
         return [
             'ok' => true,
             'user' => $user,
+            'token' => $token,
+            'expires_in' => \Auth::tokenTtlSeconds(),
             'regenerateSession' => true,
         ];
     }

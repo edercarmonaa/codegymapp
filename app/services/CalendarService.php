@@ -18,6 +18,30 @@ final class CalendarService
         \Challenge::expirePending();
     }
 
+    /** @return array{status: int, payload: array<string, mixed>} */
+    public function bootstrapData(): array
+    {
+        $this->refreshCalendar();
+
+        return $this->response(200, [
+            'ok' => true,
+            'platforms' => array_map([$this, 'platformResource'], \Platform::all()),
+            'languages' => array_map([$this, 'languageResource'], \Language::all()),
+            'routines' => array_map([$this, 'routineResource'], \Routine::allForList()),
+        ]);
+    }
+
+    /** @return array{status: int, payload: array<string, mixed>} */
+    public function routines(): array
+    {
+        $this->refreshCalendar();
+
+        return $this->response(200, [
+            'ok' => true,
+            'routines' => array_map([$this, 'routineResource'], \Routine::allForList()),
+        ]);
+    }
+
     /**
      * @param array<string, mixed> $query
      * @return array<int, array<string, mixed>>
@@ -185,6 +209,45 @@ final class CalendarService
         }
 
         return $this->response(200, ['ok' => true, 'message' => $success]);
+    }
+
+    /** @param array<string, mixed> $platform @return array<string, mixed> */
+    private function platformResource(array $platform): array
+    {
+        return [
+            'id' => (int) ($platform['id'] ?? 0),
+            'name' => (string) ($platform['name'] ?? ''),
+            'description' => (string) ($platform['description'] ?? ''),
+            'url' => safe_url($platform['url'] ?? null),
+            'is_active' => (int) ($platform['is_active'] ?? 0) === 1,
+        ];
+    }
+
+    /** @param array<string, mixed> $language @return array<string, mixed> */
+    private function languageResource(array $language): array
+    {
+        return [
+            'id' => (int) ($language['id'] ?? 0),
+            'name' => (string) ($language['name'] ?? ''),
+            'is_active' => (int) ($language['is_active'] ?? 0) === 1,
+        ];
+    }
+
+    /** @param array<string, mixed> $routine @return array<string, mixed> */
+    private function routineResource(array $routine): array
+    {
+        return [
+            'id' => (int) ($routine['id'] ?? 0),
+            'platform_id' => (int) ($routine['platform_id'] ?? 0),
+            'platform_name' => (string) ($routine['platform_name'] ?? ''),
+            'frequency_type' => (string) ($routine['frequency_type'] ?? ''),
+            'week_days' => (string) ($routine['week_days'] ?? ''),
+            'month_day' => isset($routine['month_day']) ? (int) $routine['month_day'] : null,
+            'start_date' => (string) ($routine['start_date'] ?? ''),
+            'end_date' => $routine['end_date'] ?? null,
+            'is_active' => (int) ($routine['is_active'] ?? 0) === 1,
+            'created_at' => (string) ($routine['created_at'] ?? ''),
+        ];
     }
 
     /** @param array<string, mixed> $payload @return array{status: int, payload: array<string, mixed>} */

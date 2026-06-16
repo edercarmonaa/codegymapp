@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const routineAlert = document.getElementById('routineAlert');
     const routineSubmitButton = document.getElementById('routineSubmitButton');
     const routineResetButton = document.getElementById('routineResetButton');
+    const routineTableBody = document.getElementById('routineTableBody');
     const form = document.getElementById('challengeForm');
     const modalTitle = document.getElementById('challengeModalTitle');
     const alertBox = document.getElementById('challengeAlert');
@@ -87,6 +88,87 @@ document.addEventListener('DOMContentLoaded', () => {
         const value = routineFrequency?.value || 'daily';
         routineWeekly.forEach((node) => node.classList.toggle('d-none', value !== 'weekly'));
         routineMonthly.forEach((node) => node.classList.toggle('d-none', value !== 'monthly'));
+    };
+
+    const routineFrequencyLabel = (routine) => {
+        const labels = { daily: 'Diaria', weekly: 'Semanal', monthly: 'Mensual' };
+        let label = labels[routine.frequency_type] || routine.frequency_type || '';
+        if (routine.frequency_type === 'weekly' && routine.week_days) {
+            const days = String(routine.week_days).split(',').filter(Boolean).map((day) => {
+                const dayLabels = { 1: 'Lun', 2: 'Mar', 3: 'Mié', 4: 'Jue', 5: 'Vie', 6: 'Sáb', 7: 'Dom' };
+                return dayLabels[day] || day;
+            });
+            label += ` (${days.join(', ')})`;
+        }
+        if (routine.frequency_type === 'monthly' && routine.month_day) {
+            label += ` (día ${routine.month_day})`;
+        }
+        return label;
+    };
+
+    const renderRoutines = (routines) => {
+        if (!routineTableBody) return;
+        routineTableBody.innerHTML = '';
+        if (!Array.isArray(routines) || routines.length === 0) {
+            routineTableBody.innerHTML = '<tr><td colspan="5" class="text-body-secondary">No hay rutinas registradas.</td></tr>';
+            return;
+        }
+
+        routines.forEach((routine) => {
+            const row = document.createElement('tr');
+            const active = Boolean(routine.is_active);
+            row.innerHTML = `
+                <td></td>
+                <td></td>
+                <td></td>
+                <td><span class="badge ${active ? 'text-bg-success' : 'text-bg-secondary'}">${active ? 'Activa' : 'Inactiva'}</span></td>
+                <td class="text-end"></td>
+            `;
+            row.children[0].textContent = routine.platform_name || '';
+            row.children[1].textContent = routineFrequencyLabel(routine);
+            row.children[2].textContent = `${routine.start_date || ''} a ${routine.end_date || 'sin final'}`;
+
+            const actions = row.children[4];
+            if (active) {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'd-flex gap-2 justify-content-end';
+                const edit = document.createElement('button');
+                edit.className = 'btn btn-sm btn-outline-primary routine-edit-button';
+                edit.type = 'button';
+                edit.textContent = 'Editar';
+                edit.dataset.id = String(routine.id || '');
+                edit.dataset.platformId = String(routine.platform_id || '');
+                edit.dataset.frequencyType = String(routine.frequency_type || 'daily');
+                edit.dataset.weekDays = String(routine.week_days || '');
+                edit.dataset.monthDay = routine.month_day ? String(routine.month_day) : '';
+                edit.dataset.startDate = String(routine.start_date || '');
+                edit.dataset.endDate = routine.end_date ? String(routine.end_date) : '';
+                const disable = document.createElement('button');
+                disable.className = 'btn btn-sm btn-outline-secondary routine-disable-button';
+                disable.type = 'button';
+                disable.textContent = 'Desactivar';
+                disable.dataset.id = String(routine.id || '');
+                wrapper.append(edit, disable);
+                actions.appendChild(wrapper);
+            } else {
+                actions.innerHTML = '<span class="text-body-secondary">-</span>';
+            }
+            routineTableBody.appendChild(row);
+        });
+    };
+
+    const refreshRoutines = async () => {
+        try {
+            const response = await fetch('/api/calendar/routines', {
+                headers: { 'Accept': 'application/json' }
+            });
+            const payload = await response.json();
+            if (response.ok && payload.ok) {
+                renderRoutines(payload.routines);
+            }
+        } catch (error) {
+            // The server-rendered routine list remains as a fallback.
+        }
     };
 
     const resetRoutineForm = () => {
@@ -356,7 +438,8 @@ document.addEventListener('DOMContentLoaded', () => {
             routineModal?.hide();
             showMessage(payload.message || 'Rutina guardada.');
             calendar.refetchEvents();
-            window.setTimeout(() => window.location.reload(), 800);
+            refreshRoutines();
+            resetRoutineForm();
         } catch (error) {
             showRoutineError('No se pudo guardar la rutina.');
         } finally {
@@ -364,8 +447,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    document.querySelectorAll('.routine-disable-button').forEach((button) => {
-        button.addEventListener('click', async () => {
+    routineTableBody?.addEventListener('click', async (event) => {
+        const editButton = event.target.closest('.routine-edit-button');
+        if (editButton) {
+            fillRoutineForm(editButton);
+            return;
+        }
+
+        const button = event.target.closest('.routine-disable-button');
+        if (button) {
             if (!await window.CodeGymConfirm('¿Desactivar esta rutina?')) {
                 return;
             }
@@ -382,16 +472,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
                 showMessage(payload.message || 'Rutina desactivada.');
-                window.setTimeout(() => window.location.reload(), 800);
+                calendar.refetchEvents();
+                refreshRoutines();
             } catch (error) {
                 showRoutineError('No se pudo desactivar la rutina.');
                 button.disabled = false;
             }
-        });
+        }
     });
 
-    document.querySelectorAll('.routine-edit-button').forEach((button) => {
-        button.addEventListener('click', () => fillRoutineForm(button));
-    });
+    refreshRoutines();
 });
 </script>

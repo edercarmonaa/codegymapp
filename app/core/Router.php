@@ -33,6 +33,11 @@ final class Router
 
         if ($route === null) {
             http_response_code(404);
+            if (str_starts_with($path, '/api/')) {
+                Response::json(['ok' => false, 'message' => 'Ruta no encontrada.']);
+                return;
+            }
+
             View::render('errors/not_found', ['title' => 'No encontrado'], 'main');
             return;
         }
@@ -40,6 +45,12 @@ final class Router
         [$controllerName, $action, $private] = $route;
         if ($private && !Auth::check()) {
             \SecurityLog::record(null, 'unauthorized_access', 'failure', 'Acceso no autorizado a ' . $path);
+            if (str_starts_with($path, '/api/')) {
+                http_response_code(401);
+                Response::json(['ok' => false, 'message' => 'No autenticado.']);
+                return;
+            }
+
             Response::redirect('/login');
         }
 

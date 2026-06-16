@@ -1,13 +1,13 @@
 <?php
 $dashboardMetrics = [
-    ['Retos cumplidos', $stats['completed_month']],
-    ['Cumplimiento general', $stats['general_percent'] . '%'],
-    ['Cumplimiento puntual', $stats['on_time_percent'] . '%'],
-    ['Tiempo practicado', $stats['time_month'] . ' min'],
-    ['Racha actual', $streaks['current'] . ' días'],
-    ['Mejor racha', $streaks['best'] . ' días'],
-    ['Racha del mes', $streaks['month'] . ' días'],
-    ['Retos vencidos', $stats['expired_review']],
+    ['completed_month', 'Retos cumplidos', $stats['completed_month']],
+    ['general_percent', 'Cumplimiento general', $stats['general_percent'] . '%'],
+    ['on_time_percent', 'Cumplimiento puntual', $stats['on_time_percent'] . '%'],
+    ['time_month', 'Tiempo practicado', $stats['time_month'] . ' min'],
+    ['current_streak', 'Racha actual', $streaks['current'] . ' días'],
+    ['best_streak', 'Mejor racha', $streaks['best'] . ' días'],
+    ['month_streak', 'Racha del mes', $streaks['month'] . ' días'],
+    ['expired_review', 'Retos vencidos', $stats['expired_review']],
 ];
 ?>
 
@@ -50,15 +50,15 @@ $dashboardMetrics = [
                 <div class="list-group mb-4">
                     <?php foreach ($dashboardMetrics as $metric): ?>
                         <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><?= e((string) $metric[0]) ?></span>
-                            <strong><?= e((string) $metric[1]) ?></strong>
+                            <span><?= e((string) $metric[1]) ?></span>
+                            <strong data-dashboard-metric="<?= e((string) $metric[0]) ?>"><?= e((string) $metric[2]) ?></strong>
                         </div>
                     <?php endforeach; ?>
                 </div>
 
                 <section>
                     <h3 class="h5">Necesita atención</h3>
-                    <div class="list-group">
+                    <div class="list-group" data-dashboard-list="attention">
                         <a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" href="/retos?status=expired">
                             <span>Retos vencidos por revisar</span>
                             <span class="badge text-bg-secondary"><?= e((string) $attention['expired']) ?></span>
@@ -72,7 +72,7 @@ $dashboardMetrics = [
                             <span class="badge text-bg-<?= (int) $attention['days_without_practice'] > 2 ? 'warning' : 'success' ?>"><?= e((string) $attention['days_without_practice']) ?></span>
                         </div>
                         <?php foreach ($goalAlerts as $goal): ?>
-                            <a class="list-group-item list-group-item-action" href="/metas">
+                            <a class="list-group-item list-group-item-action" href="/metas" data-dashboard-goal-alert>
                                 <strong><?= e($goalTypes[$goal['goal_type']] ?? $goal['goal_type']) ?></strong>
                                 <span class="text-body-secondary">
                                     <?= e((string) $goal['current_value']) ?>/<?= e((string) $goal['target_value']) ?>
@@ -92,7 +92,7 @@ $dashboardMetrics = [
                     <div class="col-12 col-lg-6">
                         <section>
                             <h3 class="h5">Retos de hoy</h3>
-                            <div class="list-group">
+                            <div class="list-group" data-dashboard-list="todayChallenges">
                                 <?php foreach ($todayChallenges as $challenge): ?>
                                     <a class="list-group-item list-group-item-action" href="/retos">
                                         <strong><?= e($challenge['platform_name']) ?></strong>
@@ -108,7 +108,7 @@ $dashboardMetrics = [
                     <div class="col-12 col-lg-6">
                         <section>
                             <h3 class="h5">Metas activas</h3>
-                            <div class="list-group">
+                            <div class="list-group" data-dashboard-list="activeGoals">
                                 <?php foreach ($activeGoals as $goal): ?>
                                     <a class="list-group-item list-group-item-action" href="/metas">
                                         <div class="d-flex justify-content-between gap-3">
@@ -133,7 +133,7 @@ $dashboardMetrics = [
                     <div class="col-12 col-lg-6">
                         <section>
                             <h3 class="h5">Retos vencidos pendientes de revisar</h3>
-                            <div class="list-group">
+                            <div class="list-group" data-dashboard-list="expiredChallenges">
                                 <?php foreach ($expiredChallenges as $challenge): ?>
                                     <a class="list-group-item list-group-item-action" href="/retos">
                                         <strong><?= e($challenge['platform_name']) ?></strong>
@@ -149,7 +149,7 @@ $dashboardMetrics = [
                     <div class="col-12 col-lg-6">
                         <section>
                             <h3 class="h5">Notificaciones pendientes</h3>
-                            <div class="list-group">
+                            <div class="list-group" data-dashboard-list="notifications">
                                 <?php foreach ($notifications as $notification): ?>
                                     <a class="list-group-item list-group-item-action" href="<?= e(safe_app_url($notification['action_url'] ?? '', '/notificaciones')) ?>">
                                         <strong><?= e($notification['title']) ?></strong>
@@ -165,7 +165,7 @@ $dashboardMetrics = [
                     <div class="col-12 col-lg-6">
                         <section>
                             <h3 class="h5">Plataformas del mes</h3>
-                            <div class="list-group">
+                            <div class="list-group" data-dashboard-list="topPlatforms">
                                 <?php foreach ($topPlatforms as $platform): ?>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
                                         <span><?= e($platform['label']) ?></span>
@@ -181,7 +181,7 @@ $dashboardMetrics = [
                     <div class="col-12 col-lg-6">
                         <section>
                             <h3 class="h5">Lenguajes del mes</h3>
-                            <div class="list-group">
+                            <div class="list-group" data-dashboard-list="topLanguages">
                                 <?php foreach ($topLanguages as $language): ?>
                                     <div class="list-group-item d-flex justify-content-between align-items-center">
                                         <span><?= e($language['label']) ?></span>
