@@ -23,7 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
-import mx.com.karedit.codegymapp.ui.navigation.CodeGymDrawerScaffold
+import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,12 +40,10 @@ fun ChallengesScreen(
         viewModel.snackbarShown()
     }
 
-    CodeGymDrawerScaffold(
+    CodeGymSectionScaffold(
         title = "Retos",
-        selectedRoute = AppRoutes.Challenges,
-        onNavigate = onNavigate,
-        snackbarHostState = snackbarHostState,
-        challengesCount = state.challenges.size
+        onBackHome = { onNavigate(AppRoutes.Home) },
+        snackbarHostState = snackbarHostState
     ) { padding ->
         Column(
             modifier = Modifier

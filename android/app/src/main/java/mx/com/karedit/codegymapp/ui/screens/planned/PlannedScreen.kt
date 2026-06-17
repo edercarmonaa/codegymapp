@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
-import mx.com.karedit.codegymapp.ui.navigation.CodeGymDrawerScaffold
+import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,12 +40,10 @@ fun PlannedScreen(
         viewModel.snackbarShown()
     }
 
-    CodeGymDrawerScaffold(
+    CodeGymSectionScaffold(
         title = "Planeado",
-        selectedRoute = AppRoutes.Planned,
-        onNavigate = onNavigate,
-        snackbarHostState = snackbarHostState,
-        plannedCount = state.challenges.size
+        onBackHome = { onNavigate(AppRoutes.Home) },
+        snackbarHostState = snackbarHostState
     ) { padding ->
         Column(
             modifier = Modifier

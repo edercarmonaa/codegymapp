@@ -1,0 +1,172 @@
+package mx.com.karedit.codegymapp.ui.screens.home
+
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
+import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
+
+@Composable
+fun HomeScreen(
+    viewModel: HomeViewModel,
+    onNavigate: (String) -> Unit
+) {
+    val state by viewModel.state.collectAsState()
+    val user = state.user
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 28.dp, vertical = 36.dp),
+        verticalArrangement = Arrangement.spacedBy(22.dp)
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Avatar(initial = user?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: "C")
+            Spacer(modifier = Modifier.width(18.dp))
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = user?.name?.ifBlank { user.username } ?: "CodeGymApp",
+                    style = MaterialTheme.typography.headlineSmall
+                )
+                Text(
+                    text = user?.email ?: "Challenge tracking",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = "⌕",
+                style = MaterialTheme.typography.displaySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            HomeItem(
+                symbol = "☼",
+                label = "Mi día",
+                count = state.todayCount,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                onClick = { onNavigate(AppRoutes.Today) }
+            )
+            HomeItem(
+                symbol = "☆",
+                label = "Importante",
+                color = Color(0xFFFFB6D1),
+                onClick = {}
+            )
+            HomeItem(
+                symbol = "▣",
+                label = "Planeado",
+                count = state.plannedCount,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                onClick = { onNavigate(AppRoutes.Planned) }
+            )
+            HomeItem(
+                symbol = "⌂",
+                label = "Retos",
+                count = state.challengesCount,
+                color = MaterialTheme.colorScheme.primary,
+                onClick = { onNavigate(AppRoutes.Challenges) }
+            )
+        }
+
+        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
+
+        HomeItem(
+            symbol = "≡",
+            label = "Día a día",
+            count = state.todayCount,
+            color = MaterialTheme.colorScheme.primary,
+            onClick = { onNavigate(AppRoutes.Today) }
+        )
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text("+", style = MaterialTheme.typography.displaySmall)
+            Spacer(modifier = Modifier.width(20.dp))
+            Text(
+                text = "Nueva lista",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.weight(1f))
+            Text("▢+", style = MaterialTheme.typography.headlineMedium)
+        }
+    }
+}
+
+@Composable
+private fun Avatar(initial: String) {
+    Box(contentAlignment = Alignment.Center, modifier = Modifier.size(58.dp)) {
+        Canvas(modifier = Modifier.matchParentSize()) {
+            drawCircle(color = Color(0xFFEDEDED))
+        }
+        Text(
+            text = initial,
+            style = MaterialTheme.typography.titleLarge,
+            color = Color.Black
+        )
+    }
+}
+
+@Composable
+private fun HomeItem(
+    symbol: String,
+    label: String,
+    color: Color,
+    count: Int? = null,
+    onClick: () -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick)
+            .padding(vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = symbol,
+            style = MaterialTheme.typography.headlineSmall,
+            color = color,
+            modifier = Modifier.width(56.dp)
+        )
+        Text(
+            text = label,
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier.weight(1f)
+        )
+        count?.let {
+            Text(
+                text = it.toString(),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}

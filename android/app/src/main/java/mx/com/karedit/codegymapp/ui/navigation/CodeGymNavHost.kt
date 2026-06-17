@@ -11,6 +11,8 @@ import mx.com.karedit.codegymapp.core.session.SessionEvent
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
+import mx.com.karedit.codegymapp.ui.screens.home.HomeScreen
+import mx.com.karedit.codegymapp.ui.screens.home.HomeViewModel
 import mx.com.karedit.codegymapp.ui.screens.login.LoginScreen
 import mx.com.karedit.codegymapp.ui.screens.login.LoginViewModel
 import mx.com.karedit.codegymapp.ui.screens.planned.PlannedScreen
@@ -23,10 +25,10 @@ fun CodeGymNavHost(
     appContainer: AppContainer,
     navController: NavHostController = rememberNavController()
 ) {
-    val startDestination = if (appContainer.authRepository.hasToken()) AppRoutes.Today else AppRoutes.Login
+    val startDestination = if (appContainer.authRepository.hasToken()) AppRoutes.Home else AppRoutes.Login
     val navigateTab: (String) -> Unit = { route ->
         navController.navigate(route) {
-            popUpTo(AppRoutes.Today) { saveState = true }
+            popUpTo(AppRoutes.Home) { saveState = true }
             launchSingleTop = true
             restoreState = true
         }
@@ -48,10 +50,24 @@ fun CodeGymNavHost(
             LoginScreen(
                 viewModel = viewModel,
                 onLoginSuccess = {
-                    navController.navigate(AppRoutes.Today) {
+                    navController.navigate(AppRoutes.Home) {
                         popUpTo(AppRoutes.Login) { inclusive = true }
                     }
                 }
+            )
+        }
+        composable(AppRoutes.Home) {
+            val viewModel = remember {
+                HomeViewModel(
+                    authRepository = appContainer.authRepository,
+                    todayRepository = appContainer.todayRepository,
+                    plannedRepository = appContainer.plannedRepository,
+                    challengesRepository = appContainer.challengesRepository
+                )
+            }
+            HomeScreen(
+                viewModel = viewModel,
+                onNavigate = navigateTab
             )
         }
         composable(AppRoutes.Today) {
