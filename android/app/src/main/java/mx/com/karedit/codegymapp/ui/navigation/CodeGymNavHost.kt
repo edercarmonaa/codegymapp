@@ -44,7 +44,12 @@ fun CodeGymNavHost(
             )
         }
         composable(AppRoutes.Today) {
-            val viewModel = remember { TodayViewModel(appContainer.authRepository) }
+            val viewModel = remember {
+                TodayViewModel(
+                    authRepository = appContainer.authRepository,
+                    todayRepository = appContainer.todayRepository
+                )
+            }
             TodayScreen(viewModel = viewModel)
         }
     }
