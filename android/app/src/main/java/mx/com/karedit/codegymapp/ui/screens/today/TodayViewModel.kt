@@ -24,11 +24,13 @@ class TodayViewModel(
 
     fun load() {
         viewModelScope.launch {
-            _state.update { it.copy(isLoading = true, error = null) }
+            _state.update { it.copy(isLoading = true, snackbarMessage = null) }
 
             authRepository.me()
                 .onSuccess { user -> _state.update { it.copy(user = user) } }
-                .onFailure { error -> _state.update { it.copy(error = error.message ?: "No se pudo cargar la sesión.") } }
+                .onFailure { error ->
+                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar la sesión.") }
+                }
 
             todayRepository.today()
                 .onSuccess { data ->
@@ -39,7 +41,9 @@ class TodayViewModel(
                         )
                     }
                 }
-                .onFailure { error -> _state.update { it.copy(error = error.message ?: "No se pudo cargar Mi día.") } }
+                .onFailure { error ->
+                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar Mi día.") }
+                }
 
             _state.update { it.copy(isLoading = false) }
         }
@@ -55,14 +59,14 @@ class TodayViewModel(
 
     private fun runChallengeAction(action: suspend () -> Result<String>) {
         viewModelScope.launch {
-            _state.update { it.copy(isActionLoading = true, error = null, actionMessage = null) }
+            _state.update { it.copy(isActionLoading = true, snackbarMessage = null) }
             action()
                 .onSuccess { message ->
-                    _state.update { it.copy(actionMessage = message) }
+                    _state.update { it.copy(snackbarMessage = message) }
                     refreshToday()
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(error = error.message ?: "No se pudo actualizar el reto.") }
+                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo actualizar el reto.") }
                 }
             _state.update { it.copy(isActionLoading = false) }
         }
@@ -78,7 +82,13 @@ class TodayViewModel(
                     )
                 }
             }
-            .onFailure { error -> _state.update { it.copy(error = error.message ?: "No se pudo cargar Mi día.") } }
+            .onFailure { error ->
+                _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar Mi día.") }
+            }
+    }
+
+    fun snackbarShown() {
+        _state.update { it.copy(snackbarMessage = null) }
     }
 }
 
@@ -88,6 +98,5 @@ data class TodayUiState(
     val expiredChallenges: List<MobileChallenge> = emptyList(),
     val isLoading: Boolean = false,
     val isActionLoading: Boolean = false,
-    val actionMessage: String? = null,
-    val error: String? = null
+    val snackbarMessage: String? = null
 )

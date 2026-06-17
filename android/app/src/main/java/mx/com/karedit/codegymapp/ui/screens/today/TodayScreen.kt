@@ -20,10 +20,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -42,11 +46,22 @@ fun TodayScreen(viewModel: TodayViewModel) {
     var todayExpanded by remember { mutableStateOf(true) }
     var expiredExpanded by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(state.snackbarMessage) {
+        val message = state.snackbarMessage ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(
+            message = message,
+            duration = SnackbarDuration.Short
+        )
+        viewModel.snackbarShown()
+    }
 
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Mi día") })
-        }
+        },
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -59,21 +74,6 @@ fun TodayScreen(viewModel: TodayViewModel) {
                 text = "Hola${state.user?.name?.let { ", $it" } ?: ""}",
                 style = MaterialTheme.typography.headlineSmall
             )
-
-            if (state.error != null) {
-                Text(
-                    text = state.error.orEmpty(),
-                    color = MaterialTheme.colorScheme.error,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-            if (state.actionMessage != null) {
-                Text(
-                    text = state.actionMessage.orEmpty(),
-                    color = MaterialTheme.colorScheme.primary,
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
 
             if (state.isLoading) {
                 TodayLoading()
