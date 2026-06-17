@@ -11,6 +11,8 @@ $router->post('/logout', 'AuthController', 'logout');
 $router->post('/api/auth/login', 'ApiAuthController', 'login', false);
 $router->get('/api/me', 'ApiMeController', 'show');
 $router->get('/api/mobile/today', 'ApiMobileController', 'today');
+$router->post('/api/mobile/challenges/complete', 'ApiMobileController', 'completeChallenge');
+$router->post('/api/mobile/challenges/miss', 'ApiMobileController', 'missChallenge');
 
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');

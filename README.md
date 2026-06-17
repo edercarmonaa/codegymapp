@@ -168,6 +168,13 @@ Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie
 - `GET /api/notifications/list`: notificaciones paginadas para la tabla web.
 - `GET /api/reports`: reportes con filtros opcionales.
 
+### Endpoints Móviles De Escritura
+
+Estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` y reciben JSON:
+
+- `POST /api/mobile/challenges/complete`: marca un reto como cumplido. Requiere `{"id": 1}` y conserva las validaciones de datos completos del sistema web.
+- `POST /api/mobile/challenges/miss`: marca un reto como no realizado. Requiere `{"id": 1}`.
+
 Filtros aceptados por `/api/reports`:
 
 - `date_from`
