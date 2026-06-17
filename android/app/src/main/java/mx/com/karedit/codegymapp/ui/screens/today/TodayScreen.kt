@@ -1,19 +1,22 @@
 package mx.com.karedit.codegymapp.ui.screens.today
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -26,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 
@@ -35,6 +39,7 @@ fun TodayScreen(viewModel: TodayViewModel) {
     val state by viewModel.state.collectAsState()
     var todayExpanded by remember { mutableStateOf(true) }
     var expiredExpanded by remember { mutableStateOf(false) }
+    var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
 
     Scaffold(
         topBar = {
@@ -70,7 +75,8 @@ fun TodayScreen(viewModel: TodayViewModel) {
                     expanded = todayExpanded,
                     emptyText = "Sin retos pendientes para hoy.",
                     challenges = state.todayChallenges,
-                    onToggle = { todayExpanded = !todayExpanded }
+                    onToggle = { todayExpanded = !todayExpanded },
+                    onChallengeClick = { selectedChallenge = it }
                 )
                 ChallengeSection(
                     title = "Vencidos pendientes",
@@ -78,10 +84,18 @@ fun TodayScreen(viewModel: TodayViewModel) {
                     expanded = expiredExpanded,
                     emptyText = "Sin retos vencidos por revisar.",
                     challenges = state.expiredChallenges,
-                    onToggle = { expiredExpanded = !expiredExpanded }
+                    onToggle = { expiredExpanded = !expiredExpanded },
+                    onChallengeClick = { selectedChallenge = it }
                 )
             }
         }
+    }
+
+    selectedChallenge?.let { challenge ->
+        ChallengeDetailSheet(
+            challenge = challenge,
+            onDismiss = { selectedChallenge = null }
+        )
     }
 }
 
@@ -123,7 +137,8 @@ private fun ChallengeSection(
     expanded: Boolean,
     emptyText: String,
     challenges: List<MobileChallenge>,
-    onToggle: () -> Unit
+    onToggle: () -> Unit,
+    onChallengeClick: (MobileChallenge) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -146,7 +161,10 @@ private fun ChallengeSection(
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         challenges.forEach { challenge ->
-                            ChallengeCard(challenge = challenge)
+                            ChallengeCard(
+                                challenge = challenge,
+                                onClick = { onChallengeClick(challenge) }
+                            )
                         }
                     }
                 }
@@ -156,9 +174,11 @@ private fun ChallengeSection(
 }
 
 @Composable
-private fun ChallengeCard(challenge: MobileChallenge) {
+private fun ChallengeCard(challenge: MobileChallenge, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
     ) {
         Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -167,3 +187,63 @@ private fun ChallengeCard(challenge: MobileChallenge) {
         }
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChallengeDetailSheet(challenge: MobileChallenge, onDismiss: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+
+    ModalBottomSheet(onDismissRequest = onDismiss) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp)
+        ) {
+            Text(challenge.platformName, style = MaterialTheme.typography.headlineSmall)
+            Text(challenge.statusLabel(), style = MaterialTheme.typography.bodyMedium)
+
+            HorizontalDivider()
+
+            DetailRow(label = "Fecha", value = challenge.scheduledDate)
+            if (challenge.title.isNotBlank()) {
+                DetailRow(label = "Reto", value = challenge.title)
+            }
+            if (challenge.difficulty.isNotBlank()) {
+                DetailRow(label = "Dificultad", value = challenge.difficulty)
+            }
+            if (challenge.timeSpentMinutes > 0) {
+                DetailRow(label = "Tiempo", value = "${challenge.timeSpentMinutes} min")
+            }
+            if (challenge.notes.isNotBlank()) {
+                DetailRow(label = "Notas", value = challenge.notes)
+            }
+            if (challenge.isRescheduled) {
+                DetailRow(label = "Reprogramado", value = "Sí")
+            }
+            if (!challenge.challengeUrl.isNullOrBlank()) {
+                TextButton(onClick = { uriHandler.openUri(challenge.challengeUrl) }) {
+                    Text("Abrir reto")
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+        Text(value, style = MaterialTheme.typography.bodyMedium)
+    }
+}
+
+private fun MobileChallenge.statusLabel(): String =
+    when (status) {
+        "pending" -> "Pendiente"
+        "expired" -> "Vencido"
+        "completed" -> "Completado"
+        "missed" -> "No realizado"
+        "cancelled" -> "Cancelado"
+        else -> status
+    }
