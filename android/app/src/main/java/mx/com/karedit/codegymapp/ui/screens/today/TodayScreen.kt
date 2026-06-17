@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -17,6 +18,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -65,6 +67,13 @@ fun TodayScreen(viewModel: TodayViewModel) {
                     style = MaterialTheme.typography.bodyMedium
                 )
             }
+            if (state.actionMessage != null) {
+                Text(
+                    text = state.actionMessage.orEmpty(),
+                    color = MaterialTheme.colorScheme.primary,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
 
             if (state.isLoading) {
                 TodayLoading()
@@ -94,6 +103,15 @@ fun TodayScreen(viewModel: TodayViewModel) {
     selectedChallenge?.let { challenge ->
         ChallengeDetailSheet(
             challenge = challenge,
+            isActionLoading = state.isActionLoading,
+            onComplete = {
+                viewModel.completeChallenge(challenge.id)
+                selectedChallenge = null
+            },
+            onMiss = {
+                viewModel.missChallenge(challenge.id)
+                selectedChallenge = null
+            },
             onDismiss = { selectedChallenge = null }
         )
     }
@@ -190,8 +208,15 @@ private fun ChallengeCard(challenge: MobileChallenge, onClick: () -> Unit) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun ChallengeDetailSheet(challenge: MobileChallenge, onDismiss: () -> Unit) {
+private fun ChallengeDetailSheet(
+    challenge: MobileChallenge,
+    isActionLoading: Boolean,
+    onComplete: () -> Unit,
+    onMiss: () -> Unit,
+    onDismiss: () -> Unit
+) {
     val uriHandler = LocalUriHandler.current
+    val canClose = challenge.status == "pending" || challenge.status == "expired"
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -224,6 +249,27 @@ private fun ChallengeDetailSheet(challenge: MobileChallenge, onDismiss: () -> Un
             if (!challenge.challengeUrl.isNullOrBlank()) {
                 TextButton(onClick = { uriHandler.openUri(challenge.challengeUrl) }) {
                     Text("Abrir reto")
+                }
+            }
+            if (canClose) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Button(
+                        modifier = Modifier.weight(1f),
+                        enabled = !isActionLoading,
+                        onClick = onComplete
+                    ) {
+                        Text("Completar")
+                    }
+                    OutlinedButton(
+                        modifier = Modifier.weight(1f),
+                        enabled = !isActionLoading,
+                        onClick = onMiss
+                    ) {
+                        Text("No realizado")
+                    }
                 }
             }
         }

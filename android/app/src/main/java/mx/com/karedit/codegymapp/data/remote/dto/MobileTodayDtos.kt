@@ -9,6 +9,15 @@ data class MobileTodayResponseDto(
     val message: String? = null
 )
 
+data class MobileChallengeActionRequestDto(
+    val id: Int
+)
+
+data class MobileActionResponseDto(
+    val ok: Boolean,
+    val message: String? = null
+)
+
 data class MobileChallengeDto(
     val id: Int,
     @Json(name = "platform_name") val platformName: String,

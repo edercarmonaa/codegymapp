@@ -44,6 +44,42 @@ class TodayViewModel(
             _state.update { it.copy(isLoading = false) }
         }
     }
+
+    fun completeChallenge(id: Int) {
+        runChallengeAction { todayRepository.completeChallenge(id) }
+    }
+
+    fun missChallenge(id: Int) {
+        runChallengeAction { todayRepository.missChallenge(id) }
+    }
+
+    private fun runChallengeAction(action: suspend () -> Result<String>) {
+        viewModelScope.launch {
+            _state.update { it.copy(isActionLoading = true, error = null, actionMessage = null) }
+            action()
+                .onSuccess { message ->
+                    _state.update { it.copy(actionMessage = message) }
+                    refreshToday()
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(error = error.message ?: "No se pudo actualizar el reto.") }
+                }
+            _state.update { it.copy(isActionLoading = false) }
+        }
+    }
+
+    private suspend fun refreshToday() {
+        todayRepository.today()
+            .onSuccess { data ->
+                _state.update {
+                    it.copy(
+                        todayChallenges = data.today,
+                        expiredChallenges = data.expired
+                    )
+                }
+            }
+            .onFailure { error -> _state.update { it.copy(error = error.message ?: "No se pudo cargar Mi día.") } }
+    }
 }
 
 data class TodayUiState(
@@ -51,5 +87,7 @@ data class TodayUiState(
     val todayChallenges: List<MobileChallenge> = emptyList(),
     val expiredChallenges: List<MobileChallenge> = emptyList(),
     val isLoading: Boolean = false,
+    val isActionLoading: Boolean = false,
+    val actionMessage: String? = null,
     val error: String? = null
 )

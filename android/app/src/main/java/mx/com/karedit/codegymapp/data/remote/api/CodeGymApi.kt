@@ -3,6 +3,8 @@ package mx.com.karedit.codegymapp.data.remote.api
 import mx.com.karedit.codegymapp.data.remote.dto.LoginRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.LoginResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MeResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileTodayResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -17,4 +19,10 @@ interface CodeGymApi {
 
     @GET("api/mobile/today")
     suspend fun mobileToday(): MobileTodayResponseDto
+
+    @POST("api/mobile/challenges/complete")
+    suspend fun completeChallenge(@Body request: MobileChallengeActionRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/challenges/miss")
+    suspend fun missChallenge(@Body request: MobileChallengeActionRequestDto): MobileActionResponseDto
 }
