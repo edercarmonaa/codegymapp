@@ -23,5 +23,11 @@ fun CodeGymBottomBar(
             icon = { Text("P") },
             label = { Text("Planeado") }
         )
+        NavigationBarItem(
+            selected = selectedRoute == AppRoutes.Challenges,
+            onClick = { onRouteSelected(AppRoutes.Challenges) },
+            icon = { Text("R") },
+            label = { Text("Retos") }
+        )
     }
 }

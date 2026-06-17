@@ -15,6 +15,18 @@ data class MobilePlannedResponseDto(
     val message: String? = null
 )
 
+data class MobileChallengesResponseDto(
+    val ok: Boolean,
+    val filters: MobileChallengeFiltersDto? = null,
+    val challenges: List<MobileChallengeDto> = emptyList(),
+    val message: String? = null
+)
+
+data class MobileChallengeFiltersDto(
+    val month: String,
+    val status: String
+)
+
 data class MobileChallengeActionRequestDto(
     val id: Int
 )
