@@ -436,6 +436,12 @@ final class Challenge extends BaseModel
     }
 
     /** @return array<int, array<string, mixed>> */
+    public static function plannedUpcoming(): array
+    {
+        return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.status = 'pending' AND c.scheduled_date > CURDATE() ORDER BY c.scheduled_date ASC, c.id ASC")->fetchAll();
+    }
+
+    /** @return array<int, array<string, mixed>> */
     public static function expiredForReview(): array
     {
         return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.status = 'expired' ORDER BY c.scheduled_date ASC")->fetchAll();

@@ -21,6 +21,16 @@ final class ApiMobileController
         ]);
     }
 
+    public function planned(): void
+    {
+        Challenge::expirePending();
+
+        Response::json([
+            'ok' => true,
+            'planned' => array_map([$this, 'challengeResource'], Challenge::plannedUpcoming()),
+        ]);
+    }
+
     public function completeChallenge(): void
     {
         $this->respond($this->calendarService->completeChallenge($this->jsonInput()));
