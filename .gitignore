@@ -4,6 +4,7 @@
 /storage/logs/*
 /storage/cache/*
 *.log
+*.hprof
 .DS_Store
 Thumbs.db
 
