@@ -9,6 +9,12 @@ data class MobileTodayResponseDto(
     val message: String? = null
 )
 
+data class MobilePlannedResponseDto(
+    val ok: Boolean,
+    val planned: List<MobileChallengeDto> = emptyList(),
+    val message: String? = null
+)
+
 data class MobileChallengeActionRequestDto(
     val id: Int
 )

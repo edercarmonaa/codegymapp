@@ -38,10 +38,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
+import mx.com.karedit.codegymapp.ui.navigation.CodeGymBottomBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun TodayScreen(viewModel: TodayViewModel) {
+fun TodayScreen(
+    viewModel: TodayViewModel,
+    onNavigate: (String) -> Unit
+) {
     val state by viewModel.state.collectAsState()
     var todayExpanded by remember { mutableStateOf(true) }
     var expiredExpanded by remember { mutableStateOf(false) }
@@ -60,6 +65,12 @@ fun TodayScreen(viewModel: TodayViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(title = { Text("Mi día") })
+        },
+        bottomBar = {
+            CodeGymBottomBar(
+                selectedRoute = AppRoutes.Today,
+                onRouteSelected = onNavigate
+            )
         },
         snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->

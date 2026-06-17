@@ -2,10 +2,10 @@ package mx.com.karedit.codegymapp.data.repository
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import mx.com.karedit.codegymapp.data.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
-import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeDto
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import retrofit2.HttpException
 
@@ -57,19 +57,3 @@ data class TodayData(
     val today: List<MobileChallenge>,
     val expired: List<MobileChallenge>
 )
-
-private fun MobileChallengeDto.toDomain(): MobileChallenge =
-    MobileChallenge(
-        id = id,
-        platformName = platformName,
-        title = title.orEmpty(),
-        scheduledDate = scheduledDate,
-        completedDate = completedDate,
-        status = status,
-        difficulty = difficulty.orEmpty(),
-        challengeUrl = challengeUrl,
-        timeSpentMinutes = timeSpentMinutes,
-        notes = notes.orEmpty(),
-        origin = origin.orEmpty(),
-        isRescheduled = isRescheduled
-    )

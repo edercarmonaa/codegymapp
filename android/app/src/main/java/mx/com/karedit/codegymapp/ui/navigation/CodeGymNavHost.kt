@@ -11,6 +11,8 @@ import mx.com.karedit.codegymapp.core.session.SessionEvent
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.login.LoginScreen
 import mx.com.karedit.codegymapp.ui.screens.login.LoginViewModel
+import mx.com.karedit.codegymapp.ui.screens.planned.PlannedScreen
+import mx.com.karedit.codegymapp.ui.screens.planned.PlannedViewModel
 import mx.com.karedit.codegymapp.ui.screens.today.TodayScreen
 import mx.com.karedit.codegymapp.ui.screens.today.TodayViewModel
 
@@ -20,6 +22,13 @@ fun CodeGymNavHost(
     navController: NavHostController = rememberNavController()
 ) {
     val startDestination = if (appContainer.authRepository.hasToken()) AppRoutes.Today else AppRoutes.Login
+    val navigateTab: (String) -> Unit = { route ->
+        navController.navigate(route) {
+            popUpTo(AppRoutes.Today) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+    }
 
     LaunchedEffect(appContainer.sessionManager) {
         appContainer.sessionManager.sessionEvents.collect { event ->
@@ -50,7 +59,17 @@ fun CodeGymNavHost(
                     todayRepository = appContainer.todayRepository
                 )
             }
-            TodayScreen(viewModel = viewModel)
+            TodayScreen(
+                viewModel = viewModel,
+                onNavigate = navigateTab
+            )
+        }
+        composable(AppRoutes.Planned) {
+            val viewModel = remember { PlannedViewModel(appContainer.plannedRepository) }
+            PlannedScreen(
+                viewModel = viewModel,
+                onNavigate = navigateTab
+            )
         }
     }
 }
