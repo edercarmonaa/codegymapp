@@ -441,6 +441,38 @@ final class Challenge extends BaseModel
         return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.status = 'pending' AND c.scheduled_date > CURDATE() ORDER BY c.scheduled_date ASC, c.id ASC")->fetchAll();
     }
 
+    /**
+     * @param array{month: string, status: string} $filters
+     * @return array<int, array<string, mixed>>
+     */
+    public static function mobileChallenges(array $filters): array
+    {
+        $month = preg_match('/^\d{4}-\d{2}$/', $filters['month']) === 1 ? $filters['month'] : date('Y-m');
+        $status = in_array($filters['status'], ['pending', 'completed', 'expired', 'missed', 'cancelled', 'all'], true)
+            ? $filters['status']
+            : 'pending';
+        $start = $month . '-01';
+        $end = date('Y-m-t', strtotime($start));
+        $where = ['c.scheduled_date BETWEEN :start AND :end'];
+        $params = ['start' => $start, 'end' => $end];
+
+        if ($status !== 'all') {
+            $where[] = 'c.status = :status';
+            $params['status'] = $status;
+        }
+
+        $stmt = self::db()->prepare(
+            'SELECT c.*, p.name AS platform_name
+             FROM challenges c
+             JOIN platforms p ON p.id = c.platform_id
+             WHERE ' . implode(' AND ', $where) . '
+             ORDER BY c.scheduled_date ASC, c.id ASC'
+        );
+        $stmt->execute($params);
+
+        return $stmt->fetchAll();
+    }
+
     /** @return array<int, array<string, mixed>> */
     public static function expiredForReview(): array
     {

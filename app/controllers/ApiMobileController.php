@@ -31,6 +31,18 @@ final class ApiMobileController
         ]);
     }
 
+    public function challenges(): void
+    {
+        Challenge::expirePending();
+
+        $filters = $this->challengeFilters($_GET);
+        Response::json([
+            'ok' => true,
+            'filters' => $filters,
+            'challenges' => array_map([$this, 'challengeResource'], Challenge::mobileChallenges($filters)),
+        ]);
+    }
+
     public function completeChallenge(): void
     {
         $this->respond($this->calendarService->completeChallenge($this->jsonInput()));
@@ -57,6 +69,21 @@ final class ApiMobileController
             'notes' => (string) ($challenge['notes'] ?? ''),
             'origin' => (string) ($challenge['origin'] ?? ''),
             'is_rescheduled' => (int) ($challenge['is_rescheduled'] ?? 0) === 1,
+        ];
+    }
+
+    /**
+     * @param array<string, mixed> $input
+     * @return array{month: string, status: string}
+     */
+    private function challengeFilters(array $input): array
+    {
+        $month = (string) ($input['month'] ?? date('Y-m'));
+        $status = (string) ($input['status'] ?? 'pending');
+
+        return [
+            'month' => preg_match('/^\d{4}-\d{2}$/', $month) === 1 ? $month : date('Y-m'),
+            'status' => in_array($status, ['pending', 'completed', 'expired', 'missed', 'cancelled', 'all'], true) ? $status : 'pending',
         ];
     }
 
