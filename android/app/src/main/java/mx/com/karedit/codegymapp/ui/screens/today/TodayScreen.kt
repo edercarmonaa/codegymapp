@@ -19,13 +19,10 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarDuration
-import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -39,7 +36,7 @@ import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
-import mx.com.karedit.codegymapp.ui.navigation.CodeGymBottomBar
+import mx.com.karedit.codegymapp.ui.navigation.CodeGymDrawerScaffold
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -62,17 +59,12 @@ fun TodayScreen(
         viewModel.snackbarShown()
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Mi día") })
-        },
-        bottomBar = {
-            CodeGymBottomBar(
-                selectedRoute = AppRoutes.Today,
-                onRouteSelected = onNavigate
-            )
-        },
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
+    CodeGymDrawerScaffold(
+        title = "Mi día",
+        selectedRoute = AppRoutes.Today,
+        onNavigate = onNavigate,
+        snackbarHostState = snackbarHostState,
+        todayCount = state.todayChallenges.size + state.expiredChallenges.size
     ) { padding ->
         Column(
             modifier = Modifier
