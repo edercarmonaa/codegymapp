@@ -1,7 +1,6 @@
 package mx.com.karedit.codegymapp.ui.screens.today
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -35,6 +33,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymDrawerScaffold
 
@@ -182,7 +181,7 @@ private fun ChallengeSection(
                 } else {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         challenges.forEach { challenge ->
-                            ChallengeCard(
+                            ToDoTaskCard(
                                 challenge = challenge,
                                 onClick = { onChallengeClick(challenge) }
                             )
@@ -190,21 +189,6 @@ private fun ChallengeSection(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-private fun ChallengeCard(challenge: MobileChallenge, onClick: () -> Unit) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(challenge.platformName, style = MaterialTheme.typography.titleSmall)
-            Text(challenge.scheduledDate, style = MaterialTheme.typography.bodySmall)
         }
     }
 }

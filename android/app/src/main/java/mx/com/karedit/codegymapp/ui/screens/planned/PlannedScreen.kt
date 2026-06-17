@@ -3,10 +3,7 @@ package mx.com.karedit.codegymapp.ui.screens.planned
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -21,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymDrawerScaffold
 
@@ -78,17 +76,7 @@ private fun PlannedDateGroup(date: String, challenges: List<MobileChallenge>) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(date, style = MaterialTheme.typography.titleMedium)
         challenges.forEach { challenge ->
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
-                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(challenge.platformName, style = MaterialTheme.typography.titleSmall)
-                    if (challenge.title.isNotBlank()) {
-                        Text(challenge.title, style = MaterialTheme.typography.bodySmall)
-                    }
-                }
-            }
+            ToDoTaskCard(challenge = challenge)
         }
     }
 }

@@ -1,6 +1,5 @@
 package mx.com.karedit.codegymapp.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
@@ -16,16 +15,20 @@ private val LightColors = lightColorScheme(
 )
 
 private val DarkColors = darkColorScheme(
-    primary = Color(0xFF64B5F6),
-    secondary = Color(0xFF4DD0E1),
-    background = Color(0xFF111827),
-    surface = Color(0xFF1F2937),
-    error = Color(0xFFE57373)
+    primary = Color(0xFF8492F4),
+    secondary = Color(0xFF6FA8B5),
+    background = Color(0xFF080808),
+    surface = Color(0xFF101010),
+    surfaceVariant = Color(0xFF202020),
+    onSurface = Color(0xFFEDEDED),
+    onSurfaceVariant = Color(0xFFA2A2A8),
+    outline = Color(0xFF8C8C92),
+    error = Color(0xFFFF6B74)
 )
 
 @Composable
 fun CodeGymTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = true,
     content: @Composable () -> Unit
 ) {
     MaterialTheme(

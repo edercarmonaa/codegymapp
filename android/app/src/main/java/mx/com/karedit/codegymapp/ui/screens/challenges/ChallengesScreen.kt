@@ -5,11 +5,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -24,7 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymDrawerScaffold
 
@@ -70,7 +67,7 @@ fun ChallengesScreen(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     state.challenges.forEach { challenge ->
-                        ChallengeListCard(challenge = challenge)
+                        ToDoTaskCard(challenge = challenge)
                     }
                 }
             }
@@ -96,30 +93,3 @@ private fun StatusFilters(
         }
     }
 }
-
-@Composable
-private fun ChallengeListCard(challenge: MobileChallenge) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(challenge.platformName, style = MaterialTheme.typography.titleSmall)
-            Text(challenge.scheduledDate, style = MaterialTheme.typography.bodySmall)
-            if (challenge.title.isNotBlank()) {
-                Text(challenge.title, style = MaterialTheme.typography.bodySmall)
-            }
-            Text(challenge.statusLabel(), style = MaterialTheme.typography.labelMedium)
-        }
-    }
-}
-
-private fun MobileChallenge.statusLabel(): String =
-    when (status) {
-        "pending" -> "Pendiente"
-        "expired" -> "Vencido"
-        "completed" -> "Completado"
-        "missed" -> "No realizado"
-        "cancelled" -> "Cancelado"
-        else -> status
-    }
