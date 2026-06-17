@@ -10,6 +10,7 @@ $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
 $router->post('/api/auth/login', 'ApiAuthController', 'login', false);
 $router->get('/api/me', 'ApiMeController', 'show');
+$router->get('/api/mobile/today', 'ApiMobileController', 'today');
 
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');
