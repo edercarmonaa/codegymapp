@@ -57,12 +57,7 @@ fun HomeScreen(
     }
 
     Scaffold(
-        snackbarHost = { SnackbarHost(hostState = snackbarHostState) },
-        floatingActionButton = {
-            FloatingActionButton(onClick = { showCreateSheet = true }) {
-                Text("+", style = MaterialTheme.typography.displaySmall)
-            }
-        }
+        snackbarHost = { SnackbarHost(hostState = snackbarHostState) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -121,11 +116,9 @@ fun HomeScreen(
 
             Spacer(modifier = Modifier.weight(1f))
 
-            HomeItem(
-                symbol = "+",
-                label = "Nueva rutina",
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                onClick = { showRoutineSheet = true }
+            HomeBottomActions(
+                onCreateRoutine = { showRoutineSheet = true },
+                onCreateChallenge = { showCreateSheet = true }
             )
         }
     }
@@ -152,6 +145,41 @@ fun HomeScreen(
             },
             onDismiss = { showRoutineSheet = false }
         )
+    }
+}
+
+@Composable
+private fun HomeBottomActions(
+    onCreateRoutine: () -> Unit,
+    onCreateChallenge: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Row(
+            modifier = Modifier
+                .weight(1f)
+                .clickable(onClick = onCreateRoutine)
+                .padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "+",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.width(56.dp)
+            )
+            Text(
+                text = "Nueva rutina",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+
+        FloatingActionButton(onClick = onCreateChallenge) {
+            Text("+", style = MaterialTheme.typography.displaySmall)
+        }
     }
 }
 
