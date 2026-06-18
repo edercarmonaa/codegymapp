@@ -162,6 +162,7 @@ Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie
 - `GET /api/mobile/today`: datos optimizados para la pantalla móvil Mi día, con retos pendientes de hoy y vencidos por revisar.
 - `GET /api/mobile/planned`: retos pendientes futuros para la pantalla móvil Planeado.
 - `GET /api/mobile/challenges`: retos del mes para la pantalla móvil Retos. Acepta `month=YYYY-MM` y `status=pending|completed|expired|missed|cancelled|all`.
+- `GET /api/mobile/challenges/create-options`: plataformas activas para crear retos desde móvil.
 - `GET /api/calendar/bootstrap`: datos base del calendario, plataformas, lenguajes y rutinas.
 - `GET /api/calendar/routines`: rutinas registradas.
 - `GET /api/calendar/events`: eventos en formato FullCalendar.
@@ -174,6 +175,7 @@ Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie
 
 Estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` y reciben JSON:
 
+- `POST /api/mobile/challenges/store`: crea un reto desde móvil. Requiere `{"platform_id": 1, "scheduled_date": "YYYY-MM-DD"}`.
 - `POST /api/mobile/challenges/complete`: marca un reto como cumplido. Requiere `{"id": 1}` y conserva las validaciones de datos completos del sistema web.
 - `POST /api/mobile/challenges/miss`: marca un reto como no realizado. Requiere `{"id": 1}`.
 

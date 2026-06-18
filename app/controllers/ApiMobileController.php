@@ -43,6 +43,19 @@ final class ApiMobileController
         ]);
     }
 
+    public function createOptions(): void
+    {
+        Response::json([
+            'ok' => true,
+            'platforms' => array_map([$this, 'platformResource'], Platform::active()),
+        ]);
+    }
+
+    public function storeChallenge(): void
+    {
+        $this->respond($this->calendarService->createChallenge($this->jsonInput()));
+    }
+
     public function completeChallenge(): void
     {
         $this->respond($this->calendarService->completeChallenge($this->jsonInput()));
@@ -69,6 +82,15 @@ final class ApiMobileController
             'notes' => (string) ($challenge['notes'] ?? ''),
             'origin' => (string) ($challenge['origin'] ?? ''),
             'is_rescheduled' => (int) ($challenge['is_rescheduled'] ?? 0) === 1,
+        ];
+    }
+
+    /** @param array<string, mixed> $platform @return array<string, mixed> */
+    private function platformResource(array $platform): array
+    {
+        return [
+            'id' => (int) ($platform['id'] ?? 0),
+            'name' => (string) ($platform['name'] ?? ''),
         ];
     }
 
