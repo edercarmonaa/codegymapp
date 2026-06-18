@@ -64,7 +64,7 @@ fun ToDoTaskCard(
 
         BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
             val cardWidthPx = with(density) { maxWidth.toPx() }
-            val threshold = cardWidthPx * 0.85f
+            val threshold = cardWidthPx * 0.60f
 
             SwipeBackground(offsetX = swipeOffset.value)
             TaskCardContent(
