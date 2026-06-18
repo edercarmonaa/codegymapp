@@ -5,6 +5,7 @@ import mx.com.karedit.codegymapp.core.network.RetrofitFactory
 import mx.com.karedit.codegymapp.core.session.SessionManager
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
+import mx.com.karedit.codegymapp.data.repository.CreateChallengeRepository
 import mx.com.karedit.codegymapp.data.repository.PlannedRepository
 import mx.com.karedit.codegymapp.data.repository.TodayRepository
 import mx.com.karedit.codegymapp.data.security.EncryptedTokenStorage
@@ -17,4 +18,5 @@ class AppContainer(context: Context) {
     val todayRepository = TodayRepository(api)
     val plannedRepository = PlannedRepository(api)
     val challengesRepository = ChallengesRepository(api)
+    val createChallengeRepository = CreateChallengeRepository(api)
 }

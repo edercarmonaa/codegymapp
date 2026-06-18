@@ -31,6 +31,22 @@ data class MobileChallengeActionRequestDto(
     val id: Int
 )
 
+data class MobileChallengeCreateRequestDto(
+    @Json(name = "platform_id") val platformId: Int,
+    @Json(name = "scheduled_date") val scheduledDate: String
+)
+
+data class MobileCreateOptionsResponseDto(
+    val ok: Boolean,
+    val platforms: List<MobilePlatformDto> = emptyList(),
+    val message: String? = null
+)
+
+data class MobilePlatformDto(
+    val id: Int,
+    val name: String
+)
+
 data class MobileActionResponseDto(
     val ok: Boolean,
     val message: String? = null

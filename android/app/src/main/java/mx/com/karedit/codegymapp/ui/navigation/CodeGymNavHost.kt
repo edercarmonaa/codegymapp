@@ -11,6 +11,7 @@ import mx.com.karedit.codegymapp.core.session.SessionEvent
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
 import mx.com.karedit.codegymapp.ui.screens.home.HomeScreen
 import mx.com.karedit.codegymapp.ui.screens.home.HomeViewModel
 import mx.com.karedit.codegymapp.ui.screens.login.LoginScreen
@@ -77,22 +78,28 @@ fun CodeGymNavHost(
                     todayRepository = appContainer.todayRepository
                 )
             }
+            val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             TodayScreen(
                 viewModel = viewModel,
+                createChallengeViewModel = createViewModel,
                 onNavigate = navigateTab
             )
         }
         composable(AppRoutes.Planned) {
             val viewModel = remember { PlannedViewModel(appContainer.plannedRepository) }
+            val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             PlannedScreen(
                 viewModel = viewModel,
+                createChallengeViewModel = createViewModel,
                 onNavigate = navigateTab
             )
         }
         composable(AppRoutes.Challenges) {
             val viewModel = remember { ChallengesViewModel(appContainer.challengesRepository) }
+            val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             ChallengesScreen(
                 viewModel = viewModel,
+                createChallengeViewModel = createViewModel,
                 onNavigate = navigateTab
             )
         }

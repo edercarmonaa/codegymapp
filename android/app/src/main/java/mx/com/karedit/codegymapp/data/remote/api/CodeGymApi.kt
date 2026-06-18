@@ -5,7 +5,9 @@ import mx.com.karedit.codegymapp.data.remote.dto.LoginResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MeResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengesResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileTodayResponseDto
 import retrofit2.http.Body
@@ -31,6 +33,12 @@ interface CodeGymApi {
         @Query("month") month: String,
         @Query("status") status: String
     ): MobileChallengesResponseDto
+
+    @GET("api/mobile/challenges/create-options")
+    suspend fun mobileCreateOptions(): MobileCreateOptionsResponseDto
+
+    @POST("api/mobile/challenges/store")
+    suspend fun storeChallenge(@Body request: MobileChallengeCreateRequestDto): MobileActionResponseDto
 
     @POST("api/mobile/challenges/complete")
     suspend fun completeChallenge(@Body request: MobileChallengeActionRequestDto): MobileActionResponseDto

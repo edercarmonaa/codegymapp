@@ -27,27 +27,34 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
+import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
+import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(
     viewModel: TodayViewModel,
+    createChallengeViewModel: CreateChallengeViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     var todayExpanded by remember { mutableStateOf(true) }
     var expiredExpanded by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
+    var showCreateSheet by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.snackbarMessage) {
         val message = state.snackbarMessage ?: return@LaunchedEffect
@@ -60,7 +67,8 @@ fun TodayScreen(
 
     CodeGymSectionScaffold(
         onBackHome = { onNavigate(AppRoutes.Home) },
-        snackbarHostState = snackbarHostState
+        snackbarHostState = snackbarHostState,
+        onFabClick = { showCreateSheet = true }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -119,6 +127,19 @@ fun TodayScreen(
                 selectedChallenge = null
             },
             onDismiss = { selectedChallenge = null }
+        )
+    }
+
+    if (showCreateSheet) {
+        CreateChallengeSheet(
+            viewModel = createChallengeViewModel,
+            onCreated = { message ->
+                showCreateSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+                selectedChallenge = null
+            },
+            onDismiss = { showCreateSheet = false }
         )
     }
 }
