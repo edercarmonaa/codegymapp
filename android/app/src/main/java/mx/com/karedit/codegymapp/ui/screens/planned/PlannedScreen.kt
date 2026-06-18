@@ -1,5 +1,7 @@
 package mx.com.karedit.codegymapp.ui.screens.planned
 
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -49,7 +51,8 @@ fun PlannedScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text("Próximos retos", style = MaterialTheme.typography.headlineSmall)
@@ -62,7 +65,11 @@ fun PlannedScreen(
                 state.challenges
                     .groupBy { it.scheduledDate }
                     .forEach { (date, challenges) ->
-                        PlannedDateGroup(date = date, challenges = challenges)
+                        PlannedDateGroup(
+                            date = date,
+                            challenges = challenges,
+                            onComplete = viewModel::completeChallenge
+                        )
                     }
             }
         }
@@ -70,11 +77,18 @@ fun PlannedScreen(
 }
 
 @Composable
-private fun PlannedDateGroup(date: String, challenges: List<MobileChallenge>) {
+private fun PlannedDateGroup(
+    date: String,
+    challenges: List<MobileChallenge>,
+    onComplete: (Int) -> Unit
+) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(date, style = MaterialTheme.typography.titleMedium)
         challenges.forEach { challenge ->
-            ToDoTaskCard(challenge = challenge)
+            ToDoTaskCard(
+                challenge = challenge,
+                onCompleteClick = { onComplete(challenge.id) }
+            )
         }
     }
 }

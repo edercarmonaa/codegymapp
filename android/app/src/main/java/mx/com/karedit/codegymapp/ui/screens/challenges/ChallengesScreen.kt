@@ -1,6 +1,8 @@
 package mx.com.karedit.codegymapp.ui.screens.challenges
 
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -49,7 +51,8 @@ fun ChallengesScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text("Mes ${state.month}", style = MaterialTheme.typography.headlineSmall)
@@ -65,7 +68,10 @@ fun ChallengesScreen(
             } else {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     state.challenges.forEach { challenge ->
-                        ToDoTaskCard(challenge = challenge)
+                        ToDoTaskCard(
+                            challenge = challenge,
+                            onCompleteClick = { viewModel.completeChallenge(challenge.id) }
+                        )
                     }
                 }
             }

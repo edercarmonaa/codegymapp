@@ -85,7 +85,8 @@ fun TodayScreen(
                     emptyText = "Sin retos pendientes para hoy.",
                     challenges = state.todayChallenges,
                     onToggle = { todayExpanded = !todayExpanded },
-                    onChallengeClick = { selectedChallenge = it }
+                    onChallengeClick = { selectedChallenge = it },
+                    onCompleteClick = { viewModel.completeChallenge(it.id) }
                 )
                 ChallengeSection(
                     title = "Vencidos pendientes",
@@ -94,7 +95,8 @@ fun TodayScreen(
                     emptyText = "Sin retos vencidos por revisar.",
                     challenges = state.expiredChallenges,
                     onToggle = { expiredExpanded = !expiredExpanded },
-                    onChallengeClick = { selectedChallenge = it }
+                    onChallengeClick = { selectedChallenge = it },
+                    onCompleteClick = { viewModel.completeChallenge(it.id) }
                 )
             }
         }
@@ -156,7 +158,8 @@ private fun ChallengeSection(
     emptyText: String,
     challenges: List<MobileChallenge>,
     onToggle: () -> Unit,
-    onChallengeClick: (MobileChallenge) -> Unit
+    onChallengeClick: (MobileChallenge) -> Unit,
+    onCompleteClick: (MobileChallenge) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -181,7 +184,8 @@ private fun ChallengeSection(
                         challenges.forEach { challenge ->
                             ToDoTaskCard(
                                 challenge = challenge,
-                                onClick = { onChallengeClick(challenge) }
+                                onClick = { onChallengeClick(challenge) },
+                                onCompleteClick = { onCompleteClick(challenge) }
                             )
                         }
                     }

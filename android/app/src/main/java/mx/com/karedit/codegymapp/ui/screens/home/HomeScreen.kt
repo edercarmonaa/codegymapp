@@ -12,10 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -31,6 +31,10 @@ fun HomeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val user = state.user
+
+    LaunchedEffect(Unit) {
+        viewModel.load()
+    }
 
     Column(
         modifier = Modifier
@@ -71,12 +75,6 @@ fun HomeScreen(
                 onClick = { onNavigate(AppRoutes.Today) }
             )
             HomeItem(
-                symbol = "☆",
-                label = "Importante",
-                color = Color(0xFFFFB6D1),
-                onClick = {}
-            )
-            HomeItem(
                 symbol = "▣",
                 label = "Planeado",
                 count = state.plannedCount,
@@ -90,33 +88,6 @@ fun HomeScreen(
                 color = MaterialTheme.colorScheme.primary,
                 onClick = { onNavigate(AppRoutes.Challenges) }
             )
-        }
-
-        HorizontalDivider(color = MaterialTheme.colorScheme.surfaceVariant)
-
-        HomeItem(
-            symbol = "≡",
-            label = "Día a día",
-            count = state.todayCount,
-            color = MaterialTheme.colorScheme.primary,
-            onClick = { onNavigate(AppRoutes.Today) }
-        )
-
-        Spacer(modifier = Modifier.weight(1f))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("+", style = MaterialTheme.typography.displaySmall)
-            Spacer(modifier = Modifier.width(20.dp))
-            Text(
-                text = "Nueva lista",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text("▢+", style = MaterialTheme.typography.headlineMedium)
         }
     }
 }

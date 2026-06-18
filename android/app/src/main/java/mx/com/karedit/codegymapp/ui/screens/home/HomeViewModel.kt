@@ -23,10 +23,6 @@ class HomeViewModel(
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state
 
-    init {
-        load()
-    }
-
     fun load() {
         viewModelScope.launch {
             _state.update { it.copy(isLoading = true) }

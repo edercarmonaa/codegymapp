@@ -29,7 +29,8 @@ import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 fun ToDoTaskCard(
     challenge: MobileChallenge,
     modifier: Modifier = Modifier,
-    onClick: (() -> Unit)? = null
+    onClick: (() -> Unit)? = null,
+    onCompleteClick: (() -> Unit)? = null
 ) {
     val isCompleted = challenge.status == "completed"
     val metadataColor = when (challenge.status) {
@@ -49,7 +50,10 @@ fun ToDoTaskCard(
                 .padding(horizontal = 18.dp, vertical = 16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            StatusCircle(isCompleted = isCompleted)
+            StatusCircle(
+                isCompleted = isCompleted,
+                onClick = if (!isCompleted) onCompleteClick else null
+            )
             Spacer(modifier = Modifier.width(18.dp))
             Column(
                 modifier = Modifier.weight(1f),
@@ -71,21 +75,17 @@ fun ToDoTaskCard(
                     color = metadataColor
                 )
             }
-            Text(
-                text = "☆",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
 
 @Composable
-private fun StatusCircle(isCompleted: Boolean) {
+private fun StatusCircle(isCompleted: Boolean, onClick: (() -> Unit)?) {
     val color = if (isCompleted) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+    val modifier = onClick?.let { Modifier.size(34.dp).clickable(onClick = it) } ?: Modifier.size(34.dp)
 
     androidx.compose.foundation.layout.Box(contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.size(34.dp)) {
+        Canvas(modifier = modifier) {
             drawCircle(
                 color = color,
                 style = if (isCompleted) Fill else Stroke(width = 3.dp.toPx())

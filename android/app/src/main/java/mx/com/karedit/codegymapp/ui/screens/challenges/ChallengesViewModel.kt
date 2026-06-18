@@ -39,6 +39,20 @@ class ChallengesViewModel(private val challengesRepository: ChallengesRepository
         }
     }
 
+    fun completeChallenge(id: Int) {
+        viewModelScope.launch {
+            _state.update { it.copy(snackbarMessage = null) }
+            challengesRepository.completeChallenge(id)
+                .onSuccess { message ->
+                    _state.update { it.copy(snackbarMessage = message) }
+                    load()
+                }
+                .onFailure { error ->
+                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo actualizar el reto.") }
+                }
+        }
+    }
+
     fun snackbarShown() {
         _state.update { it.copy(snackbarMessage = null) }
     }
