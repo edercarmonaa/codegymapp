@@ -66,8 +66,10 @@ fun CodeGymNavHost(
                     challengesRepository = appContainer.challengesRepository
                 )
             }
+            val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             HomeScreen(
                 viewModel = viewModel,
+                createChallengeViewModel = createViewModel,
                 onNavigate = navigateTab
             )
         }

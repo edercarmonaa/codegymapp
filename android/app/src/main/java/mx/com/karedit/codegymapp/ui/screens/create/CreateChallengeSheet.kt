@@ -2,6 +2,7 @@ package mx.com.karedit.codegymapp.ui.screens.create
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -82,18 +83,23 @@ fun CreateChallengeSheet(
                 }
             }
 
-            OutlinedTextField(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable(enabled = !state.isSaving) { showDatePicker = true },
-                value = displayDate(state.scheduledDate),
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Fecha") },
-                placeholder = { Text("Selecciona una fecha") },
-                singleLine = true,
-                enabled = !state.isSaving
-            )
+            Box(modifier = Modifier.fillMaxWidth()) {
+                OutlinedTextField(
+                    modifier = Modifier.fillMaxWidth(),
+                    value = displayDate(state.scheduledDate),
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Fecha") },
+                    placeholder = { Text("Selecciona una fecha") },
+                    singleLine = true,
+                    enabled = !state.isSaving
+                )
+                Box(
+                    modifier = Modifier
+                        .matchParentSize()
+                        .clickable(enabled = !state.isSaving) { showDatePicker = true }
+                )
+            }
 
             state.message?.let {
                 Text(it, color = MaterialTheme.colorScheme.error)
