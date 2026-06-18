@@ -43,7 +43,6 @@ fun PlannedScreen(
     }
 
     CodeGymSectionScaffold(
-        title = "Planeado",
         onBackHome = { onNavigate(AppRoutes.Home) },
         snackbarHostState = snackbarHostState
     ) { padding ->
@@ -55,7 +54,8 @@ fun PlannedScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text("Próximos retos", style = MaterialTheme.typography.headlineSmall)
+            Text("Planeado", style = MaterialTheme.typography.displayMedium)
+            Text("Todo planeado", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             if (state.isLoading) {
                 CircularProgressIndicator()

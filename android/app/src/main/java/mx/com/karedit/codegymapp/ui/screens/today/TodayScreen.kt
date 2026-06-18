@@ -59,7 +59,6 @@ fun TodayScreen(
     }
 
     CodeGymSectionScaffold(
-        title = "Mi día",
         onBackHome = { onNavigate(AppRoutes.Home) },
         snackbarHostState = snackbarHostState
     ) { padding ->
@@ -71,8 +70,13 @@ fun TodayScreen(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
-                text = "Hola${state.user?.name?.let { ", $it" } ?: ""}",
-                style = MaterialTheme.typography.headlineSmall
+                text = "Mi día",
+                style = MaterialTheme.typography.displayMedium
+            )
+            Text(
+                text = "Hoy",
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             if (state.isLoading) {
