@@ -66,6 +66,11 @@ final class ApiMobileController
         $this->respond($this->calendarService->missChallenge($this->jsonInput()));
     }
 
+    public function storeRoutine(): void
+    {
+        $this->respond($this->calendarService->createRoutine($this->jsonInput()));
+    }
+
     /** @param array<string, mixed> $challenge @return array<string, mixed> */
     private function challengeResource(array $challenge): array
     {

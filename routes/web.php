@@ -17,6 +17,7 @@ $router->get('/api/mobile/challenges/create-options', 'ApiMobileController', 'cr
 $router->post('/api/mobile/challenges/store', 'ApiMobileController', 'storeChallenge');
 $router->post('/api/mobile/challenges/complete', 'ApiMobileController', 'completeChallenge');
 $router->post('/api/mobile/challenges/miss', 'ApiMobileController', 'missChallenge');
+$router->post('/api/mobile/routines/store', 'ApiMobileController', 'storeRoutine');
 
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');
