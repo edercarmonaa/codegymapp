@@ -1,39 +1,45 @@
 package mx.com.karedit.codegymapp.ui.components
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SwipeToDismissBox
-import androidx.compose.material3.SwipeToDismissBoxValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.rememberSwipeToDismissBoxState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import kotlin.math.roundToInt
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ToDoTaskCard(
     challenge: MobileChallenge,
@@ -50,35 +56,44 @@ fun ToDoTaskCard(
     val canChangeStatus = challenge.status == "pending" || challenge.status == "expired"
     val canSwipeToComplete = canChangeStatus && onCompleteClick != null
     val canSwipeToMiss = canChangeStatus && onMissClick != null
-    val dismissState = rememberSwipeToDismissBoxState(
-        confirmValueChange = { value ->
-            when (value) {
-                SwipeToDismissBoxValue.StartToEnd -> {
-                    onCompleteClick?.invoke()
-                    false
-                }
-                SwipeToDismissBoxValue.EndToStart -> {
-                    onMissClick?.invoke()
-                    false
-                }
-                SwipeToDismissBoxValue.Settled -> false
-            }
-        },
-        positionalThreshold = { distance -> distance * 0.85f }
-    )
 
     if (canSwipeToComplete || canSwipeToMiss) {
-        SwipeToDismissBox(
-            state = dismissState,
-            enableDismissFromStartToEnd = canSwipeToComplete,
-            enableDismissFromEndToStart = canSwipeToMiss,
-            backgroundContent = {
-                SwipeBackground(direction = dismissState.targetValue)
-            }
-        ) {
+        val swipeOffset = remember(challenge.id) { Animatable(0f) }
+        val scope = rememberCoroutineScope()
+        val density = LocalDensity.current
+
+        BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+            val cardWidthPx = with(density) { maxWidth.toPx() }
+            val threshold = cardWidthPx * 0.85f
+
+            SwipeBackground(offsetX = swipeOffset.value)
             TaskCardContent(
                 challenge = challenge,
-                modifier = modifier,
+                modifier = Modifier
+                    .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
+                    .pointerInput(canSwipeToComplete, canSwipeToMiss, cardWidthPx) {
+                        detectHorizontalDragGestures(
+                            onHorizontalDrag = { change, dragAmount ->
+                                change.consume()
+                                val minOffset = if (canSwipeToMiss) -cardWidthPx else 0f
+                                val maxOffset = if (canSwipeToComplete) cardWidthPx else 0f
+                                val nextOffset = (swipeOffset.value + dragAmount)
+                                    .coerceIn(minOffset, maxOffset)
+                                scope.launch { swipeOffset.snapTo(nextOffset) }
+                            },
+                            onDragEnd = {
+                                val currentOffset = swipeOffset.value
+                                when {
+                                    currentOffset >= threshold && canSwipeToComplete -> onCompleteClick?.invoke()
+                                    currentOffset <= -threshold && canSwipeToMiss -> onMissClick?.invoke()
+                                }
+                                scope.launch { swipeOffset.animateTo(0f) }
+                            },
+                            onDragCancel = {
+                                scope.launch { swipeOffset.animateTo(0f) }
+                            }
+                        )
+                    },
                 isCompleted = isCompleted,
                 metadataColor = metadataColor,
                 onClick = onClick,
@@ -149,9 +164,9 @@ private fun TaskCardContent(
 }
 
 @Composable
-private fun SwipeBackground(direction: SwipeToDismissBoxValue) {
-    val isCompleting = direction == SwipeToDismissBoxValue.StartToEnd
-    val isMissing = direction == SwipeToDismissBoxValue.EndToStart
+private fun SwipeBackground(offsetX: Float) {
+    val isCompleting = offsetX > 0f
+    val isMissing = offsetX < 0f
     val backgroundColor = when {
         isCompleting -> Color(0xFF2E7D50)
         isMissing -> Color(0xFF8E1D2D)
