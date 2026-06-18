@@ -41,4 +41,22 @@ class PlannedRepository(private val api: CodeGymApi) {
             error(apiMessage ?: "No se pudo actualizar el reto.")
         }
     }
+
+    suspend fun missChallenge(id: Int): Result<String> = runCatching {
+        try {
+            val response = api.missChallenge(MobileChallengeActionRequestDto(id))
+            if (!response.ok) {
+                error(response.message ?: "No se pudo actualizar el reto.")
+            }
+
+            response.message ?: "Reto actualizado."
+        } catch (exception: HttpException) {
+            val apiMessage = exception.response()
+                ?.errorBody()
+                ?.string()
+                ?.let { body -> errorAdapter.fromJson(body)?.message }
+
+            error(apiMessage ?: "No se pudo actualizar el reto.")
+        }
+    }
 }

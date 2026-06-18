@@ -30,9 +30,17 @@ class PlannedViewModel(private val plannedRepository: PlannedRepository) : ViewM
     }
 
     fun completeChallenge(id: Int) {
+        runChallengeAction { plannedRepository.completeChallenge(id) }
+    }
+
+    fun missChallenge(id: Int) {
+        runChallengeAction { plannedRepository.missChallenge(id) }
+    }
+
+    private fun runChallengeAction(action: suspend () -> Result<String>) {
         viewModelScope.launch {
             _state.update { it.copy(snackbarMessage = null) }
-            plannedRepository.completeChallenge(id)
+            action()
                 .onSuccess { message ->
                     _state.update { it.copy(snackbarMessage = message) }
                     load()

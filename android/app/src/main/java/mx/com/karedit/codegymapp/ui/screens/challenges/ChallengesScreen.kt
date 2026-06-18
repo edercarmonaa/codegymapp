@@ -83,7 +83,8 @@ fun ChallengesScreen(
                     state.challenges.forEach { challenge ->
                         ToDoTaskCard(
                             challenge = challenge,
-                            onCompleteClick = { viewModel.completeChallenge(challenge.id) }
+                            onCompleteClick = { viewModel.completeChallenge(challenge.id) },
+                            onMissClick = { viewModel.missChallenge(challenge.id) }
                         )
                     }
                 }

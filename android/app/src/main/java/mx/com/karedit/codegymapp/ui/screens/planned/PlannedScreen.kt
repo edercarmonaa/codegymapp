@@ -82,7 +82,8 @@ fun PlannedScreen(
                         PlannedDateGroup(
                             date = date,
                             challenges = challenges,
-                            onComplete = viewModel::completeChallenge
+                            onComplete = viewModel::completeChallenge,
+                            onMiss = viewModel::missChallenge
                         )
                     }
             }
@@ -106,14 +107,16 @@ fun PlannedScreen(
 private fun PlannedDateGroup(
     date: String,
     challenges: List<MobileChallenge>,
-    onComplete: (Int) -> Unit
+    onComplete: (Int) -> Unit,
+    onMiss: (Int) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(date, style = MaterialTheme.typography.titleMedium)
         challenges.forEach { challenge ->
             ToDoTaskCard(
                 challenge = challenge,
-                onCompleteClick = { onComplete(challenge.id) }
+                onCompleteClick = { onComplete(challenge.id) },
+                onMissClick = { onMiss(challenge.id) }
             )
         }
     }

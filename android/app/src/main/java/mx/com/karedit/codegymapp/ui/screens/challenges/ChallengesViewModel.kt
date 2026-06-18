@@ -40,9 +40,17 @@ class ChallengesViewModel(private val challengesRepository: ChallengesRepository
     }
 
     fun completeChallenge(id: Int) {
+        runChallengeAction { challengesRepository.completeChallenge(id) }
+    }
+
+    fun missChallenge(id: Int) {
+        runChallengeAction { challengesRepository.missChallenge(id) }
+    }
+
+    private fun runChallengeAction(action: suspend () -> Result<String>) {
         viewModelScope.launch {
             _state.update { it.copy(snackbarMessage = null) }
-            challengesRepository.completeChallenge(id)
+            action()
                 .onSuccess { message ->
                     _state.update { it.copy(snackbarMessage = message) }
                     load()

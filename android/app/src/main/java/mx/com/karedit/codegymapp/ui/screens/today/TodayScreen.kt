@@ -107,7 +107,8 @@ fun TodayScreen(
                     challenges = state.todayChallenges,
                     onToggle = { todayExpanded = !todayExpanded },
                     onChallengeClick = { selectedChallenge = it },
-                    onCompleteClick = { viewModel.completeChallenge(it.id) }
+                    onCompleteClick = { viewModel.completeChallenge(it.id) },
+                    onMissClick = { viewModel.missChallenge(it.id) }
                 )
                 ChallengeSection(
                     title = "Vencidos pendientes",
@@ -117,7 +118,8 @@ fun TodayScreen(
                     challenges = state.expiredChallenges,
                     onToggle = { expiredExpanded = !expiredExpanded },
                     onChallengeClick = { selectedChallenge = it },
-                    onCompleteClick = { viewModel.completeChallenge(it.id) }
+                    onCompleteClick = { viewModel.completeChallenge(it.id) },
+                    onMissClick = { viewModel.missChallenge(it.id) }
                 )
             }
         }
@@ -193,7 +195,8 @@ private fun ChallengeSection(
     challenges: List<MobileChallenge>,
     onToggle: () -> Unit,
     onChallengeClick: (MobileChallenge) -> Unit,
-    onCompleteClick: (MobileChallenge) -> Unit
+    onCompleteClick: (MobileChallenge) -> Unit,
+    onMissClick: (MobileChallenge) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -219,7 +222,8 @@ private fun ChallengeSection(
                             ToDoTaskCard(
                                 challenge = challenge,
                                 onClick = { onChallengeClick(challenge) },
-                                onCompleteClick = { onCompleteClick(challenge) }
+                                onCompleteClick = { onCompleteClick(challenge) },
+                                onMissClick = { onMissClick(challenge) }
                             )
                         }
                     }
