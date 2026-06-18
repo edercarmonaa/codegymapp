@@ -64,7 +64,7 @@ fun ToDoTaskCard(
                 SwipeToDismissBoxValue.Settled -> false
             }
         },
-        positionalThreshold = { distance -> distance * 0.36f }
+        positionalThreshold = { distance -> distance * 0.85f }
     )
 
     if (canSwipeToComplete || canSwipeToMiss) {
