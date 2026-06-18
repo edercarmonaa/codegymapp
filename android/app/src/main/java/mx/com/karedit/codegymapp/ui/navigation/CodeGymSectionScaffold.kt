@@ -1,8 +1,10 @@
 package mx.com.karedit.codegymapp.ui.navigation
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -17,6 +19,9 @@ import androidx.compose.runtime.Composable
 fun CodeGymSectionScaffold(
     onBackHome: () -> Unit,
     snackbarHostState: SnackbarHostState,
+    collapsedTitle: String = "",
+    collapsedSubtitle: String? = null,
+    isCollapsed: Boolean = false,
     showFab: Boolean = true,
     onFabClick: () -> Unit = {},
     content: @Composable (PaddingValues) -> Unit
@@ -24,19 +29,32 @@ fun CodeGymSectionScaffold(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = {},
+                title = {
+                    if (isCollapsed) {
+                        Column {
+                            Text(collapsedTitle, style = MaterialTheme.typography.titleLarge)
+                            if (!collapsedSubtitle.isNullOrBlank()) {
+                                Text(
+                                    collapsedSubtitle,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                },
                 navigationIcon = {
                     TextButton(onClick = onBackHome) {
-                        Text("‹", style = androidx.compose.material3.MaterialTheme.typography.displaySmall)
+                        Text("‹", style = MaterialTheme.typography.displaySmall)
                     }
                 },
                 actions = {
                     TextButton(onClick = {}) {
-                        Text("⋮", style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
+                        Text("⋮", style = MaterialTheme.typography.headlineMedium)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = androidx.compose.material3.MaterialTheme.colorScheme.background
+                    containerColor = MaterialTheme.colorScheme.background
                 )
             )
         },

@@ -40,6 +40,7 @@ fun PlannedScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showCreateSheet by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.snackbarMessage) {
@@ -54,6 +55,9 @@ fun PlannedScreen(
     CodeGymSectionScaffold(
         onBackHome = { onNavigate(AppRoutes.Home) },
         snackbarHostState = snackbarHostState,
+        collapsedTitle = "Planeado",
+        collapsedSubtitle = "Todo planeado",
+        isCollapsed = scrollState.value > 96,
         onFabClick = { showCreateSheet = true }
     ) { padding ->
         Column(
@@ -61,7 +65,7 @@ fun PlannedScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text("Planeado", style = MaterialTheme.typography.displayMedium)

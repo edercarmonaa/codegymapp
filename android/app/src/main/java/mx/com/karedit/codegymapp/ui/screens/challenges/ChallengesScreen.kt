@@ -42,6 +42,7 @@ fun ChallengesScreen(
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showCreateSheet by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(state.snackbarMessage) {
@@ -53,6 +54,9 @@ fun ChallengesScreen(
     CodeGymSectionScaffold(
         onBackHome = { onNavigate(AppRoutes.Home) },
         snackbarHostState = snackbarHostState,
+        collapsedTitle = "Retos",
+        collapsedSubtitle = "Mes ${state.month}",
+        isCollapsed = scrollState.value > 96,
         onFabClick = { showCreateSheet = true }
     ) { padding ->
         Column(
@@ -60,7 +64,7 @@ fun ChallengesScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text("Retos", style = MaterialTheme.typography.displayMedium)

@@ -1,6 +1,8 @@
 package mx.com.karedit.codegymapp.ui.screens.today
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -34,6 +36,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import java.time.LocalDate
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
@@ -53,6 +56,8 @@ fun TodayScreen(
     var expiredExpanded by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     var showCreateSheet by remember { mutableStateOf(false) }
+    val scrollState = rememberScrollState()
+    val todayLabel = remember { todayDisplayLabel() }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -68,13 +73,17 @@ fun TodayScreen(
     CodeGymSectionScaffold(
         onBackHome = { onNavigate(AppRoutes.Home) },
         snackbarHostState = snackbarHostState,
+        collapsedTitle = "Mi día",
+        collapsedSubtitle = todayLabel,
+        isCollapsed = scrollState.value > 96,
         onFabClick = { showCreateSheet = true }
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp),
+                .padding(16.dp)
+                .verticalScroll(scrollState),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Text(
@@ -82,7 +91,7 @@ fun TodayScreen(
                 style = MaterialTheme.typography.displayMedium
             )
             Text(
-                text = "Hoy",
+                text = todayLabel,
                 style = MaterialTheme.typography.headlineSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
@@ -307,3 +316,24 @@ private fun MobileChallenge.statusLabel(): String =
         "cancelled" -> "Cancelado"
         else -> status
     }
+
+private fun todayDisplayLabel(): String {
+    val today = LocalDate.now()
+    val days = listOf("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
+    val months = listOf(
+        "enero",
+        "febrero",
+        "marzo",
+        "abril",
+        "mayo",
+        "junio",
+        "julio",
+        "agosto",
+        "septiembre",
+        "octubre",
+        "noviembre",
+        "diciembre"
+    )
+
+    return "${days[today.dayOfWeek.value - 1]}, ${today.dayOfMonth} de ${months[today.monthValue - 1]}"
+}
