@@ -1,14 +1,10 @@
 package mx.com.karedit.codegymapp.ui.screens.create
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -17,8 +13,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -27,9 +21,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneOffset
+import mx.com.karedit.codegymapp.ui.components.DatePickerField
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,7 +32,6 @@ fun CreateChallengeSheet(
 ) {
     val state by viewModel.state.collectAsState()
     var expanded by remember { mutableStateOf(false) }
-    var showDatePicker by remember { mutableStateOf(false) }
     val selectedPlatform = state.platforms.firstOrNull { it.id == state.selectedPlatformId }
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
@@ -83,23 +74,12 @@ fun CreateChallengeSheet(
                 }
             }
 
-            Box(modifier = Modifier.fillMaxWidth()) {
-                OutlinedTextField(
-                    modifier = Modifier.fillMaxWidth(),
-                    value = displayDate(state.scheduledDate),
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("Fecha") },
-                    placeholder = { Text("Selecciona una fecha") },
-                    singleLine = true,
-                    enabled = !state.isSaving
-                )
-                Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .clickable(enabled = !state.isSaving) { showDatePicker = true }
-                )
-            }
+            DatePickerField(
+                value = state.scheduledDate,
+                label = "Fecha",
+                enabled = !state.isSaving,
+                onDateSelected = viewModel::updateScheduledDate
+            )
 
             state.message?.let {
                 Text(it, color = MaterialTheme.colorScheme.error)
@@ -114,55 +94,4 @@ fun CreateChallengeSheet(
             }
         }
     }
-
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = dateToMillis(state.scheduledDate)
-        )
-
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        datePickerState.selectedDateMillis?.let { selectedMillis ->
-                            viewModel.updateScheduledDate(millisToDate(selectedMillis))
-                        }
-                        showDatePicker = false
-                    }
-                ) {
-                    Text("Aceptar")
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancelar")
-                }
-            }
-        ) {
-            DatePicker(state = datePickerState)
-        }
-    }
 }
-
-private fun dateToMillis(value: String): Long? =
-    runCatching {
-        LocalDate
-            .parse(value)
-            .atStartOfDay()
-            .toInstant(ZoneOffset.UTC)
-            .toEpochMilli()
-    }.getOrNull()
-
-private fun millisToDate(value: Long): String =
-    Instant
-        .ofEpochMilli(value)
-        .atZone(ZoneOffset.UTC)
-        .toLocalDate()
-        .toString()
-
-private fun displayDate(value: String): String =
-    runCatching {
-        val date = LocalDate.parse(value)
-        "%02d/%02d/%04d".format(date.dayOfMonth, date.monthValue, date.year)
-    }.getOrDefault(value)

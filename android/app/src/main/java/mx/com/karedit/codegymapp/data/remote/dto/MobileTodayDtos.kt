@@ -36,6 +36,15 @@ data class MobileChallengeCreateRequestDto(
     @Json(name = "scheduled_date") val scheduledDate: String
 )
 
+data class MobileRoutineCreateRequestDto(
+    @Json(name = "platform_id") val platformId: Int,
+    @Json(name = "frequency_type") val frequencyType: String,
+    @Json(name = "week_days") val weekDays: List<Int> = emptyList(),
+    @Json(name = "month_day") val monthDay: Int = 0,
+    @Json(name = "start_date") val startDate: String,
+    @Json(name = "end_date") val endDate: String = ""
+)
+
 data class MobileCreateOptionsResponseDto(
     val ok: Boolean,
     val platforms: List<MobilePlatformDto> = emptyList(),

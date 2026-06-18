@@ -12,6 +12,7 @@ import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.home.HomeScreen
 import mx.com.karedit.codegymapp.ui.screens.home.HomeViewModel
 import mx.com.karedit.codegymapp.ui.screens.login.LoginScreen
@@ -67,9 +68,11 @@ fun CodeGymNavHost(
                 )
             }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
             HomeScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                createRoutineViewModel = createRoutineViewModel,
                 onNavigate = navigateTab
             )
         }

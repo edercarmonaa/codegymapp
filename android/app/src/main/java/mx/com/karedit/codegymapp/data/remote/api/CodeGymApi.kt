@@ -9,6 +9,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengesResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileTodayResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -45,4 +46,7 @@ interface CodeGymApi {
 
     @POST("api/mobile/challenges/miss")
     suspend fun missChallenge(@Body request: MobileChallengeActionRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/routines/store")
+    suspend fun storeRoutine(@Body request: MobileRoutineCreateRequestDto): MobileActionResponseDto
 }

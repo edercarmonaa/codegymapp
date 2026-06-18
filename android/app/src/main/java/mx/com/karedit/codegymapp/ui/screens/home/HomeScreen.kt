@@ -35,16 +35,20 @@ import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineSheet
+import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
+    createRoutineViewModel: CreateRoutineViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val user = state.user
     var showCreateSheet by remember { mutableStateOf(false) }
+    var showRoutineSheet by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -121,14 +125,7 @@ fun HomeScreen(
                 symbol = "+",
                 label = "Nueva rutina",
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                onClick = {
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = "Nueva rutina estará disponible pronto.",
-                            duration = SnackbarDuration.Short
-                        )
-                    }
-                }
+                onClick = { showRoutineSheet = true }
             )
         }
     }
@@ -142,6 +139,18 @@ fun HomeScreen(
                 viewModel.load()
             },
             onDismiss = { showCreateSheet = false }
+        )
+    }
+
+    if (showRoutineSheet) {
+        CreateRoutineSheet(
+            viewModel = createRoutineViewModel,
+            onCreated = { message ->
+                showRoutineSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+            },
+            onDismiss = { showRoutineSheet = false }
         )
     }
 }
