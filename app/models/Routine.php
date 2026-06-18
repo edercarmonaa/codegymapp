@@ -5,7 +5,7 @@ declare(strict_types=1);
 final class Routine extends BaseModel
 {
     /** @param array<string, mixed> $data */
-    public static function create(array $data): void
+    public static function create(array $data): int
     {
         $stmt = self::db()->prepare(
             "INSERT INTO routines (
@@ -24,6 +24,8 @@ final class Routine extends BaseModel
             'start_date' => $data['start_date'],
             'end_date' => self::blankToNull((string) ($data['end_date'] ?? '')),
         ]);
+
+        return (int) self::db()->lastInsertId();
     }
 
     public static function disable(int $id): void
@@ -44,6 +46,8 @@ final class Routine extends BaseModel
     /** @param array<string, mixed> $data */
     public static function update(int $id, array $data): void
     {
+        $previous = self::findActiveOrInactive($id);
+
         $stmt = self::db()->prepare(
             "UPDATE routines
              SET platform_id = :platform_id,
@@ -65,7 +69,7 @@ final class Routine extends BaseModel
             'end_date' => self::blankToNull((string) ($data['end_date'] ?? '')),
         ]);
 
-        self::syncPendingCurrentMonth($id);
+        self::syncPendingRoutineWindow($id, $previous);
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -89,6 +93,29 @@ final class Routine extends BaseModel
                 self::createChallengeIfMissing($routine, $date);
             }
         }
+    }
+
+    /**
+     * @param array<string, mixed>|null $previous
+     */
+    public static function syncPendingRoutineWindow(int $id, ?array $previous = null): void
+    {
+        $stmt = self::db()->prepare('SELECT * FROM routines WHERE id = :id AND is_active = 1');
+        $stmt->execute(['id' => $id]);
+        $routine = $stmt->fetch();
+
+        if (!$routine) {
+            return;
+        }
+
+        [$rangeStart, $rangeEnd] = self::generationWindow($routine);
+        if ($previous !== null) {
+            [$previousStart, $previousEnd] = self::generationWindow($previous);
+            $rangeStart = $previousStart < $rangeStart ? $previousStart : $rangeStart;
+            $rangeEnd = $previousEnd > $rangeEnd ? $previousEnd : $rangeEnd;
+        }
+
+        self::syncPendingForRange($id, $routine, $rangeStart, $rangeEnd);
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -170,20 +197,31 @@ final class Routine extends BaseModel
         ]);
     }
 
-    private static function syncPendingCurrentMonth(int $id): void
+    /**
+     * @param array<string, mixed> $routine
+     * @return array{0: DateTimeImmutable, 1: DateTimeImmutable}
+     */
+    private static function generationWindow(array $routine): array
     {
-        $monthStart = new DateTimeImmutable('first day of this month 00:00:00');
-        $monthEnd = new DateTimeImmutable('last day of this month 00:00:00');
-        $stmt = self::db()->prepare('SELECT * FROM routines WHERE id = :id AND is_active = 1');
-        $stmt->execute(['id' => $id]);
-        $routine = $stmt->fetch();
+        $start = new DateTimeImmutable((string) $routine['start_date']);
+        $end = !empty($routine['end_date'])
+            ? new DateTimeImmutable((string) $routine['end_date'])
+            : $start->modify('last day of this month');
 
-        if (!$routine) {
+        return [$start, $end];
+    }
+
+    /**
+     * @param array<string, mixed> $routine
+     */
+    private static function syncPendingForRange(int $id, array $routine, DateTimeImmutable $rangeStart, DateTimeImmutable $rangeEnd): void
+    {
+        if ($rangeEnd < $rangeStart) {
             return;
         }
 
-        $dates = self::datesForRoutine($routine, $monthStart, $monthEnd);
-        $available = self::pendingGeneratedForMonth($id, $monthStart, $monthEnd);
+        $dates = self::datesForRoutine($routine, $rangeStart, $rangeEnd);
+        $available = self::pendingGeneratedForRange($id, $rangeStart, $rangeEnd);
         $usedIds = [];
 
         foreach ($dates as $date) {
@@ -212,8 +250,18 @@ final class Routine extends BaseModel
         self::cancelUnusedGeneratedChallenges($available, $usedIds);
     }
 
+    /** @return array<string, mixed>|null */
+    private static function findActiveOrInactive(int $id): ?array
+    {
+        $stmt = self::db()->prepare('SELECT * FROM routines WHERE id = :id');
+        $stmt->execute(['id' => $id]);
+        $routine = $stmt->fetch();
+
+        return $routine ?: null;
+    }
+
     /** @return array<int, array<string, mixed>> */
-    private static function pendingGeneratedForMonth(int $id, DateTimeImmutable $monthStart, DateTimeImmutable $monthEnd): array
+    private static function pendingGeneratedForRange(int $id, DateTimeImmutable $rangeStart, DateTimeImmutable $rangeEnd): array
     {
         $stmt = self::db()->prepare(
             "SELECT id, scheduled_date
@@ -221,13 +269,13 @@ final class Routine extends BaseModel
              WHERE routine_id = :routine_id
                AND status = 'pending'
                AND is_rescheduled = 0
-               AND scheduled_date BETWEEN :month_start AND :month_end
+               AND scheduled_date BETWEEN :range_start AND :range_end
              ORDER BY scheduled_date ASC, id ASC"
         );
         $stmt->execute([
             'routine_id' => $id,
-            'month_start' => $monthStart->format('Y-m-d'),
-            'month_end' => $monthEnd->format('Y-m-d'),
+            'range_start' => $rangeStart->format('Y-m-d'),
+            'range_end' => $rangeEnd->format('Y-m-d'),
         ]);
         return $stmt->fetchAll();
     }

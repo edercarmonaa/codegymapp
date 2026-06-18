@@ -169,8 +169,8 @@ final class CalendarService
             return $this->response(422, ['ok' => false, 'message' => (string) $validated['message']]);
         }
 
-        \Routine::create($validated['data']);
-        \Routine::generateCurrentMonth();
+        $routineId = \Routine::create($validated['data']);
+        \Routine::syncPendingRoutineWindow($routineId);
 
         return $this->response(200, ['ok' => true, 'message' => 'Rutina creada correctamente.']);
     }
