@@ -56,6 +56,11 @@ final class ApiMobileController
         $this->respond($this->calendarService->createChallenge($this->jsonInput()));
     }
 
+    public function saveChallengeDetails(): void
+    {
+        $this->respond($this->calendarService->saveChallengeDetails($this->jsonInput()));
+    }
+
     public function completeChallenge(): void
     {
         $this->respond($this->calendarService->completeChallenge($this->jsonInput()));
