@@ -3,7 +3,9 @@ package mx.com.karedit.codegymapp.ui.screens.challenges
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import java.time.LocalDate
+import java.time.YearMonth
 import java.time.format.DateTimeFormatter
+import java.util.Locale
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -12,8 +14,9 @@ import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 
 class ChallengesViewModel(private val challengesRepository: ChallengesRepository) : ViewModel() {
+    private val monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM")
     private val _state = MutableStateFlow(
-        ChallengesUiState(month = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyy-MM")))
+        ChallengesUiState(month = LocalDate.now().format(monthFormatter))
     )
     val state: StateFlow<ChallengesUiState> = _state
 
@@ -23,6 +26,25 @@ class ChallengesViewModel(private val challengesRepository: ChallengesRepository
 
     fun selectStatus(status: ChallengeStatusFilter) {
         _state.update { it.copy(status = status) }
+        load()
+    }
+
+    fun previousMonth() {
+        moveMonth(months = -1)
+    }
+
+    fun nextMonth() {
+        moveMonth(months = 1)
+    }
+
+    fun currentMonth() {
+        _state.update { it.copy(month = LocalDate.now().format(monthFormatter)) }
+        load()
+    }
+
+    private fun moveMonth(months: Long) {
+        val currentMonth = YearMonth.parse(_state.value.month, monthFormatter)
+        _state.update { it.copy(month = currentMonth.plusMonths(months).format(monthFormatter)) }
         load()
     }
 
@@ -72,7 +94,16 @@ data class ChallengesUiState(
     val challenges: List<MobileChallenge> = emptyList(),
     val isLoading: Boolean = false,
     val snackbarMessage: String? = null
-)
+) {
+    val monthLabel: String
+        get() {
+            val monthName = YearMonth.parse(month).month.getDisplayName(
+                java.time.format.TextStyle.FULL,
+                Locale("es", "MX")
+            )
+            return "${monthName.replaceFirstChar { it.titlecase(Locale("es", "MX")) }} ${YearMonth.parse(month).year}"
+        }
+}
 
 enum class ChallengeStatusFilter(val value: String, val label: String) {
     Pending("pending", "Pendientes"),

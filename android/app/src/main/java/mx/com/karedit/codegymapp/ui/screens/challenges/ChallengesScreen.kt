@@ -7,7 +7,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
@@ -15,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -60,7 +63,7 @@ fun ChallengesScreen(
         onBackHome = { onNavigate(AppRoutes.Home) },
         snackbarHostState = snackbarHostState,
         collapsedTitle = "Retos",
-        collapsedSubtitle = "Mes ${state.month}",
+        collapsedSubtitle = state.monthLabel,
         isCollapsed = scrollState.value > 96,
         onFabClick = { showCreateSheet = true }
     ) { padding ->
@@ -73,7 +76,12 @@ fun ChallengesScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             Text("Retos", style = MaterialTheme.typography.displayMedium)
-            Text("Mes ${state.month}", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            MonthSelector(
+                monthLabel = state.monthLabel,
+                onPrevious = viewModel::previousMonth,
+                onNext = viewModel::nextMonth,
+                onCurrent = viewModel::currentMonth
+            )
             StatusFilters(
                 selected = state.status,
                 onSelected = viewModel::selectStatus
@@ -130,6 +138,35 @@ fun ChallengesScreen(
             },
             onDismiss = { selectedChallenge = null }
         )
+    }
+}
+
+@Composable
+private fun MonthSelector(
+    monthLabel: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onCurrent: () -> Unit
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        TextButton(onClick = onPrevious, modifier = Modifier.width(52.dp)) {
+            Text("‹", style = MaterialTheme.typography.headlineMedium)
+        }
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = monthLabel,
+                style = MaterialTheme.typography.headlineSmall
+            )
+            TextButton(onClick = onCurrent) {
+                Text("Mes actual")
+            }
+        }
+        TextButton(onClick = onNext, modifier = Modifier.width(52.dp)) {
+            Text("›", style = MaterialTheme.typography.headlineMedium)
+        }
     }
 }
 
