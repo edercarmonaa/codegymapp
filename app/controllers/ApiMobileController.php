@@ -27,7 +27,7 @@ final class ApiMobileController
 
         Response::json([
             'ok' => true,
-            'planned' => array_map([$this, 'challengeResource'], Challenge::plannedUpcoming()),
+            'planned' => array_map([$this, 'challengeResource'], Challenge::mobilePlanned()),
         ]);
     }
 
