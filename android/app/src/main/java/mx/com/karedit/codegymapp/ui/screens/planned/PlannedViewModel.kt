@@ -2,6 +2,10 @@ package mx.com.karedit.codegymapp.ui.screens.planned
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.format.DateTimeParseException
+import java.time.temporal.TemporalAdjusters
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -15,6 +19,10 @@ class PlannedViewModel(private val plannedRepository: PlannedRepository) : ViewM
 
     init {
         load()
+    }
+
+    fun selectFilter(filter: PlannedFilter) {
+        _state.update { it.copy(filter = filter) }
     }
 
     fun load() {
@@ -58,6 +66,42 @@ class PlannedViewModel(private val plannedRepository: PlannedRepository) : ViewM
 
 data class PlannedUiState(
     val challenges: List<MobileChallenge> = emptyList(),
+    val filter: PlannedFilter = PlannedFilter.All,
     val isLoading: Boolean = false,
     val snackbarMessage: String? = null
-)
+) {
+    val filteredChallenges: List<MobileChallenge>
+        get() = challenges.filter { challenge -> filter.matches(challenge) }
+}
+
+enum class PlannedFilter(val label: String) {
+    Expired("Vencidas"),
+    Today("Hoy"),
+    Tomorrow("Mañana"),
+    ThisWeek("Esta semana"),
+    Later("Después"),
+    All("Todo");
+
+    fun matches(challenge: MobileChallenge): Boolean {
+        val date = challenge.scheduledLocalDate() ?: return this == All
+        val today = LocalDate.now()
+        val tomorrow = today.plusDays(1)
+        val endOfWeek = today.with(TemporalAdjusters.nextOrSame(DayOfWeek.SUNDAY))
+
+        return when (this) {
+            Expired -> challenge.status == "expired" || date < today
+            Today -> challenge.status == "pending" && date == today
+            Tomorrow -> challenge.status == "pending" && date == tomorrow
+            ThisWeek -> challenge.status == "pending" && date > tomorrow && date <= endOfWeek
+            Later -> challenge.status == "pending" && date > endOfWeek
+            All -> true
+        }
+    }
+}
+
+private fun MobileChallenge.scheduledLocalDate(): LocalDate? =
+    try {
+        LocalDate.parse(scheduledDate)
+    } catch (_: DateTimeParseException) {
+        null
+    }

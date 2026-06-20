@@ -2,12 +2,15 @@ package mx.com.karedit.codegymapp.ui.screens.planned
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -74,13 +77,17 @@ fun PlannedScreen(
         ) {
             Text("Planeado", style = MaterialTheme.typography.displayMedium)
             Text("Todo planeado", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            PlannedFilters(
+                selected = state.filter,
+                onSelected = viewModel::selectFilter
+            )
 
             if (state.isLoading) {
                 CircularProgressIndicator()
-            } else if (state.challenges.isEmpty()) {
-                Text("No hay retos pendientes próximos.", style = MaterialTheme.typography.bodyMedium)
+            } else if (state.filteredChallenges.isEmpty()) {
+                Text("No hay retos para este filtro.", style = MaterialTheme.typography.bodyMedium)
             } else {
-                state.challenges
+                state.filteredChallenges
                     .groupBy { it.scheduledDate }
                     .forEach { (date, challenges) ->
                         PlannedDateGroup(
@@ -127,6 +134,25 @@ fun PlannedScreen(
             },
             onDismiss = { selectedChallenge = null }
         )
+    }
+}
+
+@Composable
+private fun PlannedFilters(
+    selected: PlannedFilter,
+    onSelected: (PlannedFilter) -> Unit
+) {
+    Row(
+        modifier = Modifier.horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        PlannedFilter.entries.forEach { filter ->
+            FilterChip(
+                selected = selected == filter,
+                onClick = { onSelected(filter) },
+                label = { Text(filter.label) }
+            )
+        }
     }
 }
 
