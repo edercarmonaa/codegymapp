@@ -76,6 +76,7 @@ final class ApiMobileController
         Response::json([
             'ok' => true,
             'platforms' => array_map([$this, 'platformResource'], Platform::active()),
+            'languages' => array_map([$this, 'languageResource'], Language::active()),
         ]);
     }
 
@@ -107,19 +108,29 @@ final class ApiMobileController
     /** @param array<string, mixed> $challenge @return array<string, mixed> */
     private function challengeResource(array $challenge): array
     {
+        $id = (int) ($challenge['id'] ?? 0);
+        $detail = $challenge;
+        if ($id > 0 && (!array_key_exists('language_ids', $detail) || !array_key_exists('github_links', $detail))) {
+            $detail = array_merge($detail, Challenge::detail($id) ?? []);
+        }
+
         return [
-            'id' => (int) ($challenge['id'] ?? 0),
-            'platform_name' => (string) ($challenge['platform_name'] ?? ''),
-            'title' => (string) ($challenge['title'] ?? ''),
-            'scheduled_date' => (string) ($challenge['scheduled_date'] ?? ''),
-            'completed_date' => $challenge['completed_date'] ?? null,
-            'status' => (string) ($challenge['status'] ?? ''),
-            'difficulty' => (string) ($challenge['difficulty'] ?? ''),
-            'challenge_url' => safe_url($challenge['challenge_url'] ?? null),
-            'time_spent_minutes' => (int) ($challenge['time_spent_minutes'] ?? 0),
-            'notes' => (string) ($challenge['notes'] ?? ''),
-            'origin' => (string) ($challenge['origin'] ?? ''),
-            'is_rescheduled' => (int) ($challenge['is_rescheduled'] ?? 0) === 1,
+            'id' => $id,
+            'platform_id' => (int) ($detail['platform_id'] ?? 0),
+            'platform_name' => (string) ($detail['platform_name'] ?? ''),
+            'title' => (string) ($detail['title'] ?? ''),
+            'scheduled_date' => (string) ($detail['scheduled_date'] ?? ''),
+            'completed_date' => $detail['completed_date'] ?? null,
+            'status' => (string) ($detail['status'] ?? ''),
+            'difficulty' => (string) ($detail['difficulty'] ?? ''),
+            'challenge_url' => safe_url($detail['challenge_url'] ?? null),
+            'time_spent_minutes' => (int) ($detail['time_spent_minutes'] ?? 0),
+            'notes' => (string) ($detail['notes'] ?? ''),
+            'language_ids' => array_values(array_map('intval', $detail['language_ids'] ?? [])),
+            'language_names' => $this->challengeLanguageNames($detail['language_ids'] ?? []),
+            'github_links' => $this->githubLinksResource($detail['github_links'] ?? []),
+            'origin' => (string) ($detail['origin'] ?? ''),
+            'is_rescheduled' => (int) ($detail['is_rescheduled'] ?? 0) === 1,
         ];
     }
 
@@ -130,6 +141,58 @@ final class ApiMobileController
             'id' => (int) ($platform['id'] ?? 0),
             'name' => (string) ($platform['name'] ?? ''),
         ];
+    }
+
+    /** @param array<string, mixed> $language @return array<string, mixed> */
+    private function languageResource(array $language): array
+    {
+        return [
+            'id' => (int) ($language['id'] ?? 0),
+            'name' => (string) ($language['name'] ?? ''),
+        ];
+    }
+
+    /** @param mixed $languageIds @return string */
+    private function challengeLanguageNames(mixed $languageIds): string
+    {
+        $ids = array_values(array_unique(array_filter(array_map('intval', is_array($languageIds) ? $languageIds : []))));
+        if (!$ids) {
+            return '';
+        }
+
+        $names = array_filter(array_map(
+            static fn (array $language): string => in_array((int) ($language['id'] ?? 0), $ids, true)
+                ? (string) ($language['name'] ?? '')
+                : '',
+            Language::all()
+        ));
+
+        return implode(', ', $names);
+    }
+
+    /** @param mixed $links @return array<int, array<string, string>> */
+    private function githubLinksResource(mixed $links): array
+    {
+        if (!is_array($links)) {
+            return [];
+        }
+
+        return array_values(array_filter(array_map(static function (mixed $link): ?array {
+            if (is_array($link)) {
+                $url = safe_url($link['github_url'] ?? null);
+                if ($url === null) {
+                    return null;
+                }
+
+                return [
+                    'github_url' => $url,
+                    'description' => (string) ($link['description'] ?? ''),
+                ];
+            }
+
+            $url = safe_url($link);
+            return $url === null ? null : ['github_url' => $url, 'description' => ''];
+        }, $links)));
     }
 
     /**
