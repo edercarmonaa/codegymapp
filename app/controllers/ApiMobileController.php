@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 use CodeGymApp\Services\CalendarService;
+use CodeGymApp\Services\DashboardService;
 
 final class ApiMobileController
 {
-    public function __construct(private readonly CalendarService $calendarService = new CalendarService())
-    {
+    public function __construct(
+        private readonly CalendarService $calendarService = new CalendarService(),
+        private readonly DashboardService $dashboardService = new DashboardService()
+    ) {
     }
 
     public function today(): void
@@ -40,6 +43,31 @@ final class ApiMobileController
             'ok' => true,
             'filters' => $filters,
             'challenges' => array_map([$this, 'challengeResource'], Challenge::mobileChallenges($filters)),
+        ]);
+    }
+
+    public function summary(): void
+    {
+        $this->dashboardService->refreshDashboardData();
+        $payload = $this->dashboardService->dashboardPayload();
+        $stats = $payload['stats'] ?? [];
+        $streaks = $payload['streaks'] ?? [];
+        $attention = $payload['attention'] ?? [];
+
+        Response::json([
+            'ok' => true,
+            'summary' => [
+                'completed_month' => (int) ($stats['completed_month'] ?? 0),
+                'general_percent' => (float) ($stats['general_percent'] ?? 0),
+                'on_time_percent' => (float) ($stats['on_time_percent'] ?? 0),
+                'time_month' => (int) ($stats['time_month'] ?? 0),
+                'current_streak' => (int) ($streaks['current'] ?? 0),
+                'best_streak' => (int) ($streaks['best'] ?? 0),
+                'month_streak' => (int) ($streaks['month'] ?? 0),
+                'expired_review' => (int) ($stats['expired_review'] ?? 0),
+                'pending_today' => (int) ($attention['pending_today'] ?? 0),
+                'pending_week' => (int) ($attention['pending_week'] ?? 0),
+            ],
         ]);
     }
 
