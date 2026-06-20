@@ -9,6 +9,7 @@ import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
 import mx.com.karedit.codegymapp.data.repository.CreateChallengeRepository
 import mx.com.karedit.codegymapp.data.repository.CreateRoutineRepository
 import mx.com.karedit.codegymapp.data.repository.PlannedRepository
+import mx.com.karedit.codegymapp.data.repository.SummaryRepository
 import mx.com.karedit.codegymapp.data.repository.TodayRepository
 import mx.com.karedit.codegymapp.data.security.EncryptedTokenStorage
 
@@ -17,6 +18,7 @@ class AppContainer(context: Context) {
     val sessionManager = SessionManager(tokenStorage)
     private val api = RetrofitFactory.createApi(sessionManager)
     val authRepository = AuthRepository(api, sessionManager)
+    val summaryRepository = SummaryRepository(api)
     val todayRepository = TodayRepository(api)
     val plannedRepository = PlannedRepository(api)
     val challengesRepository = ChallengesRepository(api)

@@ -22,6 +22,25 @@ data class MobileChallengesResponseDto(
     val message: String? = null
 )
 
+data class MobileSummaryResponseDto(
+    val ok: Boolean,
+    val summary: MobileSummaryDto? = null,
+    val message: String? = null
+)
+
+data class MobileSummaryDto(
+    @Json(name = "completed_month") val completedMonth: Int = 0,
+    @Json(name = "general_percent") val generalPercent: Double = 0.0,
+    @Json(name = "on_time_percent") val onTimePercent: Double = 0.0,
+    @Json(name = "time_month") val timeMonth: Int = 0,
+    @Json(name = "current_streak") val currentStreak: Int = 0,
+    @Json(name = "best_streak") val bestStreak: Int = 0,
+    @Json(name = "month_streak") val monthStreak: Int = 0,
+    @Json(name = "expired_review") val expiredReview: Int = 0,
+    @Json(name = "pending_today") val pendingToday: Int = 0,
+    @Json(name = "pending_week") val pendingWeek: Int = 0
+)
+
 data class MobileChallengeFiltersDto(
     val month: String,
     val status: String

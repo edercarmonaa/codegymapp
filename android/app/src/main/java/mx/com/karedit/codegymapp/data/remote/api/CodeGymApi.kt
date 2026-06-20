@@ -11,6 +11,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengesResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileSummaryResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileTodayResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -23,6 +24,9 @@ interface CodeGymApi {
 
     @GET("api/me")
     suspend fun me(): MeResponseDto
+
+    @GET("api/mobile/summary")
+    suspend fun mobileSummary(): MobileSummaryResponseDto
 
     @GET("api/mobile/today")
     suspend fun mobileToday(): MobileTodayResponseDto
