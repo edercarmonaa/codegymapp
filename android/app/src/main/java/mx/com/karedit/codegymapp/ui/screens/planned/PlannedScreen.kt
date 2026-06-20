@@ -29,17 +29,21 @@ import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PlannedScreen(
     viewModel: PlannedViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
+    challengeDetailsViewModel: ChallengeDetailsViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showCreateSheet by remember { mutableStateOf(false) }
+    var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -82,6 +86,7 @@ fun PlannedScreen(
                         PlannedDateGroup(
                             date = date,
                             challenges = challenges,
+                            onChallengeClick = { selectedChallenge = it },
                             onComplete = viewModel::completeChallenge,
                             onMiss = viewModel::missChallenge
                         )
@@ -101,12 +106,35 @@ fun PlannedScreen(
             onDismiss = { showCreateSheet = false }
         )
     }
+
+    selectedChallenge?.let { challenge ->
+        ChallengeDetailsSheet(
+            challenge = challenge,
+            viewModel = challengeDetailsViewModel,
+            isActionLoading = false,
+            onSaved = { message ->
+                selectedChallenge = null
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+            },
+            onComplete = {
+                selectedChallenge = null
+                viewModel.completeChallenge(challenge.id)
+            },
+            onMiss = {
+                selectedChallenge = null
+                viewModel.missChallenge(challenge.id)
+            },
+            onDismiss = { selectedChallenge = null }
+        )
+    }
 }
 
 @Composable
 private fun PlannedDateGroup(
     date: String,
     challenges: List<MobileChallenge>,
+    onChallengeClick: (MobileChallenge) -> Unit,
     onComplete: (Int) -> Unit,
     onMiss: (Int) -> Unit
 ) {
@@ -115,6 +143,7 @@ private fun PlannedDateGroup(
         challenges.forEach { challenge ->
             ToDoTaskCard(
                 challenge = challenge,
+                onClick = { onChallengeClick(challenge) },
                 onCompleteClick = { onComplete(challenge.id) },
                 onMissClick = { onMiss(challenge.id) }
             )

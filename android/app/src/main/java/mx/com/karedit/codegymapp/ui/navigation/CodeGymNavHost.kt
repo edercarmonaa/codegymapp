@@ -13,6 +13,7 @@ import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 import mx.com.karedit.codegymapp.ui.screens.home.HomeScreen
 import mx.com.karedit.codegymapp.ui.screens.home.HomeViewModel
 import mx.com.karedit.codegymapp.ui.screens.login.LoginScreen
@@ -84,27 +85,33 @@ fun CodeGymNavHost(
                 )
             }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             TodayScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
             )
         }
         composable(AppRoutes.Planned) {
             val viewModel = remember { PlannedViewModel(appContainer.plannedRepository) }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             PlannedScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
             )
         }
         composable(AppRoutes.Challenges) {
             val viewModel = remember { ChallengesViewModel(appContainer.challengesRepository) }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             ChallengesScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
             )
         }

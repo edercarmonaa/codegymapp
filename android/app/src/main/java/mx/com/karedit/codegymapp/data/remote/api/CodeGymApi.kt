@@ -6,6 +6,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MeResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeDetailsRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengesResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
@@ -40,6 +41,9 @@ interface CodeGymApi {
 
     @POST("api/mobile/challenges/store")
     suspend fun storeChallenge(@Body request: MobileChallengeCreateRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/challenges/save-details")
+    suspend fun saveChallengeDetails(@Body request: MobileChallengeDetailsRequestDto): MobileActionResponseDto
 
     @POST("api/mobile/challenges/complete")
     suspend fun completeChallenge(@Body request: MobileChallengeActionRequestDto): MobileActionResponseDto

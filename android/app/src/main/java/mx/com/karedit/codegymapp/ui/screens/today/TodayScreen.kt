@@ -11,14 +11,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -33,7 +29,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -43,12 +38,15 @@ import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayScreen(
     viewModel: TodayViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
+    challengeDetailsViewModel: ChallengeDetailsViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
@@ -126,9 +124,15 @@ fun TodayScreen(
     }
 
     selectedChallenge?.let { challenge ->
-        ChallengeDetailSheet(
+        ChallengeDetailsSheet(
             challenge = challenge,
+            viewModel = challengeDetailsViewModel,
             isActionLoading = state.isActionLoading,
+            onSaved = { message ->
+                selectedChallenge = null
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+            },
             onComplete = {
                 viewModel.completeChallenge(challenge.id)
                 selectedChallenge = null
@@ -232,94 +236,6 @@ private fun ChallengeSection(
         }
     }
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun ChallengeDetailSheet(
-    challenge: MobileChallenge,
-    isActionLoading: Boolean,
-    onComplete: () -> Unit,
-    onMiss: () -> Unit,
-    onDismiss: () -> Unit
-) {
-    val uriHandler = LocalUriHandler.current
-    val canClose = challenge.status == "pending" || challenge.status == "expired"
-
-    ModalBottomSheet(onDismissRequest = onDismiss) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
-            verticalArrangement = Arrangement.spacedBy(14.dp)
-        ) {
-            Text(challenge.platformName, style = MaterialTheme.typography.headlineSmall)
-            Text(challenge.statusLabel(), style = MaterialTheme.typography.bodyMedium)
-
-            HorizontalDivider()
-
-            DetailRow(label = "Fecha", value = challenge.scheduledDate)
-            if (challenge.title.isNotBlank()) {
-                DetailRow(label = "Reto", value = challenge.title)
-            }
-            if (challenge.difficulty.isNotBlank()) {
-                DetailRow(label = "Dificultad", value = challenge.difficulty)
-            }
-            if (challenge.timeSpentMinutes > 0) {
-                DetailRow(label = "Tiempo", value = "${challenge.timeSpentMinutes} min")
-            }
-            if (challenge.notes.isNotBlank()) {
-                DetailRow(label = "Notas", value = challenge.notes)
-            }
-            if (challenge.isRescheduled) {
-                DetailRow(label = "Reprogramado", value = "Sí")
-            }
-            if (!challenge.challengeUrl.isNullOrBlank()) {
-                TextButton(onClick = { uriHandler.openUri(challenge.challengeUrl) }) {
-                    Text("Abrir reto")
-                }
-            }
-            if (canClose) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Button(
-                        modifier = Modifier.weight(1f),
-                        enabled = !isActionLoading,
-                        onClick = onComplete
-                    ) {
-                        Text("Completar")
-                    }
-                    OutlinedButton(
-                        modifier = Modifier.weight(1f),
-                        enabled = !isActionLoading,
-                        onClick = onMiss
-                    ) {
-                        Text("No realizado")
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun DetailRow(label: String, value: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-        Text(value, style = MaterialTheme.typography.bodyMedium)
-    }
-}
-
-private fun MobileChallenge.statusLabel(): String =
-    when (status) {
-        "pending" -> "Pendiente"
-        "expired" -> "Vencido"
-        "completed" -> "Completado"
-        "missed" -> "No realizado"
-        "cancelled" -> "Cancelado"
-        else -> status
-    }
 
 private fun todayDisplayLabel(): String {
     val today = LocalDate.now()

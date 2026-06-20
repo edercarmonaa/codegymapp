@@ -26,22 +26,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ChallengesScreen(
     viewModel: ChallengesViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
+    challengeDetailsViewModel: ChallengeDetailsViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     var showCreateSheet by remember { mutableStateOf(false) }
+    var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -83,6 +88,7 @@ fun ChallengesScreen(
                     state.challenges.forEach { challenge ->
                         ToDoTaskCard(
                             challenge = challenge,
+                            onClick = { selectedChallenge = challenge },
                             onCompleteClick = { viewModel.completeChallenge(challenge.id) },
                             onMissClick = { viewModel.missChallenge(challenge.id) }
                         )
@@ -101,6 +107,28 @@ fun ChallengesScreen(
                 viewModel.load()
             },
             onDismiss = { showCreateSheet = false }
+        )
+    }
+
+    selectedChallenge?.let { challenge ->
+        ChallengeDetailsSheet(
+            challenge = challenge,
+            viewModel = challengeDetailsViewModel,
+            isActionLoading = false,
+            onSaved = { message ->
+                selectedChallenge = null
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+            },
+            onComplete = {
+                selectedChallenge = null
+                viewModel.completeChallenge(challenge.id)
+            },
+            onMiss = {
+                selectedChallenge = null
+                viewModel.missChallenge(challenge.id)
+            },
+            onDismiss = { selectedChallenge = null }
         )
     }
 }

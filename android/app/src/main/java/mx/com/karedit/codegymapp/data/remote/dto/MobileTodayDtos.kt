@@ -31,6 +31,15 @@ data class MobileChallengeActionRequestDto(
     val id: Int
 )
 
+data class MobileChallengeDetailsRequestDto(
+    val id: Int,
+    val title: String,
+    @Json(name = "challenge_url") val challengeUrl: String,
+    val difficulty: String,
+    @Json(name = "time_spent_minutes") val timeSpentMinutes: Int?,
+    val notes: String
+)
+
 data class MobileChallengeCreateRequestDto(
     @Json(name = "platform_id") val platformId: Int,
     @Json(name = "scheduled_date") val scheduledDate: String
