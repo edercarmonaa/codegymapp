@@ -179,7 +179,8 @@ final class Challenge extends BaseModel
         try {
             $stmt = $db->prepare(
                 'UPDATE challenges
-                 SET title = :title,
+                 SET platform_id = :platform_id,
+                     title = :title,
                      challenge_url = :challenge_url,
                      difficulty = :difficulty,
                      time_spent_minutes = :time_spent_minutes,
@@ -189,6 +190,7 @@ final class Challenge extends BaseModel
             );
             $stmt->execute([
                 'id' => $id,
+                'platform_id' => self::validPlatformId($data['platform_id'] ?? 0, (int) $detail['platform_id']),
                 'title' => self::blankToNull((string) ($data['title'] ?? '')),
                 'challenge_url' => safe_url((string) ($data['challenge_url'] ?? '')),
                 'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
@@ -899,5 +901,11 @@ final class Challenge extends BaseModel
             }
             $insert->execute(['challenge_id' => $challengeId, 'github_url' => $url]);
         }
+    }
+
+    private static function validPlatformId(mixed $platformId, int $fallback): int
+    {
+        $id = (int) $platformId;
+        return $id > 0 && \Platform::existsActive($id) ? $id : $fallback;
     }
 }

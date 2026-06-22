@@ -107,6 +107,7 @@ final class CalendarService
         }
 
         $saved = \Challenge::saveDetails($id, [
+            'platform_id' => $input['platform_id'] ?? 0,
             'title' => $input['title'] ?? '',
             'challenge_url' => $input['challenge_url'] ?? '',
             'difficulty' => $input['difficulty'] ?? '',
