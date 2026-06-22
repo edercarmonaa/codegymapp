@@ -53,6 +53,7 @@ final class ApiMobileController
         $stats = $payload['stats'] ?? [];
         $streaks = $payload['streaks'] ?? [];
         $attention = $payload['attention'] ?? [];
+        $distribution = $payload['distribution'] ?? [];
 
         Response::json([
             'ok' => true,
@@ -67,6 +68,17 @@ final class ApiMobileController
                 'expired_review' => (int) ($stats['expired_review'] ?? 0),
                 'pending_today' => (int) ($attention['pending_today'] ?? 0),
                 'pending_week' => (int) ($attention['pending_week'] ?? 0),
+                'days_without_practice' => (int) ($attention['days_without_practice'] ?? 0),
+                'distribution' => [
+                    'pending' => (int) ($distribution['pending'] ?? 0),
+                    'completed' => (int) ($distribution['completed'] ?? 0),
+                    'missed' => (int) ($distribution['missed'] ?? 0),
+                    'expired' => (int) ($distribution['expired'] ?? 0),
+                    'cancelled' => (int) ($distribution['cancelled'] ?? 0),
+                ],
+                'weekly_compliance' => array_map([$this, 'summarySeriesResource'], $payload['weeklyCompliance'] ?? []),
+                'top_platforms' => array_map([$this, 'summarySeriesResource'], $payload['topPlatforms'] ?? []),
+                'top_languages' => array_map([$this, 'summarySeriesResource'], $payload['topLanguages'] ?? []),
             ],
         ]);
     }
@@ -140,6 +152,19 @@ final class ApiMobileController
         return [
             'id' => (int) ($platform['id'] ?? 0),
             'name' => (string) ($platform['name'] ?? ''),
+        ];
+    }
+
+    /** @param array<string, mixed> $row @return array<string, mixed> */
+    private function summarySeriesResource(array $row): array
+    {
+        return [
+            'label' => (string) ($row['label'] ?? ''),
+            'value' => (int) ($row['value'] ?? $row['completed'] ?? 0),
+            'minutes' => (int) ($row['minutes'] ?? 0),
+            'scheduled' => (int) ($row['scheduled'] ?? 0),
+            'completed' => (int) ($row['completed'] ?? 0),
+            'percent' => (float) ($row['percent'] ?? 0),
         ];
     }
 
