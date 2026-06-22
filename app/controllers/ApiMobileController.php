@@ -120,6 +120,19 @@ final class ApiMobileController
         Response::json(['ok' => true, 'message' => 'Notificación eliminada.']);
     }
 
+    public function storeDeviceToken(): void
+    {
+        $user = Auth::user();
+        $input = $this->jsonInput();
+        if (!$user || !MobileDeviceToken::upsert((int) $user['id'], $input)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'No se pudo registrar el dispositivo.']);
+            return;
+        }
+
+        Response::json(['ok' => true, 'message' => 'Dispositivo registrado.']);
+    }
+
     public function createOptions(): void
     {
         Response::json([
