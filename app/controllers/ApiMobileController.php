@@ -3,13 +3,15 @@
 declare(strict_types=1);
 
 use CodeGymApp\Services\CalendarService;
+use CodeGymApp\Services\AzureNotificationHubService;
 use CodeGymApp\Services\DashboardService;
 
 final class ApiMobileController
 {
     public function __construct(
         private readonly CalendarService $calendarService = new CalendarService(),
-        private readonly DashboardService $dashboardService = new DashboardService()
+        private readonly DashboardService $dashboardService = new DashboardService(),
+        private readonly AzureNotificationHubService $notificationHubService = new AzureNotificationHubService()
     ) {
     }
 
@@ -129,6 +131,8 @@ final class ApiMobileController
             Response::json(['ok' => false, 'message' => 'No se pudo registrar el dispositivo.']);
             return;
         }
+
+        $this->notificationHubService->registerInstallation($user, $input);
 
         Response::json(['ok' => true, 'message' => 'Dispositivo registrado.']);
     }
