@@ -14,6 +14,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appContainer = AppContainer(applicationContext)
+        appContainer.fcmTokenRegistrar.registerCurrentToken()
 
         setContent {
             CodeGymTheme {

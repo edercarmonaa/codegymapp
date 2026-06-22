@@ -84,6 +84,13 @@ data class MobileNotificationActionRequestDto(
     val id: Int
 )
 
+data class MobileDeviceTokenRequestDto(
+    val token: String,
+    val platform: String = "android",
+    @Json(name = "device_name") val deviceName: String,
+    @Json(name = "app_version") val appVersion: String
+)
+
 data class MobileChallengeFiltersDto(
     val month: String,
     val status: String

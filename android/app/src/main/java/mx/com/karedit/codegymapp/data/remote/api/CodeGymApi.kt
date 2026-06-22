@@ -9,6 +9,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeDetailsRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengesResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileDeviceTokenRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
@@ -38,6 +39,9 @@ interface CodeGymApi {
 
     @POST("api/mobile/notifications/delete")
     suspend fun deleteNotification(@Body request: MobileNotificationActionRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/device-token")
+    suspend fun storeDeviceToken(@Body request: MobileDeviceTokenRequestDto): MobileActionResponseDto
 
     @GET("api/mobile/today")
     suspend fun mobileToday(): MobileTodayResponseDto
