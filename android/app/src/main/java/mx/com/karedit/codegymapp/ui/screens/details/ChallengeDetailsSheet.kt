@@ -9,9 +9,14 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -21,6 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +50,8 @@ fun ChallengeDetailsSheet(
     val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
     val canClose = challenge.status == "pending" || challenge.status == "expired"
+    var platformMenuExpanded by remember { mutableStateOf(false) }
+    val selectedPlatform = state.platforms.firstOrNull { it.id == state.platformId }
 
     LaunchedEffect(challenge.id) {
         viewModel.load(challenge)
@@ -63,6 +74,39 @@ fun ChallengeDetailsSheet(
 
             HorizontalDivider()
 
+            ExposedDropdownMenuBox(
+                expanded = platformMenuExpanded,
+                onExpandedChange = { platformMenuExpanded = !platformMenuExpanded }
+            ) {
+                OutlinedTextField(
+                    modifier = Modifier
+                        .menuAnchor(
+                            type = MenuAnchorType.PrimaryNotEditable,
+                            enabled = !state.isSaving
+                        )
+                        .fillMaxWidth(),
+                    value = selectedPlatform?.name ?: state.platformName,
+                    onValueChange = {},
+                    readOnly = true,
+                    label = { Text("Plataforma") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = platformMenuExpanded) },
+                    enabled = !state.isSaving
+                )
+                ExposedDropdownMenu(
+                    expanded = platformMenuExpanded,
+                    onDismissRequest = { platformMenuExpanded = false }
+                ) {
+                    state.platforms.forEach { platform ->
+                        DropdownMenuItem(
+                            text = { Text(platform.name) },
+                            onClick = {
+                                viewModel.selectPlatform(platform.id)
+                                platformMenuExpanded = false
+                            }
+                        )
+                    }
+                }
+            }
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
                 value = state.title,
@@ -104,6 +148,34 @@ fun ChallengeDetailsSheet(
                 minLines = 3,
                 enabled = !state.isSaving
             )
+            OutlinedTextField(
+                modifier = Modifier.fillMaxWidth(),
+                value = state.githubLinks,
+                onValueChange = viewModel::updateGithubLinks,
+                label = { Text("GitHub") },
+                placeholder = { Text("Un enlace por línea") },
+                minLines = 3,
+                enabled = !state.isSaving
+            )
+
+            if (state.languages.isNotEmpty()) {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("Lenguajes", style = MaterialTheme.typography.titleMedium)
+                    state.languages.forEach { language ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Checkbox(
+                                checked = state.selectedLanguageIds.contains(language.id),
+                                onCheckedChange = { viewModel.toggleLanguage(language.id) },
+                                enabled = !state.isSaving
+                            )
+                            Text(language.name, style = MaterialTheme.typography.bodyLarge)
+                        }
+                    }
+                }
+            }
 
             if (state.challengeUrl.isNotBlank()) {
                 TextButton(onClick = { uriHandler.openUri(state.challengeUrl) }) {

@@ -52,11 +52,14 @@ data class MobileChallengeActionRequestDto(
 
 data class MobileChallengeDetailsRequestDto(
     val id: Int,
+    @Json(name = "platform_id") val platformId: Int,
     val title: String,
     @Json(name = "challenge_url") val challengeUrl: String,
     val difficulty: String,
     @Json(name = "time_spent_minutes") val timeSpentMinutes: Int?,
-    val notes: String
+    val notes: String,
+    @Json(name = "language_ids") val languageIds: List<Int>,
+    @Json(name = "github_links") val githubLinks: String
 )
 
 data class MobileChallengeCreateRequestDto(
@@ -76,10 +79,16 @@ data class MobileRoutineCreateRequestDto(
 data class MobileCreateOptionsResponseDto(
     val ok: Boolean,
     val platforms: List<MobilePlatformDto> = emptyList(),
+    val languages: List<MobileLanguageDto> = emptyList(),
     val message: String? = null
 )
 
 data class MobilePlatformDto(
+    val id: Int,
+    val name: String
+)
+
+data class MobileLanguageDto(
     val id: Int,
     val name: String
 )
@@ -91,6 +100,7 @@ data class MobileActionResponseDto(
 
 data class MobileChallengeDto(
     val id: Int,
+    @Json(name = "platform_id") val platformId: Int = 0,
     @Json(name = "platform_name") val platformName: String,
     val title: String? = null,
     @Json(name = "scheduled_date") val scheduledDate: String,
@@ -100,6 +110,14 @@ data class MobileChallengeDto(
     @Json(name = "challenge_url") val challengeUrl: String? = null,
     @Json(name = "time_spent_minutes") val timeSpentMinutes: Int = 0,
     val notes: String? = null,
+    @Json(name = "language_ids") val languageIds: List<Int> = emptyList(),
+    @Json(name = "language_names") val languageNames: String = "",
+    @Json(name = "github_links") val githubLinks: List<MobileGithubLinkDto> = emptyList(),
     val origin: String? = null,
     @Json(name = "is_rescheduled") val isRescheduled: Boolean = false
+)
+
+data class MobileGithubLinkDto(
+    @Json(name = "github_url") val githubUrl: String,
+    val description: String = ""
 )

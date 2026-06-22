@@ -6,6 +6,7 @@ import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 fun MobileChallengeDto.toDomain(): MobileChallenge =
     MobileChallenge(
         id = id,
+        platformId = platformId,
         platformName = platformName,
         title = title.orEmpty(),
         scheduledDate = scheduledDate,
@@ -15,6 +16,9 @@ fun MobileChallengeDto.toDomain(): MobileChallenge =
         challengeUrl = challengeUrl,
         timeSpentMinutes = timeSpentMinutes,
         notes = notes.orEmpty(),
+        languageIds = languageIds,
+        languageNames = languageNames,
+        githubLinks = githubLinks.map { it.githubUrl },
         origin = origin.orEmpty(),
         isRescheduled = isRescheduled
     )
