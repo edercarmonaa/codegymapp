@@ -92,12 +92,6 @@ fun HomeScreen(
 
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 HomeItem(
-                    symbol = "▤",
-                    label = "Resumen",
-                    color = MaterialTheme.colorScheme.tertiary,
-                    onClick = { onNavigate(AppRoutes.Summary) }
-                )
-                HomeItem(
                     symbol = "☼",
                     label = "Mi día",
                     count = state.todayCount,
@@ -117,6 +111,12 @@ fun HomeScreen(
                     count = state.challengesCount,
                     color = MaterialTheme.colorScheme.primary,
                     onClick = { onNavigate(AppRoutes.Challenges) }
+                )
+                HomeItem(
+                    symbol = "▤",
+                    label = "Resumen",
+                    color = MaterialTheme.colorScheme.tertiary,
+                    onClick = { onNavigate(AppRoutes.Summary) }
                 )
             }
 
