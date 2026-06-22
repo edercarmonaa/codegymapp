@@ -16,6 +16,7 @@ $router->get('/api/mobile/challenges', 'ApiMobileController', 'challenges');
 $router->get('/api/mobile/summary', 'ApiMobileController', 'summary');
 $router->get('/api/mobile/notifications', 'ApiMobileController', 'notifications');
 $router->post('/api/mobile/notifications/mark-read', 'ApiMobileController', 'markNotificationRead');
+$router->post('/api/mobile/notifications/delete', 'ApiMobileController', 'deleteNotification');
 $router->get('/api/mobile/challenges/create-options', 'ApiMobileController', 'createOptions');
 $router->post('/api/mobile/challenges/store', 'ApiMobileController', 'storeChallenge');
 $router->post('/api/mobile/challenges/save-details', 'ApiMobileController', 'saveChallengeDetails');
