@@ -107,6 +107,19 @@ final class ApiMobileController
         Response::json(['ok' => true, 'message' => 'Notificación marcada como leída.']);
     }
 
+    public function deleteNotification(): void
+    {
+        $id = (int) ($this->jsonInput()['id'] ?? 0);
+        if ($id <= 0) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'No se pudo identificar la notificación.']);
+            return;
+        }
+
+        Notification::delete($id);
+        Response::json(['ok' => true, 'message' => 'Notificación eliminada.']);
+    }
+
     public function createOptions(): void
     {
         Response::json([
