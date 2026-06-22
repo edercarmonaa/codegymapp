@@ -10,5 +10,27 @@ data class MobileSummary(
     val monthStreak: Int,
     val expiredReview: Int,
     val pendingToday: Int,
-    val pendingWeek: Int
+    val pendingWeek: Int,
+    val daysWithoutPractice: Int,
+    val distribution: MobileSummaryDistribution,
+    val weeklyCompliance: List<MobileSummarySeries>,
+    val topPlatforms: List<MobileSummarySeries>,
+    val topLanguages: List<MobileSummarySeries>
+)
+
+data class MobileSummaryDistribution(
+    val pending: Int,
+    val completed: Int,
+    val missed: Int,
+    val expired: Int,
+    val cancelled: Int
+)
+
+data class MobileSummarySeries(
+    val label: String,
+    val value: Int,
+    val minutes: Int,
+    val scheduled: Int,
+    val completed: Int,
+    val percent: Double
 )

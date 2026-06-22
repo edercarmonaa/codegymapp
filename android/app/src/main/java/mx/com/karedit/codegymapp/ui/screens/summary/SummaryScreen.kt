@@ -25,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileSummary
+import mx.com.karedit.codegymapp.domain.model.MobileSummarySeries
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 
@@ -96,9 +97,57 @@ private fun SummaryContent(summary: MobileSummary) {
             rows = listOf(
                 "Retos de hoy" to summary.pendingToday.toString(),
                 "Próximos 7 días" to summary.pendingWeek.toString(),
-                "Vencidos por revisar" to summary.expiredReview.toString()
+                "Vencidos por revisar" to summary.expiredReview.toString(),
+                "Días sin practicar" to summary.daysWithoutPractice.asDays()
             )
         )
+        SeriesGroup(
+            title = "Cumplimiento semanal",
+            rows = summary.weeklyCompliance,
+            valueText = { "${it.completed}/${it.scheduled} · ${it.percent.asPercent()}" },
+            emptyText = "Sin semanas registradas."
+        )
+        SeriesGroup(
+            title = "Plataformas del mes",
+            rows = summary.topPlatforms,
+            valueText = { "${it.value} retos · ${it.minutes} min" },
+            emptyText = "Sin plataformas completadas."
+        )
+        SeriesGroup(
+            title = "Lenguajes del mes",
+            rows = summary.topLanguages,
+            valueText = { "${it.value} retos · ${it.minutes} min" },
+            emptyText = "Sin lenguajes registrados."
+        )
+        MetricGroup(
+            title = "Historial del mes",
+            rows = listOf(
+                "Pendientes" to summary.distribution.pending.toString(),
+                "Completados" to summary.distribution.completed.toString(),
+                "No realizados" to summary.distribution.missed.toString(),
+                "Vencidos" to summary.distribution.expired.toString(),
+                "Cancelados" to summary.distribution.cancelled.toString()
+            )
+        )
+    }
+}
+
+@Composable
+private fun SeriesGroup(
+    title: String,
+    rows: List<MobileSummarySeries>,
+    valueText: (MobileSummarySeries) -> String,
+    emptyText: String
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        if (rows.isEmpty()) {
+            Text(emptyText, style = MaterialTheme.typography.bodyMedium)
+        } else {
+            rows.forEach { row ->
+                MetricRow(label = row.label.ifBlank { "-" }, value = valueText(row))
+            }
+        }
     }
 }
 

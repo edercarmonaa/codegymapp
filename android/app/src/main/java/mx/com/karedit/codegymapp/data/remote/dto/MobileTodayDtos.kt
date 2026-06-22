@@ -38,7 +38,29 @@ data class MobileSummaryDto(
     @Json(name = "month_streak") val monthStreak: Int = 0,
     @Json(name = "expired_review") val expiredReview: Int = 0,
     @Json(name = "pending_today") val pendingToday: Int = 0,
-    @Json(name = "pending_week") val pendingWeek: Int = 0
+    @Json(name = "pending_week") val pendingWeek: Int = 0,
+    @Json(name = "days_without_practice") val daysWithoutPractice: Int = 0,
+    val distribution: MobileSummaryDistributionDto = MobileSummaryDistributionDto(),
+    @Json(name = "weekly_compliance") val weeklyCompliance: List<MobileSummarySeriesDto> = emptyList(),
+    @Json(name = "top_platforms") val topPlatforms: List<MobileSummarySeriesDto> = emptyList(),
+    @Json(name = "top_languages") val topLanguages: List<MobileSummarySeriesDto> = emptyList()
+)
+
+data class MobileSummaryDistributionDto(
+    val pending: Int = 0,
+    val completed: Int = 0,
+    val missed: Int = 0,
+    val expired: Int = 0,
+    val cancelled: Int = 0
+)
+
+data class MobileSummarySeriesDto(
+    val label: String = "",
+    val value: Int = 0,
+    val minutes: Int = 0,
+    val scheduled: Int = 0,
+    val completed: Int = 0,
+    val percent: Double = 0.0
 )
 
 data class MobileChallengeFiltersDto(
