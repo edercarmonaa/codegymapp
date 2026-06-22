@@ -118,6 +118,12 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.tertiary,
                     onClick = { onNavigate(AppRoutes.Summary) }
                 )
+                HomeItem(
+                    symbol = "◌",
+                    label = "Mi cuenta",
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    onClick = { onNavigate(AppRoutes.Account) }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))

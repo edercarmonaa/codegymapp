@@ -9,6 +9,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mx.com.karedit.codegymapp.core.session.SessionEvent
 import mx.com.karedit.codegymapp.di.AppContainer
+import mx.com.karedit.codegymapp.ui.screens.account.AccountScreen
+import mx.com.karedit.codegymapp.ui.screens.account.AccountViewModel
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
@@ -76,6 +78,13 @@ fun CodeGymNavHost(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
                 createRoutineViewModel = createRoutineViewModel,
+                onNavigate = navigateTab
+            )
+        }
+        composable(AppRoutes.Account) {
+            val viewModel = remember { AccountViewModel(appContainer.authRepository) }
+            AccountScreen(
+                viewModel = viewModel,
                 onNavigate = navigateTab
             )
         }
