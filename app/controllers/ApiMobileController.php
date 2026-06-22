@@ -83,6 +83,17 @@ final class ApiMobileController
         ]);
     }
 
+    public function notifications(): void
+    {
+        $this->dashboardService->refreshDashboardData();
+
+        Response::json([
+            'ok' => true,
+            'unread_count' => Notification::unreadCount(),
+            'notifications' => array_map([$this, 'notificationResource'], Notification::allForList()),
+        ]);
+    }
+
     public function createOptions(): void
     {
         Response::json([
@@ -152,6 +163,20 @@ final class ApiMobileController
         return [
             'id' => (int) ($platform['id'] ?? 0),
             'name' => (string) ($platform['name'] ?? ''),
+        ];
+    }
+
+    /** @param array<string, mixed> $notification @return array<string, mixed> */
+    private function notificationResource(array $notification): array
+    {
+        return [
+            'id' => (int) ($notification['id'] ?? 0),
+            'type' => (string) ($notification['type'] ?? ''),
+            'title' => (string) ($notification['title'] ?? ''),
+            'message' => (string) ($notification['message'] ?? ''),
+            'is_read' => (int) ($notification['is_read'] ?? 0) === 1,
+            'action_url' => safe_app_url($notification['action_url'] ?? '', ''),
+            'created_at' => (string) ($notification['created_at'] ?? ''),
         ];
     }
 

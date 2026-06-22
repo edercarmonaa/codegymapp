@@ -14,6 +14,7 @@ $router->get('/api/mobile/today', 'ApiMobileController', 'today');
 $router->get('/api/mobile/planned', 'ApiMobileController', 'planned');
 $router->get('/api/mobile/challenges', 'ApiMobileController', 'challenges');
 $router->get('/api/mobile/summary', 'ApiMobileController', 'summary');
+$router->get('/api/mobile/notifications', 'ApiMobileController', 'notifications');
 $router->get('/api/mobile/challenges/create-options', 'ApiMobileController', 'createOptions');
 $router->post('/api/mobile/challenges/store', 'ApiMobileController', 'storeChallenge');
 $router->post('/api/mobile/challenges/save-details', 'ApiMobileController', 'saveChallengeDetails');
