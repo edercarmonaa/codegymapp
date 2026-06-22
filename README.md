@@ -83,9 +83,32 @@ LOGIN_BLOCK_MINUTES=30
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_REQUESTS=120
 RATE_LIMIT_WINDOW_SECONDS=60
+
+NOTIFICATION_HUB_ENABLED=false
+NOTIFICATION_HUB_NAME=
+NOTIFICATION_HUB_CONNECTION_STRING=
+NOTIFICATION_HUB_PLATFORM=fcmv1
 ```
 
 Nunca subas `.env` a GitHub.
+
+## Azure Notification Hubs
+
+La app móvil registra el token FCM del dispositivo en el backend. Si Azure Notification Hubs está habilitado, el backend también registra/actualiza la instalación en el hub usando tags:
+
+- `user:{id}`
+- `platform:android`
+
+Configura estas variables en `.env`:
+
+```env
+NOTIFICATION_HUB_ENABLED=true
+NOTIFICATION_HUB_NAME=nombre_del_hub
+NOTIFICATION_HUB_CONNECTION_STRING="Endpoint=sb://...;SharedAccessKeyName=...;SharedAccessKey=..."
+NOTIFICATION_HUB_PLATFORM=fcmv1
+```
+
+Antes de habilitarlo, crea la tabla con `database/mobile_device_tokens.sql` si tu base ya existía antes de esta funcionalidad.
 
 ## API Inicial
 
