@@ -1,15 +1,25 @@
 package mx.com.karedit.codegymapp.ui.screens.notifications
 
-import androidx.compose.foundation.clickable
+import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -22,12 +32,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileNotification
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
+import kotlinx.coroutines.launch
+import kotlin.math.roundToInt
 
 @Composable
 fun NotificationsScreen(
@@ -73,7 +86,8 @@ fun NotificationsScreen(
                 else -> state.notifications.forEach { notification ->
                     NotificationCard(
                         notification = notification,
-                        onClick = { viewModel.markRead(notification) }
+                        onMarkRead = { viewModel.markRead(notification) },
+                        onDelete = { viewModel.delete(notification) }
                     )
                 }
             }
@@ -84,12 +98,58 @@ fun NotificationsScreen(
 @Composable
 private fun NotificationCard(
     notification: MobileNotification,
-    onClick: () -> Unit
+    onMarkRead: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val canMarkRead = !notification.isRead
+    val canDelete = notification.isRead
+    val swipeOffset = remember(notification.id, notification.isRead) { Animatable(0f) }
+    val scope = rememberCoroutineScope()
+    val density = LocalDensity.current
+
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+        val cardWidthPx = with(density) { maxWidth.toPx() }
+        val threshold = cardWidthPx * 0.60f
+
+        NotificationSwipeBackground(offsetX = swipeOffset.value)
+        NotificationCardContent(
+            notification = notification,
+            modifier = Modifier
+                .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
+                .pointerInput(canMarkRead, canDelete, cardWidthPx) {
+                    detectHorizontalDragGestures(
+                        onHorizontalDrag = { change, dragAmount ->
+                            change.consume()
+                            val minOffset = if (canDelete) -cardWidthPx else 0f
+                            val maxOffset = if (canMarkRead) cardWidthPx else 0f
+                            val nextOffset = (swipeOffset.value + dragAmount)
+                                .coerceIn(minOffset, maxOffset)
+                            scope.launch { swipeOffset.snapTo(nextOffset) }
+                        },
+                        onDragEnd = {
+                            val currentOffset = swipeOffset.value
+                            when {
+                                currentOffset >= threshold && canMarkRead -> onMarkRead()
+                                currentOffset <= -threshold && canDelete -> onDelete()
+                            }
+                            scope.launch { swipeOffset.animateTo(0f) }
+                        },
+                        onDragCancel = {
+                            scope.launch { swipeOffset.animateTo(0f) }
+                        }
+                    )
+                }
+        )
+    }
+}
+
+@Composable
+private fun NotificationCardContent(
+    notification: MobileNotification,
+    modifier: Modifier
 ) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(enabled = !notification.isRead, onClick = onClick),
+        modifier = modifier.fillMaxWidth(),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -118,9 +178,15 @@ private fun NotificationCard(
             Text(notification.message, style = MaterialTheme.typography.bodyLarge)
             if (!notification.isRead) {
                 Text(
-                    text = "Toca para marcar como leída",
+                    text = "Desliza a la derecha para marcar como leída",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.primary
+                )
+            } else {
+                Text(
+                    text = "Desliza a la izquierda para eliminar",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
             if (notification.createdAt.isNotBlank()) {
@@ -130,6 +196,41 @@ private fun NotificationCard(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun NotificationSwipeBackground(offsetX: Float) {
+    val isMarkingRead = offsetX > 0f
+    val isDeleting = offsetX < 0f
+    val backgroundColor = when {
+        isMarkingRead -> Color(0xFF2E7D50)
+        isDeleting -> Color(0xFF8E1D2D)
+        else -> Color.Transparent
+    }
+    val alignment = if (isMarkingRead) Alignment.CenterStart else Alignment.CenterEnd
+    val label = when {
+        isMarkingRead -> "Leída"
+        isDeleting -> "Eliminar"
+        else -> ""
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .fillMaxSize()
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 22.dp),
+        contentAlignment = alignment
+    ) {
+        if (label.isNotBlank()) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.titleMedium,
+                color = Color.White
+            )
         }
     }
 }

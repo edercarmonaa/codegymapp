@@ -60,6 +60,28 @@ class NotificationsViewModel(private val repository: NotificationsRepository) : 
         }
     }
 
+    fun delete(notification: MobileNotification) {
+        if (!notification.isRead) {
+            _state.update { it.copy(snackbarMessage = "Primero marca la notificación como leída.") }
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update { state ->
+                state.copy(
+                    notifications = state.notifications.filterNot { it.id == notification.id },
+                    snackbarMessage = null
+                )
+            }
+            repository.delete(notification.id)
+                .onSuccess { message -> _state.update { it.copy(snackbarMessage = message) } }
+                .onFailure { error ->
+                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo eliminar la notificación.") }
+                    load()
+                }
+        }
+    }
+
     fun snackbarShown() {
         _state.update { it.copy(snackbarMessage = null) }
     }

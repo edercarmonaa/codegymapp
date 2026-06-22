@@ -36,6 +36,9 @@ interface CodeGymApi {
     @POST("api/mobile/notifications/mark-read")
     suspend fun markNotificationRead(@Body request: MobileNotificationActionRequestDto): MobileActionResponseDto
 
+    @POST("api/mobile/notifications/delete")
+    suspend fun deleteNotification(@Body request: MobileNotificationActionRequestDto): MobileActionResponseDto
+
     @GET("api/mobile/today")
     suspend fun mobileToday(): MobileTodayResponseDto
 

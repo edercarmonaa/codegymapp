@@ -26,6 +26,15 @@ class NotificationsRepository(private val api: CodeGymApi) {
 
         response.message ?: "Notificación marcada como leída."
     }
+
+    suspend fun delete(id: Int): Result<String> = runCatching {
+        val response = api.deleteNotification(MobileNotificationActionRequestDto(id))
+        if (!response.ok) {
+            error(response.message ?: "No se pudo eliminar la notificación.")
+        }
+
+        response.message ?: "Notificación eliminada."
+    }
 }
 
 data class NotificationsData(
