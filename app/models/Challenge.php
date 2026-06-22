@@ -190,7 +190,7 @@ final class Challenge extends BaseModel
             );
             $stmt->execute([
                 'id' => $id,
-                'platform_id' => self::validPlatformId($data['platform_id'] ?? 0, (int) $detail['platform_id']),
+                'platform_id' => self::validPlatformId($data['platform_id'] ?? 0, (int) $challenge['platform_id']),
                 'title' => self::blankToNull((string) ($data['title'] ?? '')),
                 'challenge_url' => safe_url((string) ($data['challenge_url'] ?? '')),
                 'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
