@@ -67,7 +67,9 @@ fun HomeScreen(
             verticalArrangement = Arrangement.spacedBy(22.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onNavigate(AppRoutes.Account) },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Avatar(initial = user?.name?.firstOrNull()?.uppercaseChar()?.toString() ?: "C")
@@ -117,12 +119,6 @@ fun HomeScreen(
                     label = "Resumen",
                     color = MaterialTheme.colorScheme.tertiary,
                     onClick = { onNavigate(AppRoutes.Summary) }
-                )
-                HomeItem(
-                    symbol = "◌",
-                    label = "Mi cuenta",
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    onClick = { onNavigate(AppRoutes.Account) }
                 )
             }
 
