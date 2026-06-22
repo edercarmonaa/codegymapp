@@ -2,6 +2,7 @@ package mx.com.karedit.codegymapp.ui.screens.details
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import java.net.URI
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
@@ -97,6 +98,11 @@ class ChallengeDetailsViewModel(
 
     fun save(onSaved: (String) -> Unit) {
         val current = _state.value
+        validateUrls(current)?.let { message ->
+            _state.update { it.copy(message = message) }
+            return
+        }
+
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, message = null) }
             repository.save(
@@ -115,7 +121,29 @@ class ChallengeDetailsViewModel(
             _state.update { it.copy(isSaving = false) }
         }
     }
+
+    private fun validateUrls(state: ChallengeDetailsUiState): String? {
+        if (state.challengeUrl.isNotBlank() && !state.challengeUrl.isValidHttpUrl()) {
+            return "La URL del reto no es válida. Usa una URL completa con http:// o https://."
+        }
+
+        state.githubLinks.lines().forEachIndexed { index, url ->
+            if (url.isNotBlank() && !url.isValidHttpUrl()) {
+                return "El enlace de GitHub en la línea ${index + 1} no es válido. Usa una URL completa con http:// o https://."
+            }
+        }
+
+        return null
+    }
 }
+
+private fun String.isValidHttpUrl(): Boolean =
+    try {
+        val uri = URI(trim())
+        uri.host?.isNotBlank() == true && uri.scheme in setOf("http", "https")
+    } catch (_: Exception) {
+        false
+    }
 
 data class ChallengeDetailsUiState(
     val id: Int = 0,
