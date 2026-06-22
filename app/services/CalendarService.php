@@ -106,6 +106,14 @@ final class CalendarService
             return $this->response(422, ['ok' => false, 'message' => 'No se pudo identificar el reto.']);
         }
 
+        $urlError = $this->validateChallengeUrls(
+            (string) ($input['challenge_url'] ?? ''),
+            (string) ($input['github_links'] ?? '')
+        );
+        if ($urlError !== null) {
+            return $this->response(422, ['ok' => false, 'message' => $urlError]);
+        }
+
         $saved = \Challenge::saveDetails($id, [
             'platform_id' => $input['platform_id'] ?? 0,
             'title' => $input['title'] ?? '',
@@ -122,6 +130,26 @@ final class CalendarService
         }
 
         return $this->response(200, ['ok' => true, 'message' => 'Reto actualizado correctamente.']);
+    }
+
+    private function validateChallengeUrls(string $challengeUrl, string $githubLinks): ?string
+    {
+        if (trim($challengeUrl) !== '' && safe_url($challengeUrl) === null) {
+            return 'La URL del reto no es válida. Usa una URL completa con http:// o https://.';
+        }
+
+        $rows = preg_split('/\R+/', trim($githubLinks)) ?: [];
+        foreach ($rows as $index => $row) {
+            if (trim($row) === '') {
+                continue;
+            }
+
+            if (safe_url($row) === null) {
+                return 'El enlace de GitHub en la línea ' . ($index + 1) . ' no es válido. Usa una URL completa con http:// o https://.';
+            }
+        }
+
+        return null;
     }
 
     /** @param array<string, mixed> $input @return array{status: int, payload: array<string, mixed>} */
