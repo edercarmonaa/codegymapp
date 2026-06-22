@@ -1,5 +1,6 @@
 package mx.com.karedit.codegymapp.ui.screens.notifications
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -70,7 +71,10 @@ fun NotificationsScreen(
                 state.isLoading -> CircularProgressIndicator()
                 state.notifications.isEmpty() -> Text("No hay avisos pendientes.", style = MaterialTheme.typography.bodyLarge)
                 else -> state.notifications.forEach { notification ->
-                    NotificationCard(notification = notification)
+                    NotificationCard(
+                        notification = notification,
+                        onClick = { viewModel.markRead(notification) }
+                    )
                 }
             }
         }
@@ -78,9 +82,14 @@ fun NotificationsScreen(
 }
 
 @Composable
-private fun NotificationCard(notification: MobileNotification) {
+private fun NotificationCard(
+    notification: MobileNotification,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(enabled = !notification.isRead, onClick = onClick),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
@@ -107,6 +116,13 @@ private fun NotificationCard(notification: MobileNotification) {
                 }
             }
             Text(notification.message, style = MaterialTheme.typography.bodyLarge)
+            if (!notification.isRead) {
+                Text(
+                    text = "Toca para marcar como leída",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
             if (notification.createdAt.isNotBlank()) {
                 Text(
                     text = notification.createdAt,

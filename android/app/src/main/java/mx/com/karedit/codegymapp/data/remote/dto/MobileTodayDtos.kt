@@ -80,6 +80,10 @@ data class MobileNotificationDto(
     @Json(name = "created_at") val createdAt: String = ""
 )
 
+data class MobileNotificationActionRequestDto(
+    val id: Int
+)
+
 data class MobileChallengeFiltersDto(
     val month: String,
     val status: String

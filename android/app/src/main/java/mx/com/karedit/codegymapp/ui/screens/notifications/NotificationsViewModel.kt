@@ -36,6 +36,30 @@ class NotificationsViewModel(private val repository: NotificationsRepository) : 
         }
     }
 
+    fun markRead(notification: MobileNotification) {
+        if (notification.isRead) {
+            return
+        }
+
+        viewModelScope.launch {
+            _state.update { state ->
+                state.copy(
+                    notifications = state.notifications.map {
+                        if (it.id == notification.id) it.copy(isRead = true) else it
+                    },
+                    unreadCount = (state.unreadCount - 1).coerceAtLeast(0),
+                    snackbarMessage = null
+                )
+            }
+            repository.markRead(notification.id)
+                .onSuccess { message -> _state.update { it.copy(snackbarMessage = message) } }
+                .onFailure { error ->
+                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo marcar la notificación.") }
+                    load()
+                }
+        }
+    }
+
     fun snackbarShown() {
         _state.update { it.copy(snackbarMessage = null) }
     }
