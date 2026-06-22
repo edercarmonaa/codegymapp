@@ -8,6 +8,7 @@ import mx.com.karedit.codegymapp.data.repository.ChallengeDetailsRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
 import mx.com.karedit.codegymapp.data.repository.CreateChallengeRepository
 import mx.com.karedit.codegymapp.data.repository.CreateRoutineRepository
+import mx.com.karedit.codegymapp.data.repository.NotificationsRepository
 import mx.com.karedit.codegymapp.data.repository.PlannedRepository
 import mx.com.karedit.codegymapp.data.repository.SummaryRepository
 import mx.com.karedit.codegymapp.data.repository.TodayRepository
@@ -19,6 +20,7 @@ class AppContainer(context: Context) {
     private val api = RetrofitFactory.createApi(sessionManager)
     val authRepository = AuthRepository(api, sessionManager)
     val summaryRepository = SummaryRepository(api)
+    val notificationsRepository = NotificationsRepository(api)
     val todayRepository = TodayRepository(api)
     val plannedRepository = PlannedRepository(api)
     val challengesRepository = ChallengesRepository(api)

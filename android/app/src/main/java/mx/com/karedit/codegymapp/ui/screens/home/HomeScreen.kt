@@ -120,6 +120,12 @@ fun HomeScreen(
                     color = MaterialTheme.colorScheme.tertiary,
                     onClick = { onNavigate(AppRoutes.Summary) }
                 )
+                HomeItem(
+                    symbol = "!",
+                    label = "Notificaciones",
+                    color = MaterialTheme.colorScheme.error,
+                    onClick = { onNavigate(AppRoutes.Notifications) }
+                )
             }
 
             Spacer(modifier = Modifier.weight(1f))

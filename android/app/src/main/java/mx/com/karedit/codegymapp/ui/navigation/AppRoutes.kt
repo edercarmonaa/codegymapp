@@ -5,6 +5,7 @@ object AppRoutes {
     const val Home = "home"
     const val Account = "account"
     const val Summary = "summary"
+    const val Notifications = "notifications"
     const val Today = "today"
     const val Planned = "planned"
     const val Challenges = "challenges"

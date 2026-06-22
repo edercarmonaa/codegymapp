@@ -63,6 +63,23 @@ data class MobileSummarySeriesDto(
     val percent: Double = 0.0
 )
 
+data class MobileNotificationsResponseDto(
+    val ok: Boolean,
+    @Json(name = "unread_count") val unreadCount: Int = 0,
+    val notifications: List<MobileNotificationDto> = emptyList(),
+    val message: String? = null
+)
+
+data class MobileNotificationDto(
+    val id: Int,
+    val type: String = "",
+    val title: String,
+    val message: String,
+    @Json(name = "is_read") val isRead: Boolean = false,
+    @Json(name = "action_url") val actionUrl: String = "",
+    @Json(name = "created_at") val createdAt: String = ""
+)
+
 data class MobileChallengeFiltersDto(
     val month: String,
     val status: String
