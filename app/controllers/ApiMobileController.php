@@ -159,7 +159,11 @@ final class ApiMobileController
 
         if (!$sent) {
             http_response_code(422);
-            Response::json(['ok' => false, 'message' => 'No se pudo enviar la notificación de prueba. Revisa la configuración de Azure Notification Hub.']);
+            Response::json([
+                'ok' => false,
+                'message' => 'No se pudo enviar la notificación de prueba.',
+                'detail' => $this->notificationHubService->lastError(),
+            ]);
             return;
         }
 

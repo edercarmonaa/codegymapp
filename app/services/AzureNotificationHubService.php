@@ -6,6 +6,8 @@ namespace CodeGymApp\Services;
 
 final class AzureNotificationHubService
 {
+    private ?string $lastError = null;
+
     /** @param array<string, mixed> $user @param array<string, mixed> $device */
     public function registerInstallation(array $user, array $device): bool
     {
@@ -41,7 +43,15 @@ final class AzureNotificationHubService
     /** @param array<string, string> $data */
     public function sendToUser(int $userId, string $title, string $message, array $data = []): bool
     {
-        if ($userId <= 0 || !\Env::get('NOTIFICATION_HUB_ENABLED', false)) {
+        $this->lastError = null;
+
+        if ($userId <= 0) {
+            $this->lastError = 'Usuario no válido.';
+            return false;
+        }
+
+        if (!\Env::get('NOTIFICATION_HUB_ENABLED', false)) {
+            $this->lastError = 'Azure Notification Hub está deshabilitado en NOTIFICATION_HUB_ENABLED.';
             return false;
         }
 
@@ -49,6 +59,7 @@ final class AzureNotificationHubService
         $hubName = trim((string) \Env::get('NOTIFICATION_HUB_NAME', ''));
 
         if ($hubName === '' || !$connection) {
+            $this->lastError = 'Falta NOTIFICATION_HUB_NAME o NOTIFICATION_HUB_CONNECTION_STRING no es válida.';
             \SecurityLog::record($userId, 'notification_hub_config_missing', 'warning', 'Azure Notification Hub no está configurado.');
             return false;
         }
@@ -70,11 +81,16 @@ final class AzureNotificationHubService
             $payload,
             $this->sasToken($endpoint, $connection),
             [
-                'ServiceBusNotification-Format: ' . (string) \Env::get('NOTIFICATION_HUB_PLATFORM', 'fcmv1'),
+                'ServiceBusNotification-Format: ' . (string) \Env::get('NOTIFICATION_HUB_SEND_FORMAT', 'gcm'),
                 'ServiceBusNotification-Tags: user:' . $userId,
             ],
             $userId
         );
+    }
+
+    public function lastError(): ?string
+    {
+        return $this->lastError;
     }
 
     /** @return array{endpoint: string, keyName: string, key: string}|null */
@@ -181,12 +197,14 @@ final class AzureNotificationHubService
     private function postJson(string $url, array $payload, string $authorization, array $extraHeaders, int $userId): bool
     {
         if (!function_exists('curl_init')) {
+            $this->lastError = 'cURL no está disponible en PHP.';
             \SecurityLog::record($userId, 'notification_hub_curl_missing', 'warning', 'cURL no está disponible para enviar Azure Notification Hub.');
             return false;
         }
 
         $ch = curl_init($url);
         if ($ch === false) {
+            $this->lastError = 'No se pudo inicializar cURL.';
             return false;
         }
 
@@ -212,6 +230,7 @@ final class AzureNotificationHubService
         }
 
         $detail = $error !== '' ? $error : substr($response, 0, 180);
+        $this->lastError = 'Azure respondió HTTP ' . $status . ($detail !== '' ? ': ' . $detail : '.');
         \SecurityLog::record($userId, 'notification_hub_send_failed', 'warning', 'Azure Notification Hub respondió ' . $status . ($detail !== '' ? ': ' . $detail : '.'));
         return false;
     }
