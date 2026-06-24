@@ -8,7 +8,7 @@ final class MobileDeviceToken extends BaseModel
     public static function upsert(int $userId, array $data): bool
     {
         $token = trim((string) ($data['token'] ?? ''));
-        if ($userId <= 0 || $token === '' || strlen($token) > 255) {
+        if ($userId <= 0 || $token === '' || strlen($token) > 512) {
             return false;
         }
 
