@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS mobile_device_tokens (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     user_id BIGINT UNSIGNED NOT NULL,
-    token VARCHAR(255) NOT NULL,
+    token VARCHAR(512) NOT NULL,
     platform VARCHAR(30) NOT NULL DEFAULT 'android',
     device_name VARCHAR(120) NULL,
     app_version VARCHAR(40) NULL,

@@ -137,6 +137,35 @@ final class ApiMobileController
         Response::json(['ok' => true, 'message' => 'Dispositivo registrado.']);
     }
 
+    public function testNotification(): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            http_response_code(401);
+            Response::json(['ok' => false, 'message' => 'Sesión no válida.']);
+            return;
+        }
+
+        $input = $this->jsonInput();
+        $title = trim((string) ($input['title'] ?? 'CodeGymApp'));
+        $message = trim((string) ($input['message'] ?? 'Notificación de prueba enviada desde CodeGymApp.'));
+
+        $sent = $this->notificationHubService->sendToUser(
+            (int) $user['id'],
+            $title !== '' ? $title : 'CodeGymApp',
+            $message !== '' ? $message : 'Notificación de prueba enviada desde CodeGymApp.',
+            ['type' => 'test']
+        );
+
+        if (!$sent) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'No se pudo enviar la notificación de prueba. Revisa la configuración de Azure Notification Hub.']);
+            return;
+        }
+
+        Response::json(['ok' => true, 'message' => 'Notificación de prueba enviada.']);
+    }
+
     public function createOptions(): void
     {
         Response::json([

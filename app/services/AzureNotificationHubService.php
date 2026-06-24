@@ -38,6 +38,45 @@ final class AzureNotificationHubService
         return $this->putJson($url, $payload, $this->sasToken($endpoint, $connection));
     }
 
+    /** @param array<string, string> $data */
+    public function sendToUser(int $userId, string $title, string $message, array $data = []): bool
+    {
+        if ($userId <= 0 || !\Env::get('NOTIFICATION_HUB_ENABLED', false)) {
+            return false;
+        }
+
+        $connection = $this->connectionParts((string) \Env::get('NOTIFICATION_HUB_CONNECTION_STRING', ''));
+        $hubName = trim((string) \Env::get('NOTIFICATION_HUB_NAME', ''));
+
+        if ($hubName === '' || !$connection) {
+            \SecurityLog::record($userId, 'notification_hub_config_missing', 'warning', 'Azure Notification Hub no está configurado.');
+            return false;
+        }
+
+        $endpoint = rtrim($connection['endpoint'], '/') . '/' . rawurlencode($hubName) . '/messages/';
+        $url = $endpoint . '?api-version=2015-01';
+        $payload = [
+            'message' => [
+                'notification' => [
+                    'title' => $this->truncate($title, 80),
+                    'body' => $this->truncate($message, 180),
+                ],
+                'data' => $this->cleanData($data),
+            ],
+        ];
+
+        return $this->postJson(
+            $url,
+            $payload,
+            $this->sasToken($endpoint, $connection),
+            [
+                'ServiceBusNotification-Format: ' . (string) \Env::get('NOTIFICATION_HUB_PLATFORM', 'fcmv1'),
+                'ServiceBusNotification-Tags: user:' . $userId,
+            ],
+            $userId
+        );
+    }
+
     /** @return array{endpoint: string, keyName: string, key: string}|null */
     private function connectionParts(string $connection): ?array
     {
@@ -79,6 +118,27 @@ final class AzureNotificationHubService
         return 'codegym-' . substr(hash('sha256', $token), 0, 48);
     }
 
+    /** @param array<string, string> $data @return array<string, string> */
+    private function cleanData(array $data): array
+    {
+        $clean = [];
+        foreach ($data as $key => $value) {
+            $key = $this->truncate((string) $key, 40);
+            if ($key === '') {
+                continue;
+            }
+
+            $clean[$key] = $this->truncate((string) $value, 120);
+        }
+
+        return $clean;
+    }
+
+    private function truncate(string $value, int $maxLength): string
+    {
+        return substr(trim($value), 0, $maxLength);
+    }
+
     /** @param array<string, mixed> $payload */
     private function putJson(string $url, array $payload, string $authorization): bool
     {
@@ -114,6 +174,45 @@ final class AzureNotificationHubService
         }
 
         \SecurityLog::record(null, 'notification_hub_register_failed', 'warning', 'Azure Notification Hub respondió ' . $status . ($error !== '' ? ': ' . $error : '.'));
+        return false;
+    }
+
+    /** @param array<string, mixed> $payload @param list<string> $extraHeaders */
+    private function postJson(string $url, array $payload, string $authorization, array $extraHeaders, int $userId): bool
+    {
+        if (!function_exists('curl_init')) {
+            \SecurityLog::record($userId, 'notification_hub_curl_missing', 'warning', 'cURL no está disponible para enviar Azure Notification Hub.');
+            return false;
+        }
+
+        $ch = curl_init($url);
+        if ($ch === false) {
+            return false;
+        }
+
+        curl_setopt_array($ch, [
+            CURLOPT_POST => true,
+            CURLOPT_POSTFIELDS => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            CURLOPT_HTTPHEADER => array_merge([
+                'Authorization: ' . $authorization,
+                'Content-Type: application/json',
+                'x-ms-version: 2015-01',
+            ], $extraHeaders),
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_TIMEOUT => 10,
+        ]);
+
+        $response = (string) curl_exec($ch);
+        $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+        $error = curl_error($ch);
+        curl_close($ch);
+
+        if ($status >= 200 && $status < 300) {
+            return true;
+        }
+
+        $detail = $error !== '' ? $error : substr($response, 0, 180);
+        \SecurityLog::record($userId, 'notification_hub_send_failed', 'warning', 'Azure Notification Hub respondió ' . $status . ($detail !== '' ? ': ' . $detail : '.'));
         return false;
     }
 }

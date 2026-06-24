@@ -110,6 +110,27 @@ NOTIFICATION_HUB_PLATFORM=fcmv1
 
 Antes de habilitarlo, crea la tabla con `database/mobile_device_tokens.sql` si tu base ya existía antes de esta funcionalidad.
 
+Si ya habías creado la tabla con una versión anterior, ajusta el tamaño del token:
+
+```sql
+ALTER TABLE mobile_device_tokens MODIFY token VARCHAR(512) NOT NULL;
+```
+
+Para validar el envío desde Postman, inicia sesión con `/api/auth/login`, copia el token y envía:
+
+```http
+POST /api/mobile/notifications/test
+Authorization: Bearer TU_TOKEN
+Content-Type: application/json
+```
+
+```json
+{
+  "title": "CodeGymApp",
+  "message": "Prueba de notificación push"
+}
+```
+
 ## API Inicial
 
 La API vive en el mismo dominio de la web usando rutas `/api/...`.
