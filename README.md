@@ -308,6 +308,17 @@ Para trabajar Android:
 
 La app Android no debe usar tráfico HTTP claro y debe guardar el JWT en almacenamiento seguro del dispositivo.
 
+### Firebase Cloud Messaging
+
+Para que Android genere el token FCM usado por Azure Notification Hub:
+
+1. En Firebase Console crea o usa una app Android con package `mx.com.karedit.codegymapp`.
+2. Descarga `google-services.json`.
+3. Coloca el archivo en `android/app/google-services.json`.
+4. Sincroniza Gradle en Android Studio y vuelve a compilar.
+
+El archivo `android/app/google-services.json` está ignorado por Git. El plugin de Google Services se aplica solo cuando ese archivo existe, así que la app sigue compilando sin exponer configuración sensible en el repositorio.
+
 ## Seguridad
 
 `.htaccess` bloquea acceso directo a:
