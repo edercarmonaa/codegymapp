@@ -88,6 +88,7 @@ NOTIFICATION_HUB_ENABLED=false
 NOTIFICATION_HUB_NAME=
 NOTIFICATION_HUB_CONNECTION_STRING=
 NOTIFICATION_HUB_PLATFORM=fcmv1
+NOTIFICATION_HUB_SEND_FORMAT=gcm
 ```
 
 Nunca subas `.env` a GitHub.
@@ -106,6 +107,7 @@ NOTIFICATION_HUB_ENABLED=true
 NOTIFICATION_HUB_NAME=nombre_del_hub
 NOTIFICATION_HUB_CONNECTION_STRING="Endpoint=sb://...;SharedAccessKeyName=...;SharedAccessKey=..."
 NOTIFICATION_HUB_PLATFORM=fcmv1
+NOTIFICATION_HUB_SEND_FORMAT=gcm
 ```
 
 Antes de habilitarlo, crea la tabla con `database/mobile_device_tokens.sql` si tu base ya existía antes de esta funcionalidad.
