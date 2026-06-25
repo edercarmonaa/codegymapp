@@ -81,7 +81,7 @@ final class AzureNotificationHubService
             $payload,
             $this->sasToken($endpoint, $connection),
             [
-                'ServiceBusNotification-Format: ' . (string) \Env::get('NOTIFICATION_HUB_SEND_FORMAT', 'gcm'),
+                'ServiceBusNotification-Format: ' . (string) \Env::get('NOTIFICATION_HUB_SEND_FORMAT', 'fcmv1'),
                 'ServiceBusNotification-Tags: user:' . $userId,
             ],
             $userId
