@@ -9,6 +9,7 @@ $router->get('/login', 'AuthController', 'showLogin', false);
 $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
 $router->post('/api/auth/login', 'ApiAuthController', 'login', false);
+$router->get('/api/cron/mobile/today-reminder', 'ApiCronController', 'todayReminder', false);
 $router->get('/api/me', 'ApiMeController', 'show');
 $router->get('/api/mobile/today', 'ApiMobileController', 'today');
 $router->get('/api/mobile/planned', 'ApiMobileController', 'planned');

@@ -4,6 +4,16 @@ declare(strict_types=1);
 
 final class MobileDeviceToken extends BaseModel
 {
+    /** @return array<int, int> */
+    public static function activeUserIds(): array
+    {
+        $rows = self::db()
+            ->query('SELECT DISTINCT user_id FROM mobile_device_tokens WHERE is_active = 1 ORDER BY user_id ASC')
+            ->fetchAll();
+
+        return array_map('intval', array_column($rows, 'user_id'));
+    }
+
     /** @param array<string, mixed> $data */
     public static function upsert(int $userId, array $data): bool
     {

@@ -83,6 +83,7 @@ LOGIN_BLOCK_MINUTES=30
 RATE_LIMIT_ENABLED=true
 RATE_LIMIT_REQUESTS=120
 RATE_LIMIT_WINDOW_SECONDS=60
+CRON_SECRET=clave_larga_para_cron
 
 NOTIFICATION_HUB_ENABLED=false
 NOTIFICATION_HUB_NAME=
@@ -131,6 +132,18 @@ Content-Type: application/json
   "title": "CodeGymApp",
   "message": "Prueba de notificación push"
 }
+```
+
+Para enviar el recordatorio móvil de retos pendientes de hoy desde cron:
+
+```http
+GET /api/cron/mobile/today-reminder?key=TU_CRON_SECRET
+```
+
+En cPanel puedes programarlo una vez al día con `curl`:
+
+```bash
+curl -fsS "https://tu-subdominio/api/cron/mobile/today-reminder?key=TU_CRON_SECRET"
 ```
 
 ## API Inicial
