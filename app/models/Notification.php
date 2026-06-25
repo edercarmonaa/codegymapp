@@ -127,12 +127,10 @@ final class Notification extends BaseModel
         $stmt->execute(['id' => $id]);
     }
 
-    public static function createOnceToday(string $type, string $title, string $message, string $actionUrl): void
+    public static function createOnceToday(string $type, string $title, string $message, string $actionUrl): bool
     {
-        $stmt = self::db()->prepare('SELECT COUNT(*) FROM notifications WHERE type = :type AND action_url = :action_url AND DATE(created_at) = CURDATE()');
-        $stmt->execute(['type' => $type, 'action_url' => $actionUrl]);
-        if ((int) $stmt->fetchColumn() > 0) {
-            return;
+        if (self::existsToday($type, $actionUrl)) {
+            return false;
         }
 
         $insert = self::db()->prepare(
@@ -145,5 +143,14 @@ final class Notification extends BaseModel
             'message' => $message,
             'action_url' => $actionUrl,
         ]);
+
+        return true;
+    }
+
+    public static function existsToday(string $type, string $actionUrl): bool
+    {
+        $stmt = self::db()->prepare('SELECT COUNT(*) FROM notifications WHERE type = :type AND action_url = :action_url AND DATE(created_at) = CURDATE()');
+        $stmt->execute(['type' => $type, 'action_url' => $actionUrl]);
+        return (int) $stmt->fetchColumn() > 0;
     }
 }
