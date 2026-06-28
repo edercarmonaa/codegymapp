@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileManualChallengeRequestDto
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
 import retrofit2.HttpException
@@ -56,6 +57,44 @@ class CreateChallengeRepository(private val api: CodeGymApi) {
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo crear el reto.")
+        }
+    }
+
+    suspend fun createManual(
+        platformId: Int,
+        title: String,
+        challengeUrl: String,
+        difficulty: String,
+        timeSpentMinutes: Int,
+        notes: String,
+        languageIds: List<Int>,
+        githubLinks: String
+    ): Result<String> = runCatching {
+        try {
+            val response = api.storeManualChallenge(
+                MobileManualChallengeRequestDto(
+                    platformId = platformId,
+                    title = title,
+                    challengeUrl = challengeUrl,
+                    difficulty = difficulty,
+                    timeSpentMinutes = timeSpentMinutes,
+                    notes = notes,
+                    languageIds = languageIds,
+                    githubLinks = githubLinks
+                )
+            )
+            if (!response.ok) {
+                error(response.message ?: "No se pudo registrar el reto realizado.")
+            }
+
+            response.message ?: "Reto realizado registrado."
+        } catch (exception: HttpException) {
+            val apiMessage = exception.response()
+                ?.errorBody()
+                ?.string()
+                ?.let { body -> errorAdapter.fromJson(body)?.message }
+
+            error(apiMessage ?: "No se pudo registrar el reto realizado.")
         }
     }
 }

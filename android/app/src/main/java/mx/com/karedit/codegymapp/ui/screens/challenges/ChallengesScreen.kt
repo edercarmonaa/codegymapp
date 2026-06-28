@@ -38,6 +38,8 @@ import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
+import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeSheet
+import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeViewModel
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
@@ -47,6 +49,7 @@ fun ChallengesScreen(
     viewModel: ChallengesViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
     createRoutineViewModel: CreateRoutineViewModel,
+    registerCompletedChallengeViewModel: RegisterCompletedChallengeViewModel,
     challengeDetailsViewModel: ChallengeDetailsViewModel,
     onNavigate: (String) -> Unit
 ) {
@@ -55,6 +58,7 @@ fun ChallengesScreen(
     var showQuickActions by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
     var showRoutineSheet by remember { mutableStateOf(false) }
+    var showRegisterCompletedSheet by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -120,7 +124,7 @@ fun ChallengesScreen(
             },
             onRegisterCompletedChallenge = {
                 showQuickActions = false
-                scope.launch { snackbarHostState.showSnackbar("Registro manual desde móvil pendiente de definir.", duration = SnackbarDuration.Short) }
+                showRegisterCompletedSheet = true
             },
             onCreateRoutine = {
                 showQuickActions = false
@@ -155,6 +159,18 @@ fun ChallengesScreen(
                 viewModel.load()
             },
             onDismiss = { showRoutineSheet = false }
+        )
+    }
+
+    if (showRegisterCompletedSheet) {
+        RegisterCompletedChallengeSheet(
+            viewModel = registerCompletedChallengeViewModel,
+            onCreated = { message ->
+                showRegisterCompletedSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+            },
+            onDismiss = { showRegisterCompletedSheet = false }
         )
     }
 
