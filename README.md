@@ -242,6 +242,7 @@ Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie
 Estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` y reciben JSON:
 
 - `POST /api/mobile/challenges/store`: crea un reto desde móvil. Requiere `{"platform_id": 1, "scheduled_date": "YYYY-MM-DD"}`.
+- `POST /api/mobile/challenges/manual`: registra un reto ya realizado desde móvil. Requiere plataforma, título, dificultad, tiempo y al menos un lenguaje.
 - `POST /api/mobile/challenges/complete`: marca un reto como cumplido. Requiere `{"id": 1}` y conserva las validaciones de datos completos del sistema web.
 - `POST /api/mobile/challenges/miss`: marca un reto como no realizado. Requiere `{"id": 1}`.
 
