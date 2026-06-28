@@ -245,6 +245,8 @@ Estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` y reciben JSON
 - `POST /api/mobile/challenges/manual`: registra un reto ya realizado desde móvil. Requiere plataforma, título, dificultad, tiempo y al menos un lenguaje.
 - `POST /api/mobile/challenges/complete`: marca un reto como cumplido. Requiere `{"id": 1}` y conserva las validaciones de datos completos del sistema web.
 - `POST /api/mobile/challenges/miss`: marca un reto como no realizado. Requiere `{"id": 1}`.
+- `GET /api/mobile/goals/options`: catálogos para crear metas desde móvil.
+- `POST /api/mobile/goals/store`: crea una meta desde móvil. Requiere `goal_type`, `period_type` y `target_value`.
 
 Filtros aceptados por `/api/reports`:
 

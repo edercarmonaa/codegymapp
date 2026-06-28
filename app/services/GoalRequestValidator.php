@@ -25,7 +25,7 @@ final class GoalRequestValidator
                 'target_value' => $target,
                 'platform_id' => (int) ($input['platform_id'] ?? 0),
                 'language_id' => (int) ($input['language_id'] ?? 0),
-                'auto_renew' => isset($input['auto_renew']) ? 1 : 0,
+                'auto_renew' => filter_var($input['auto_renew'] ?? false, FILTER_VALIDATE_BOOLEAN) ? 1 : 0,
             ],
         ];
     }
