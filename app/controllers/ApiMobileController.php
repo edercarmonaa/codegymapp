@@ -227,6 +227,18 @@ final class ApiMobileController
         $this->respond($this->calendarService->createRoutine($this->jsonInput()));
     }
 
+    public function goals(): void
+    {
+        Goal::refreshActiveProgress();
+
+        Response::json([
+            'ok' => true,
+            'goal_types' => Goal::goalTypes(),
+            'period_types' => Goal::periodTypes(),
+            'goals' => array_map([$this, 'goalResource'], Goal::dashboardActive(100)),
+        ]);
+    }
+
     public function goalOptions(): void
     {
         Response::json([
@@ -251,6 +263,24 @@ final class ApiMobileController
         }
 
         Response::json(['ok' => true, 'message' => 'Meta creada correctamente.']);
+    }
+
+    /** @param array<string, mixed> $goal @return array<string, mixed> */
+    private function goalResource(array $goal): array
+    {
+        return [
+            'id' => (int) ($goal['id'] ?? 0),
+            'goal_type' => (string) ($goal['goal_type'] ?? ''),
+            'period_type' => (string) ($goal['period_type'] ?? ''),
+            'target_value' => (int) ($goal['target_value'] ?? 0),
+            'current_value' => (int) ($goal['current_value'] ?? 0),
+            'progress_percent' => (float) ($goal['progress_percent'] ?? 0),
+            'platform_name' => (string) ($goal['platform_name'] ?? ''),
+            'language_name' => (string) ($goal['language_name'] ?? ''),
+            'period_start' => (string) ($goal['period_start'] ?? ''),
+            'period_end' => (string) ($goal['period_end'] ?? ''),
+            'auto_renew' => (int) ($goal['auto_renew'] ?? 0) === 1,
+        ];
     }
 
     /** @param array<string, mixed> $challenge @return array<string, mixed> */
