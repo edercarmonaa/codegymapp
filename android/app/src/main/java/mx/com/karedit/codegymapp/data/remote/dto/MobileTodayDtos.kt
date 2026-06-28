@@ -146,6 +146,28 @@ data class MobileGoalOptionsResponseDto(
     val message: String? = null
 )
 
+data class MobileGoalsResponseDto(
+    val ok: Boolean,
+    @Json(name = "goal_types") val goalTypes: Map<String, String> = emptyMap(),
+    @Json(name = "period_types") val periodTypes: Map<String, String> = emptyMap(),
+    val goals: List<MobileGoalDto> = emptyList(),
+    val message: String? = null
+)
+
+data class MobileGoalDto(
+    val id: Int,
+    @Json(name = "goal_type") val goalType: String,
+    @Json(name = "period_type") val periodType: String,
+    @Json(name = "target_value") val targetValue: Int,
+    @Json(name = "current_value") val currentValue: Int,
+    @Json(name = "progress_percent") val progressPercent: Double,
+    @Json(name = "platform_name") val platformName: String = "",
+    @Json(name = "language_name") val languageName: String = "",
+    @Json(name = "period_start") val periodStart: String = "",
+    @Json(name = "period_end") val periodEnd: String = "",
+    @Json(name = "auto_renew") val autoRenew: Boolean = false
+)
+
 data class MobileGoalCreateRequestDto(
     @Json(name = "goal_type") val goalType: String,
     @Json(name = "period_type") val periodType: String,

@@ -121,6 +121,12 @@ fun HomeScreen(
                     onClick = { onNavigate(AppRoutes.Summary) }
                 )
                 HomeItem(
+                    symbol = "◎",
+                    label = "Metas",
+                    color = MaterialTheme.colorScheme.primary,
+                    onClick = { onNavigate(AppRoutes.Goals) }
+                )
+                HomeItem(
                     symbol = "!",
                     label = "Notificaciones",
                     color = MaterialTheme.colorScheme.error,

@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
+import mx.com.karedit.codegymapp.domain.model.MobileGoal
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
 import retrofit2.HttpException
@@ -27,6 +28,31 @@ class GoalsRepository(private val api: CodeGymApi) {
             platforms = response.platforms.map { MobilePlatform(id = it.id, name = it.name) },
             languages = response.languages.map { MobileLanguage(id = it.id, name = it.name) }
         )
+    }
+
+    suspend fun activeGoals(): Result<List<MobileGoal>> = runCatching {
+        val response = api.mobileGoals()
+        if (!response.ok) {
+            error(response.message ?: "No se pudieron cargar las metas.")
+        }
+
+        response.goals.map { goal ->
+            MobileGoal(
+                id = goal.id,
+                goalType = goal.goalType,
+                goalTypeLabel = response.goalTypes[goal.goalType] ?: goal.goalType,
+                periodType = goal.periodType,
+                periodTypeLabel = response.periodTypes[goal.periodType] ?: goal.periodType,
+                targetValue = goal.targetValue,
+                currentValue = goal.currentValue,
+                progressPercent = goal.progressPercent,
+                platformName = goal.platformName,
+                languageName = goal.languageName,
+                periodStart = goal.periodStart,
+                periodEnd = goal.periodEnd,
+                autoRenew = goal.autoRenew
+            )
+        }
     }
 
     suspend fun create(

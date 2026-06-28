@@ -12,6 +12,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileDeviceTokenRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalOptionsResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileManualChallengeRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationsResponseDto
@@ -81,6 +82,9 @@ interface CodeGymApi {
 
     @GET("api/mobile/goals/options")
     suspend fun mobileGoalOptions(): MobileGoalOptionsResponseDto
+
+    @GET("api/mobile/goals")
+    suspend fun mobileGoals(): MobileGoalsResponseDto
 
     @POST("api/mobile/goals/store")
     suspend fun storeGoal(@Body request: MobileGoalCreateRequestDto): MobileActionResponseDto

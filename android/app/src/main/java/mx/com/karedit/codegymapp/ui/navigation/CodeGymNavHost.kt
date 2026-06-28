@@ -19,6 +19,8 @@ import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeViewModel
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
+import mx.com.karedit.codegymapp.ui.screens.goals.GoalsScreen
+import mx.com.karedit.codegymapp.ui.screens.goals.GoalsViewModel
 import mx.com.karedit.codegymapp.ui.screens.home.HomeScreen
 import mx.com.karedit.codegymapp.ui.screens.home.HomeViewModel
 import mx.com.karedit.codegymapp.ui.screens.login.LoginScreen
@@ -113,6 +115,13 @@ fun CodeGymNavHost(
         composable(AppRoutes.Summary) {
             val viewModel = remember { SummaryViewModel(appContainer.summaryRepository) }
             SummaryScreen(
+                viewModel = viewModel,
+                onNavigate = navigateTab
+            )
+        }
+        composable(AppRoutes.Goals) {
+            val viewModel = remember { GoalsViewModel(appContainer.goalsRepository) }
+            GoalsScreen(
                 viewModel = viewModel,
                 onNavigate = navigateTab
             )
