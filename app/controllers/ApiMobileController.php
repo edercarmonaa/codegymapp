@@ -4,12 +4,14 @@ declare(strict_types=1);
 
 use CodeGymApp\Services\CalendarService;
 use CodeGymApp\Services\AzureNotificationHubService;
+use CodeGymApp\Services\ChallengeService;
 use CodeGymApp\Services\DashboardService;
 
 final class ApiMobileController
 {
     public function __construct(
         private readonly CalendarService $calendarService = new CalendarService(),
+        private readonly ChallengeService $challengeService = new ChallengeService(),
         private readonly DashboardService $dashboardService = new DashboardService(),
         private readonly AzureNotificationHubService $notificationHubService = new AzureNotificationHubService()
     ) {
@@ -186,6 +188,21 @@ final class ApiMobileController
     public function storeChallenge(): void
     {
         $this->respond($this->calendarService->createChallenge($this->jsonInput()));
+    }
+
+    public function manualChallenge(): void
+    {
+        $result = $this->challengeService->createManual($this->jsonInput());
+        if (!$result['ok']) {
+            http_response_code(422);
+            Response::json([
+                'ok' => false,
+                'message' => implode(' ', $result['errors']),
+            ]);
+            return;
+        }
+
+        Response::json(['ok' => true, 'message' => 'Reto realizado registrado correctamente.']);
     }
 
     public function saveChallengeDetails(): void

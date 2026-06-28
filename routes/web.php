@@ -23,6 +23,7 @@ $router->post('/api/mobile/device-token', 'ApiMobileController', 'storeDeviceTok
 $router->post('/api/mobile/notifications/test', 'ApiMobileController', 'testNotification');
 $router->get('/api/mobile/challenges/create-options', 'ApiMobileController', 'createOptions');
 $router->post('/api/mobile/challenges/store', 'ApiMobileController', 'storeChallenge');
+$router->post('/api/mobile/challenges/manual', 'ApiMobileController', 'manualChallenge');
 $router->post('/api/mobile/challenges/save-details', 'ApiMobileController', 'saveChallengeDetails');
 $router->post('/api/mobile/challenges/complete', 'ApiMobileController', 'completeChallenge');
 $router->post('/api/mobile/challenges/miss', 'ApiMobileController', 'missChallenge');
