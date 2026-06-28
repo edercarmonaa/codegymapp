@@ -2,7 +2,6 @@ package mx.com.karedit.codegymapp.ui.screens.planned
 
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -32,6 +30,9 @@ import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineSheet
+import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
@@ -40,12 +41,15 @@ import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 fun PlannedScreen(
     viewModel: PlannedViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
+    createRoutineViewModel: CreateRoutineViewModel,
     challengeDetailsViewModel: ChallengeDetailsViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    var showQuickActions by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
+    var showRoutineSheet by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
@@ -65,7 +69,7 @@ fun PlannedScreen(
         collapsedTitle = "Planeado",
         collapsedSubtitle = "Todo planeado",
         isCollapsed = scrollState.value > 96,
-        onFabClick = { showCreateSheet = true }
+        onFabClick = { showQuickActions = true }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -77,17 +81,13 @@ fun PlannedScreen(
         ) {
             Text("Planeado", style = MaterialTheme.typography.displayMedium)
             Text("Todo planeado", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            PlannedFilters(
-                selected = state.filter,
-                onSelected = viewModel::selectFilter
-            )
 
             if (state.isLoading) {
                 CircularProgressIndicator()
-            } else if (state.filteredChallenges.isEmpty()) {
-                Text("No hay retos para este filtro.", style = MaterialTheme.typography.bodyMedium)
+            } else if (state.challenges.isEmpty()) {
+                Text("No hay retos pendientes próximos.", style = MaterialTheme.typography.bodyMedium)
             } else {
-                state.filteredChallenges
+                state.challenges
                     .groupBy { it.scheduledDate }
                     .forEach { (date, challenges) ->
                         PlannedDateGroup(
@@ -102,6 +102,28 @@ fun PlannedScreen(
         }
     }
 
+    if (showQuickActions) {
+        QuickCreateActionSheet(
+            onScheduleChallenge = {
+                showQuickActions = false
+                showCreateSheet = true
+            },
+            onRegisterCompletedChallenge = {
+                showQuickActions = false
+                scope.launch { snackbarHostState.showSnackbar("Registro manual desde móvil pendiente de definir.", duration = SnackbarDuration.Short) }
+            },
+            onCreateRoutine = {
+                showQuickActions = false
+                showRoutineSheet = true
+            },
+            onCreateGoal = {
+                showQuickActions = false
+                scope.launch { snackbarHostState.showSnackbar("Crear meta desde móvil pendiente de definir.", duration = SnackbarDuration.Short) }
+            },
+            onDismiss = { showQuickActions = false }
+        )
+    }
+
     if (showCreateSheet) {
         CreateChallengeSheet(
             viewModel = createChallengeViewModel,
@@ -111,6 +133,18 @@ fun PlannedScreen(
                 viewModel.load()
             },
             onDismiss = { showCreateSheet = false }
+        )
+    }
+
+    if (showRoutineSheet) {
+        CreateRoutineSheet(
+            viewModel = createRoutineViewModel,
+            onCreated = { message ->
+                showRoutineSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+            },
+            onDismiss = { showRoutineSheet = false }
         )
     }
 
@@ -134,25 +168,6 @@ fun PlannedScreen(
             },
             onDismiss = { selectedChallenge = null }
         )
-    }
-}
-
-@Composable
-private fun PlannedFilters(
-    selected: PlannedFilter,
-    onSelected: (PlannedFilter) -> Unit
-) {
-    Row(
-        modifier = Modifier.horizontalScroll(rememberScrollState()),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        PlannedFilter.entries.forEach { filter ->
-            FilterChip(
-                selected = selected == filter,
-                onClick = { onSelected(filter) },
-                label = { Text(filter.label) }
-            )
-        }
     }
 }
 

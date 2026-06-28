@@ -5,7 +5,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -49,10 +48,6 @@ fun ToDoTaskCard(
     onMissClick: (() -> Unit)? = null
 ) {
     val isCompleted = challenge.status == "completed"
-    val metadataColor = when (challenge.status) {
-        "expired", "missed", "cancelled" -> MaterialTheme.colorScheme.error
-        else -> MaterialTheme.colorScheme.onSurfaceVariant
-    }
     val canChangeStatus = challenge.status == "pending" || challenge.status == "expired"
     val canSwipeToComplete = canChangeStatus && onCompleteClick != null
     val canSwipeToMiss = canChangeStatus && onMissClick != null
@@ -95,7 +90,6 @@ fun ToDoTaskCard(
                         )
                     },
                 isCompleted = isCompleted,
-                metadataColor = metadataColor,
                 onClick = onClick,
                 onCompleteClick = onCompleteClick
             )
@@ -105,7 +99,6 @@ fun ToDoTaskCard(
             challenge = challenge,
             modifier = modifier,
             isCompleted = isCompleted,
-            metadataColor = metadataColor,
             onClick = onClick,
             onCompleteClick = onCompleteClick
         )
@@ -117,7 +110,6 @@ private fun TaskCardContent(
     challenge: MobileChallenge,
     modifier: Modifier,
     isCompleted: Boolean,
-    metadataColor: Color,
     onClick: (() -> Unit)?,
     onCompleteClick: (() -> Unit)?
 ) {
@@ -139,10 +131,7 @@ private fun TaskCardContent(
                 onClick = if (!isCompleted) onCompleteClick else null
             )
             Spacer(modifier = Modifier.width(18.dp))
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = challenge.platformName,
                     style = MaterialTheme.typography.titleLarge,
@@ -152,11 +141,6 @@ private fun TaskCardContent(
                         MaterialTheme.colorScheme.onSurface
                     },
                     textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
-                )
-                Text(
-                    text = challenge.metadataLabel(),
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = metadataColor
                 )
             }
         }

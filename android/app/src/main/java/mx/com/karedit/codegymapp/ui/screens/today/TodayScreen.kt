@@ -38,6 +38,9 @@ import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineSheet
+import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
@@ -46,6 +49,7 @@ import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 fun TodayScreen(
     viewModel: TodayViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
+    createRoutineViewModel: CreateRoutineViewModel,
     challengeDetailsViewModel: ChallengeDetailsViewModel,
     onNavigate: (String) -> Unit
 ) {
@@ -53,7 +57,9 @@ fun TodayScreen(
     var todayExpanded by remember { mutableStateOf(true) }
     var expiredExpanded by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
+    var showQuickActions by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
+    var showRoutineSheet by remember { mutableStateOf(false) }
     val scrollState = rememberScrollState()
     val todayLabel = remember { todayDisplayLabel() }
     val snackbarHostState = remember { SnackbarHostState() }
@@ -74,7 +80,7 @@ fun TodayScreen(
         collapsedTitle = "Mi día",
         collapsedSubtitle = todayLabel,
         isCollapsed = scrollState.value > 96,
-        onFabClick = { showCreateSheet = true }
+        onFabClick = { showQuickActions = true }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -145,6 +151,28 @@ fun TodayScreen(
         )
     }
 
+    if (showQuickActions) {
+        QuickCreateActionSheet(
+            onScheduleChallenge = {
+                showQuickActions = false
+                showCreateSheet = true
+            },
+            onRegisterCompletedChallenge = {
+                showQuickActions = false
+                scope.launch { snackbarHostState.showSnackbar("Registro manual desde móvil pendiente de definir.", duration = SnackbarDuration.Short) }
+            },
+            onCreateRoutine = {
+                showQuickActions = false
+                showRoutineSheet = true
+            },
+            onCreateGoal = {
+                showQuickActions = false
+                scope.launch { snackbarHostState.showSnackbar("Crear meta desde móvil pendiente de definir.", duration = SnackbarDuration.Short) }
+            },
+            onDismiss = { showQuickActions = false }
+        )
+    }
+
     if (showCreateSheet) {
         CreateChallengeSheet(
             viewModel = createChallengeViewModel,
@@ -155,6 +183,19 @@ fun TodayScreen(
                 selectedChallenge = null
             },
             onDismiss = { showCreateSheet = false }
+        )
+    }
+
+    if (showRoutineSheet) {
+        CreateRoutineSheet(
+            viewModel = createRoutineViewModel,
+            onCreated = { message ->
+                showRoutineSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+                selectedChallenge = null
+            },
+            onDismiss = { showRoutineSheet = false }
         )
     }
 }

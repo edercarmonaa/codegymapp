@@ -83,13 +83,49 @@ fun NotificationsScreen(
             when {
                 state.isLoading -> CircularProgressIndicator()
                 state.notifications.isEmpty() -> Text("No hay avisos pendientes.", style = MaterialTheme.typography.bodyLarge)
-                else -> state.notifications.forEach { notification ->
-                    NotificationCard(
-                        notification = notification,
-                        onMarkRead = { viewModel.markRead(notification) },
-                        onDelete = { viewModel.delete(notification) }
+                else -> {
+                    val unread = state.notifications.filterNot { it.isRead }
+                    val history = state.notifications.filter { it.isRead }
+
+                    NotificationSection(
+                        title = "No leídas",
+                        emptyText = "No hay notificaciones nuevas.",
+                        notifications = unread,
+                        onMarkRead = viewModel::markRead,
+                        onDelete = viewModel::delete
+                    )
+                    NotificationSection(
+                        title = "Historial",
+                        emptyText = "No hay notificaciones leídas.",
+                        notifications = history,
+                        onMarkRead = viewModel::markRead,
+                        onDelete = viewModel::delete
                     )
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun NotificationSection(
+    title: String,
+    emptyText: String,
+    notifications: List<MobileNotification>,
+    onMarkRead: (MobileNotification) -> Unit,
+    onDelete: (MobileNotification) -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text(title, style = MaterialTheme.typography.headlineSmall)
+        if (notifications.isEmpty()) {
+            Text(emptyText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        } else {
+            notifications.forEach { notification ->
+                NotificationCard(
+                    notification = notification,
+                    onMarkRead = { onMarkRead(notification) },
+                    onDelete = { onDelete(notification) }
+                )
             }
         }
     }

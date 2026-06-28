@@ -130,10 +130,12 @@ fun CodeGymNavHost(
                 )
             }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             TodayScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                createRoutineViewModel = createRoutineViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
             )
@@ -141,10 +143,12 @@ fun CodeGymNavHost(
         composable(AppRoutes.Planned) {
             val viewModel = remember { PlannedViewModel(appContainer.plannedRepository) }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             PlannedScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                createRoutineViewModel = createRoutineViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
             )
@@ -152,10 +156,12 @@ fun CodeGymNavHost(
         composable(AppRoutes.Challenges) {
             val viewModel = remember { ChallengesViewModel(appContainer.challengesRepository) }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             ChallengesScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                createRoutineViewModel = createRoutineViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
             )
@@ -168,10 +174,12 @@ fun CodeGymNavHost(
                 )
             }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             ChallengesScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
+                createRoutineViewModel = createRoutineViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
             )
