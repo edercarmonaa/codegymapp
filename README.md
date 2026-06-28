@@ -229,6 +229,7 @@ Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie
 - `GET /api/mobile/planned`: retos pendientes futuros para la pantalla móvil Planeado.
 - `GET /api/mobile/challenges`: retos del mes para la pantalla móvil Retos. Acepta `month=YYYY-MM` y `status=pending|completed|expired|missed|cancelled|all`.
 - `GET /api/mobile/challenges/create-options`: plataformas activas para crear retos desde móvil.
+- `GET /api/mobile/goals`: metas activas para la pantalla móvil Metas.
 - `GET /api/calendar/bootstrap`: datos base del calendario, plataformas, lenguajes y rutinas.
 - `GET /api/calendar/routines`: rutinas registradas.
 - `GET /api/calendar/events`: eventos en formato FullCalendar.
