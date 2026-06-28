@@ -6,6 +6,7 @@ use CodeGymApp\Services\CalendarService;
 use CodeGymApp\Services\AzureNotificationHubService;
 use CodeGymApp\Services\ChallengeService;
 use CodeGymApp\Services\DashboardService;
+use CodeGymApp\Services\GoalService;
 
 final class ApiMobileController
 {
@@ -13,6 +14,7 @@ final class ApiMobileController
         private readonly CalendarService $calendarService = new CalendarService(),
         private readonly ChallengeService $challengeService = new ChallengeService(),
         private readonly DashboardService $dashboardService = new DashboardService(),
+        private readonly GoalService $goalService = new GoalService(),
         private readonly AzureNotificationHubService $notificationHubService = new AzureNotificationHubService()
     ) {
     }
@@ -223,6 +225,32 @@ final class ApiMobileController
     public function storeRoutine(): void
     {
         $this->respond($this->calendarService->createRoutine($this->jsonInput()));
+    }
+
+    public function goalOptions(): void
+    {
+        Response::json([
+            'ok' => true,
+            'goal_types' => Goal::goalTypes(),
+            'period_types' => Goal::periodTypes(),
+            'platforms' => array_map([$this, 'platformResource'], Platform::active()),
+            'languages' => array_map([$this, 'languageResource'], Language::active()),
+        ]);
+    }
+
+    public function storeGoal(): void
+    {
+        $result = $this->goalService->create($this->jsonInput());
+        if (!$result['ok']) {
+            http_response_code(422);
+            Response::json([
+                'ok' => false,
+                'message' => $result['message'] ?? 'No se pudo crear la meta.',
+            ]);
+            return;
+        }
+
+        Response::json(['ok' => true, 'message' => 'Meta creada correctamente.']);
     }
 
     /** @param array<string, mixed> $challenge @return array<string, mixed> */
