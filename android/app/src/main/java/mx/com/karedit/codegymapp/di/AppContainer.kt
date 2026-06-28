@@ -10,6 +10,7 @@ import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
 import mx.com.karedit.codegymapp.data.repository.CreateChallengeRepository
 import mx.com.karedit.codegymapp.data.repository.CreateRoutineRepository
 import mx.com.karedit.codegymapp.data.repository.DeviceTokenRepository
+import mx.com.karedit.codegymapp.data.repository.GoalsRepository
 import mx.com.karedit.codegymapp.data.repository.NotificationsRepository
 import mx.com.karedit.codegymapp.data.repository.PlannedRepository
 import mx.com.karedit.codegymapp.data.repository.SummaryRepository
@@ -35,4 +36,5 @@ class AppContainer(context: Context) {
     val challengeDetailsRepository = ChallengeDetailsRepository(api)
     val createChallengeRepository = CreateChallengeRepository(api)
     val createRoutineRepository = CreateRoutineRepository(api)
+    val goalsRepository = GoalsRepository(api)
 }

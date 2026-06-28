@@ -137,6 +137,24 @@ data class MobileRoutineCreateRequestDto(
     @Json(name = "end_date") val endDate: String = ""
 )
 
+data class MobileGoalOptionsResponseDto(
+    val ok: Boolean,
+    @Json(name = "goal_types") val goalTypes: Map<String, String> = emptyMap(),
+    @Json(name = "period_types") val periodTypes: Map<String, String> = emptyMap(),
+    val platforms: List<MobilePlatformDto> = emptyList(),
+    val languages: List<MobileLanguageDto> = emptyList(),
+    val message: String? = null
+)
+
+data class MobileGoalCreateRequestDto(
+    @Json(name = "goal_type") val goalType: String,
+    @Json(name = "period_type") val periodType: String,
+    @Json(name = "target_value") val targetValue: Int,
+    @Json(name = "platform_id") val platformId: Int = 0,
+    @Json(name = "language_id") val languageId: Int = 0,
+    @Json(name = "auto_renew") val autoRenew: Boolean = false
+)
+
 data class MobileCreateOptionsResponseDto(
     val ok: Boolean,
     val platforms: List<MobilePlatformDto> = emptyList(),

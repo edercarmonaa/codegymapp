@@ -35,6 +35,8 @@ import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalSheet
+import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
@@ -49,6 +51,7 @@ fun ChallengesScreen(
     viewModel: ChallengesViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
     createRoutineViewModel: CreateRoutineViewModel,
+    createGoalViewModel: CreateGoalViewModel,
     registerCompletedChallengeViewModel: RegisterCompletedChallengeViewModel,
     challengeDetailsViewModel: ChallengeDetailsViewModel,
     onNavigate: (String) -> Unit
@@ -58,6 +61,7 @@ fun ChallengesScreen(
     var showQuickActions by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
     var showRoutineSheet by remember { mutableStateOf(false) }
+    var showGoalSheet by remember { mutableStateOf(false) }
     var showRegisterCompletedSheet by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     val scrollState = rememberScrollState()
@@ -132,7 +136,7 @@ fun ChallengesScreen(
             },
             onCreateGoal = {
                 showQuickActions = false
-                scope.launch { snackbarHostState.showSnackbar("Crear meta desde móvil pendiente de definir.", duration = SnackbarDuration.Short) }
+                showGoalSheet = true
             },
             onDismiss = { showQuickActions = false }
         )
@@ -171,6 +175,17 @@ fun ChallengesScreen(
                 viewModel.load()
             },
             onDismiss = { showRegisterCompletedSheet = false }
+        )
+    }
+
+    if (showGoalSheet) {
+        CreateGoalSheet(
+            viewModel = createGoalViewModel,
+            onCreated = { message ->
+                showGoalSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+            },
+            onDismiss = { showGoalSheet = false }
         )
     }
 

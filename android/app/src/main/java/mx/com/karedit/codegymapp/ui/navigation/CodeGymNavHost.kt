@@ -15,6 +15,7 @@ import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengeStatusFilter
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeViewModel
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
@@ -132,12 +133,14 @@ fun CodeGymNavHost(
             }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
+            val createGoalViewModel = remember { CreateGoalViewModel(appContainer.goalsRepository) }
             val registerCompletedViewModel = remember { RegisterCompletedChallengeViewModel(appContainer.createChallengeRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             TodayScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
                 createRoutineViewModel = createRoutineViewModel,
+                createGoalViewModel = createGoalViewModel,
                 registerCompletedChallengeViewModel = registerCompletedViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
@@ -147,12 +150,14 @@ fun CodeGymNavHost(
             val viewModel = remember { PlannedViewModel(appContainer.plannedRepository) }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
+            val createGoalViewModel = remember { CreateGoalViewModel(appContainer.goalsRepository) }
             val registerCompletedViewModel = remember { RegisterCompletedChallengeViewModel(appContainer.createChallengeRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             PlannedScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
                 createRoutineViewModel = createRoutineViewModel,
+                createGoalViewModel = createGoalViewModel,
                 registerCompletedChallengeViewModel = registerCompletedViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
@@ -162,12 +167,14 @@ fun CodeGymNavHost(
             val viewModel = remember { ChallengesViewModel(appContainer.challengesRepository) }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
+            val createGoalViewModel = remember { CreateGoalViewModel(appContainer.goalsRepository) }
             val registerCompletedViewModel = remember { RegisterCompletedChallengeViewModel(appContainer.createChallengeRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             ChallengesScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
                 createRoutineViewModel = createRoutineViewModel,
+                createGoalViewModel = createGoalViewModel,
                 registerCompletedChallengeViewModel = registerCompletedViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
@@ -182,12 +189,14 @@ fun CodeGymNavHost(
             }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
+            val createGoalViewModel = remember { CreateGoalViewModel(appContainer.goalsRepository) }
             val registerCompletedViewModel = remember { RegisterCompletedChallengeViewModel(appContainer.createChallengeRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             ChallengesScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
                 createRoutineViewModel = createRoutineViewModel,
+                createGoalViewModel = createGoalViewModel,
                 registerCompletedChallengeViewModel = registerCompletedViewModel,
                 challengeDetailsViewModel = detailsViewModel,
                 onNavigate = navigateTab
