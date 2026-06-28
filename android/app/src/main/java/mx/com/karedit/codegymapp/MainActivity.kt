@@ -64,14 +64,21 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun routeFromNotification(intent: Intent?): String? {
-        return when (intent?.getStringExtra(EXTRA_NOTIFICATION_TYPE) ?: intent?.getStringExtra("type")) {
-            "expired_review_reminder" -> AppRoutes.ChallengesExpired
-            "today_reminder" -> AppRoutes.Today
-            else -> null
+        return when (intent?.getStringExtra(EXTRA_NOTIFICATION_SCREEN) ?: intent?.getStringExtra("screen")) {
+            "challenges_expired" -> AppRoutes.ChallengesExpired
+            "today" -> AppRoutes.Today
+            "notifications" -> AppRoutes.Notifications
+            else -> when (intent?.getStringExtra(EXTRA_NOTIFICATION_TYPE) ?: intent?.getStringExtra("type")) {
+                "expired_review_reminder" -> AppRoutes.ChallengesExpired
+                "today_reminder" -> AppRoutes.Today
+                "test" -> AppRoutes.Notifications
+                else -> null
+            }
         }
     }
 
     private companion object {
         const val EXTRA_NOTIFICATION_TYPE = "notification_type"
+        const val EXTRA_NOTIFICATION_SCREEN = "notification_screen"
     }
 }
