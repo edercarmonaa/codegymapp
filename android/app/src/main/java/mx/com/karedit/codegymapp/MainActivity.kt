@@ -65,7 +65,7 @@ class MainActivity : ComponentActivity() {
 
     private fun routeFromNotification(intent: Intent?): String? {
         return when (intent?.getStringExtra(EXTRA_NOTIFICATION_TYPE) ?: intent?.getStringExtra("type")) {
-            "expired_review_reminder" -> AppRoutes.Challenges
+            "expired_review_reminder" -> AppRoutes.ChallengesExpired
             "today_reminder" -> AppRoutes.Today
             else -> null
         }

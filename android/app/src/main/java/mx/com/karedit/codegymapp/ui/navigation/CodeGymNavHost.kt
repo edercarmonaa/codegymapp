@@ -12,6 +12,7 @@ import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.account.AccountScreen
 import mx.com.karedit.codegymapp.ui.screens.account.AccountViewModel
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
+import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengeStatusFilter
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
@@ -150,6 +151,22 @@ fun CodeGymNavHost(
         }
         composable(AppRoutes.Challenges) {
             val viewModel = remember { ChallengesViewModel(appContainer.challengesRepository) }
+            val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
+            val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
+            ChallengesScreen(
+                viewModel = viewModel,
+                createChallengeViewModel = createViewModel,
+                challengeDetailsViewModel = detailsViewModel,
+                onNavigate = navigateTab
+            )
+        }
+        composable(AppRoutes.ChallengesExpired) {
+            val viewModel = remember {
+                ChallengesViewModel(
+                    challengesRepository = appContainer.challengesRepository,
+                    initialStatus = ChallengeStatusFilter.Expired
+                )
+            }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             val detailsViewModel = remember { ChallengeDetailsViewModel(appContainer.challengeDetailsRepository) }
             ChallengesScreen(

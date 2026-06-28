@@ -9,4 +9,5 @@ object AppRoutes {
     const val Today = "today"
     const val Planned = "planned"
     const val Challenges = "challenges"
+    const val ChallengesExpired = "challenges/expired"
 }

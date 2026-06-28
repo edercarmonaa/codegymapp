@@ -13,10 +13,16 @@ import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 
-class ChallengesViewModel(private val challengesRepository: ChallengesRepository) : ViewModel() {
+class ChallengesViewModel(
+    private val challengesRepository: ChallengesRepository,
+    initialStatus: ChallengeStatusFilter = ChallengeStatusFilter.Pending
+) : ViewModel() {
     private val monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM")
     private val _state = MutableStateFlow(
-        ChallengesUiState(month = LocalDate.now().format(monthFormatter))
+        ChallengesUiState(
+            month = LocalDate.now().format(monthFormatter),
+            status = initialStatus
+        )
     )
     val state: StateFlow<ChallengesUiState> = _state
 
