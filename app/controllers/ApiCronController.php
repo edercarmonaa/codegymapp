@@ -22,6 +22,17 @@ final class ApiCronController
         Response::json($this->mobileReminderService->sendTodayReminder());
     }
 
+    public function expiredReviewReminder(): void
+    {
+        if (!$this->authorized()) {
+            http_response_code(403);
+            Response::json(['ok' => false, 'message' => 'Cron no autorizado.']);
+            return;
+        }
+
+        Response::json($this->mobileReminderService->sendExpiredReviewReminder());
+    }
+
     private function authorized(): bool
     {
         $secret = trim((string) Env::get('CRON_SECRET', ''));
