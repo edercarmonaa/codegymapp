@@ -32,6 +32,8 @@ import mx.com.karedit.codegymapp.ui.screens.today.TodayViewModel
 @Composable
 fun CodeGymNavHost(
     appContainer: AppContainer,
+    pendingNotificationRoute: String? = null,
+    onPendingNotificationRouteHandled: () -> Unit = {},
     navController: NavHostController = rememberNavController()
 ) {
     val startDestination = if (appContainer.authRepository.hasToken()) AppRoutes.Home else AppRoutes.Login
@@ -51,6 +53,20 @@ fun CodeGymNavHost(
                 }
             }
         }
+    }
+
+    LaunchedEffect(pendingNotificationRoute) {
+        val route = pendingNotificationRoute ?: return@LaunchedEffect
+        if (!appContainer.authRepository.hasToken()) {
+            return@LaunchedEffect
+        }
+
+        navController.navigate(route) {
+            popUpTo(AppRoutes.Home) { saveState = true }
+            launchSingleTop = true
+            restoreState = true
+        }
+        onPendingNotificationRouteHandled()
     }
 
     NavHost(navController = navController, startDestination = startDestination) {

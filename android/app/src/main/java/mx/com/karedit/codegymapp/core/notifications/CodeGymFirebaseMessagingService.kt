@@ -31,10 +31,14 @@ class CodeGymFirebaseMessagingService : FirebaseMessagingService() {
             ?: message.data["message"]
             ?: return
 
-        showNotification(title = title, body = body)
+        showNotification(
+            title = title,
+            body = body,
+            type = message.data["type"]
+        )
     }
 
-    private fun showNotification(title: String, body: String) {
+    private fun showNotification(title: String, body: String, type: String?) {
         if (!canPostNotifications()) {
             return
         }
@@ -43,6 +47,7 @@ class CodeGymFirebaseMessagingService : FirebaseMessagingService() {
 
         val intent = Intent(this, MainActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+            putExtra(EXTRA_NOTIFICATION_TYPE, type.orEmpty())
         }
         val pendingIntent = PendingIntent.getActivity(
             this,
@@ -92,5 +97,6 @@ class CodeGymFirebaseMessagingService : FirebaseMessagingService() {
 
     private companion object {
         const val CHANNEL_ID = "codegym_reminders"
+        const val EXTRA_NOTIFICATION_TYPE = "notification_type"
     }
 }
