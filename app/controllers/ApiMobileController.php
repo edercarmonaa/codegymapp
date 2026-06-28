@@ -154,7 +154,11 @@ final class ApiMobileController
             (int) $user['id'],
             $title !== '' ? $title : 'CodeGymApp',
             $message !== '' ? $message : 'Notificación de prueba enviada desde CodeGymApp.',
-            ['type' => 'test']
+            [
+                'type' => 'test',
+                'screen' => 'notifications',
+                'action_url' => '/notificaciones',
+            ]
         );
 
         if (!$sent) {

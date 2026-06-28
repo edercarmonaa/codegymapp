@@ -44,7 +44,11 @@ final class MobileReminderService
         $sent = 0;
         $userIds = \MobileDeviceToken::activeUserIds();
         foreach ($userIds as $userId) {
-            if ($this->notificationHubService->sendToUser($userId, 'Retos pendientes', $this->message($pending), ['type' => 'today_reminder'])) {
+            if ($this->notificationHubService->sendToUser($userId, 'Retos pendientes', $this->message($pending), [
+                'type' => 'today_reminder',
+                'screen' => 'today',
+                'action_url' => $actionUrl,
+            ])) {
                 $sent++;
             }
         }
@@ -100,7 +104,11 @@ final class MobileReminderService
         $sent = 0;
         $userIds = \MobileDeviceToken::activeUserIds();
         foreach ($userIds as $userId) {
-            if ($this->notificationHubService->sendToUser($userId, 'Retos vencidos', $this->expiredReviewMessage($pending), ['type' => 'expired_review_reminder'])) {
+            if ($this->notificationHubService->sendToUser($userId, 'Retos vencidos', $this->expiredReviewMessage($pending), [
+                'type' => 'expired_review_reminder',
+                'screen' => 'challenges_expired',
+                'action_url' => $actionUrl,
+            ])) {
                 $sent++;
             }
         }
