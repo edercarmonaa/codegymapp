@@ -67,7 +67,11 @@ fun AccountScreen(
 
             when {
                 state.isLoading -> CircularProgressIndicator()
-                state.user != null -> AccountContent(user = state.user!!, onLogout = viewModel::logout)
+                state.user != null -> AccountContent(
+                    user = state.user!!,
+                    onSettings = { onNavigate(AppRoutes.Settings) },
+                    onLogout = viewModel::logout
+                )
                 else -> Text("No se pudo cargar la sesión.", style = MaterialTheme.typography.bodyLarge)
             }
         }
@@ -77,6 +81,7 @@ fun AccountScreen(
 @Composable
 private fun AccountContent(
     user: User,
+    onSettings: () -> Unit,
     onLogout: () -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -95,6 +100,13 @@ private fun AccountContent(
         AccountRow(label = "Usuario", value = user.username)
         AccountRow(label = "Estado de sesión", value = "Activa")
         AccountRow(label = "Versión", value = BuildConfig.VERSION_NAME)
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onSettings
+        ) {
+            Text("Configuración")
+        }
 
         Button(
             modifier = Modifier.fillMaxWidth(),

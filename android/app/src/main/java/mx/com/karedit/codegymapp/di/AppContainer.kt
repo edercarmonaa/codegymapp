@@ -13,6 +13,7 @@ import mx.com.karedit.codegymapp.data.repository.DeviceTokenRepository
 import mx.com.karedit.codegymapp.data.repository.GoalsRepository
 import mx.com.karedit.codegymapp.data.repository.NotificationsRepository
 import mx.com.karedit.codegymapp.data.repository.PlannedRepository
+import mx.com.karedit.codegymapp.data.repository.SettingsRepository
 import mx.com.karedit.codegymapp.data.repository.SummaryRepository
 import mx.com.karedit.codegymapp.data.repository.TodayRepository
 import mx.com.karedit.codegymapp.data.security.EncryptedTokenStorage
@@ -37,4 +38,5 @@ class AppContainer(context: Context) {
     val createChallengeRepository = CreateChallengeRepository(api)
     val createRoutineRepository = CreateRoutineRepository(api)
     val goalsRepository = GoalsRepository(api)
+    val settingsRepository = SettingsRepository(context.applicationContext)
 }

@@ -29,6 +29,8 @@ import mx.com.karedit.codegymapp.ui.screens.notifications.NotificationsScreen
 import mx.com.karedit.codegymapp.ui.screens.notifications.NotificationsViewModel
 import mx.com.karedit.codegymapp.ui.screens.planned.PlannedScreen
 import mx.com.karedit.codegymapp.ui.screens.planned.PlannedViewModel
+import mx.com.karedit.codegymapp.ui.screens.settings.SettingsScreen
+import mx.com.karedit.codegymapp.ui.screens.settings.SettingsViewModel
 import mx.com.karedit.codegymapp.ui.screens.summary.SummaryScreen
 import mx.com.karedit.codegymapp.ui.screens.summary.SummaryViewModel
 import mx.com.karedit.codegymapp.ui.screens.today.TodayScreen
@@ -108,6 +110,18 @@ fun CodeGymNavHost(
         composable(AppRoutes.Account) {
             val viewModel = remember { AccountViewModel(appContainer.authRepository) }
             AccountScreen(
+                viewModel = viewModel,
+                onNavigate = navigateTab
+            )
+        }
+        composable(AppRoutes.Settings) {
+            val viewModel = remember {
+                SettingsViewModel(
+                    settingsRepository = appContainer.settingsRepository,
+                    authRepository = appContainer.authRepository
+                )
+            }
+            SettingsScreen(
                 viewModel = viewModel,
                 onNavigate = navigateTab
             )

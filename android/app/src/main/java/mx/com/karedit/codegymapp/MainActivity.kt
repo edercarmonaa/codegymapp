@@ -8,12 +8,15 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Surface
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import mx.com.karedit.codegymapp.di.AppContainer
+import mx.com.karedit.codegymapp.data.repository.ThemePreference
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymNavHost
 import mx.com.karedit.codegymapp.ui.theme.CodeGymTheme
@@ -32,7 +35,15 @@ class MainActivity : ComponentActivity() {
         appContainer.fcmTokenRegistrar.registerCurrentToken()
 
         setContent {
-            CodeGymTheme {
+            val settings by appContainer.settingsRepository.settings.collectAsState()
+            val systemDarkTheme = isSystemInDarkTheme()
+            val darkTheme = when (settings.themePreference) {
+                ThemePreference.System -> systemDarkTheme
+                ThemePreference.Light -> false
+                ThemePreference.Dark -> true
+            }
+
+            CodeGymTheme(darkTheme = darkTheme) {
                 Surface {
                     CodeGymNavHost(
                         appContainer = appContainer,
