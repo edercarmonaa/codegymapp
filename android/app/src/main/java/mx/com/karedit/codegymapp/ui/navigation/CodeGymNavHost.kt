@@ -116,7 +116,7 @@ fun CodeGymNavHost(
                         popUpTo(AppRoutes.BiometricUnlock) { inclusive = true }
                     }
                 },
-                onBiometricFailed = { message ->
+                onBiometricFatalError = { message ->
                     authViewModel.onBiometricCancelledOrFailed(message)
                     navController.navigate(AppRoutes.Login) {
                         popUpTo(0)

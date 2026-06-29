@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
@@ -29,18 +33,20 @@ import androidx.fragment.app.FragmentActivity
 @Composable
 fun BiometricUnlockScreen(
     onUnlocked: () -> Unit,
-    onBiometricFailed: (String) -> Unit,
+    onBiometricFatalError: (String) -> Unit,
     onDisableBiometricAndLogout: () -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as? FragmentActivity
     var message by remember { mutableStateOf<String?>(null) }
+    var showExplicitBiometricButton by remember { mutableStateOf(false) }
 
     fun showPrompt() {
+        showExplicitBiometricButton = false
         if (activity == null) {
             val errorMessage = "No se pudo iniciar la verificación biométrica."
             message = errorMessage
-            onBiometricFailed(errorMessage)
+            onBiometricFatalError(errorMessage)
             return
         }
 
@@ -51,7 +57,7 @@ fun BiometricUnlockScreen(
         if (canAuthenticate != BiometricManager.BIOMETRIC_SUCCESS) {
             val errorMessage = "Huella no disponible. Inicia sesión con usuario y contraseña."
             message = errorMessage
-            onBiometricFailed(errorMessage)
+            onBiometricFatalError(errorMessage)
             return
         }
 
@@ -67,13 +73,17 @@ fun BiometricUnlockScreen(
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    val errorMessage = if (errString.isBlank()) {
-                        "Verificación biométrica cancelada. Inicia sesión con contraseña."
-                    } else {
-                        errString.toString()
+                    if (errorCode.isRecoverableBiometricCancellation()) {
+                        message = "Verificación cancelada. Puedes intentar entrar con biometría de nuevo."
+                        showExplicitBiometricButton = true
+                        return
                     }
+
+                    val errorMessage = errString
+                        .toString()
+                        .ifBlank { "No se pudo verificar la huella. Inicia sesión con contraseña." }
                     message = errorMessage
-                    onBiometricFailed(errorMessage)
+                    onBiometricFatalError(errorMessage)
                 }
 
                 override fun onAuthenticationFailed() {
@@ -121,12 +131,10 @@ fun BiometricUnlockScreen(
             Spacer(modifier = Modifier.height(12.dp))
         }
 
-        Button(
-            modifier = Modifier.fillMaxWidth(),
+        BiometricAccessButton(
+            showProminent = showExplicitBiometricButton,
             onClick = ::showPrompt
-        ) {
-            Text("Intentar de nuevo")
-        }
+        )
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
@@ -136,3 +144,51 @@ fun BiometricUnlockScreen(
         }
     }
 }
+
+@Composable
+private fun BiometricAccessButton(
+    showProminent: Boolean,
+    onClick: () -> Unit
+) {
+    if (showProminent) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
+        ) {
+            Column(
+                modifier = Modifier.padding(18.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("Acceso protegido", style = MaterialTheme.typography.titleLarge)
+                Text(
+                    text = "Tu sesión sigue protegida. Usa tu huella para continuar sin escribir credenciales.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Button(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(56.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
+                    onClick = onClick
+                ) {
+                    Text("Entrar con biometría", style = MaterialTheme.typography.titleMedium)
+                }
+            }
+        }
+    } else {
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = onClick
+        ) {
+            Text("Entrar con biometría")
+        }
+    }
+}
+
+private fun Int.isRecoverableBiometricCancellation(): Boolean =
+    this == BiometricPrompt.ERROR_NEGATIVE_BUTTON ||
+        this == BiometricPrompt.ERROR_USER_CANCELED ||
+        this == BiometricPrompt.ERROR_CANCELED ||
+        this == BiometricPrompt.ERROR_TIMEOUT
