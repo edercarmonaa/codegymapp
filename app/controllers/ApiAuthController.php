@@ -16,9 +16,7 @@ final class ApiAuthController
         $result = $this->authService->attemptLogin(
             (string) ($input['username'] ?? ''),
             (string) ($input['password'] ?? ''),
-            false,
-            true,
-            (string) ($input['device_name'] ?? '')
+            false
         );
 
         if (!$result['ok']) {
@@ -34,44 +32,7 @@ final class ApiAuthController
             'ok' => true,
             'token' => $result['token'],
             'expires_in' => $result['expires_in'],
-            'refresh_token' => $result['refresh_token'] ?? null,
-            'refresh_expires_in' => $result['refresh_expires_in'] ?? null,
             'user' => $this->publicUser($result['user'] ?? []),
-        ]);
-    }
-
-    public function refresh(): void
-    {
-        $input = $this->input();
-        $result = $this->authService->refreshMobileSession((string) ($input['refresh_token'] ?? ''));
-
-        if (!$result['ok']) {
-            http_response_code(401);
-            Response::json([
-                'ok' => false,
-                'message' => $result['message'] ?? 'No se pudo renovar la sesión.',
-            ]);
-            return;
-        }
-
-        Response::json([
-            'ok' => true,
-            'token' => $result['token'],
-            'expires_in' => $result['expires_in'],
-            'refresh_token' => $result['refresh_token'] ?? null,
-            'refresh_expires_in' => $result['refresh_expires_in'] ?? null,
-            'user' => $this->publicUser($result['user'] ?? []),
-        ]);
-    }
-
-    public function revokeRefresh(): void
-    {
-        $input = $this->input();
-        $this->authService->revokeMobileRefreshToken((string) ($input['refresh_token'] ?? ''));
-
-        Response::json([
-            'ok' => true,
-            'message' => 'Refresh token revocado.',
         ]);
     }
 

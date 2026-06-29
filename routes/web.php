@@ -9,8 +9,6 @@ $router->get('/login', 'AuthController', 'showLogin', false);
 $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
 $router->post('/api/auth/login', 'ApiAuthController', 'login', false);
-$router->post('/api/auth/refresh', 'ApiAuthController', 'refresh', false);
-$router->post('/api/auth/revoke-refresh', 'ApiAuthController', 'revokeRefresh', false);
 $router->get('/api/cron/mobile/today-reminder', 'ApiCronController', 'todayReminder', false);
 $router->get('/api/cron/mobile/expired-review-reminder', 'ApiCronController', 'expiredReviewReminder', false);
 $router->get('/api/me', 'ApiMeController', 'show');

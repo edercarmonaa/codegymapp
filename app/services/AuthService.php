@@ -6,8 +6,8 @@ namespace CodeGymApp\Services;
 
 final class AuthService
 {
-    /** @return array{ok: bool, message?: string, user?: array<string, mixed>, token?: string, expires_in?: int, refresh_token?: string, refresh_expires_in?: int, regenerateSession?: bool} */
-    public function attemptLogin(string $username, string $password, bool $issueCookie = true, bool $issueRefreshToken = false, ?string $deviceName = null): array
+    /** @return array{ok: bool, message?: string, user?: array<string, mixed>, token?: string, expires_in?: int, regenerateSession?: bool} */
+    public function attemptLogin(string $username, string $password, bool $issueCookie = true): array
     {
         $username = trim($username);
         $user = \User::findByUsername($username);
@@ -49,59 +49,7 @@ final class AuthService
             'regenerateSession' => true,
         ];
 
-        if ($issueRefreshToken) {
-            try {
-                $refresh = \MobileRefreshToken::issue((int) $user['id'], $deviceName);
-                $result['refresh_token'] = $refresh['token'];
-                $result['refresh_expires_in'] = $refresh['expires_in'];
-                \SecurityLog::record((int) $user['id'], 'mobile_refresh_issued', 'success', 'Refresh token móvil emitido.');
-            } catch (\Throwable $error) {
-                \SecurityLog::record((int) $user['id'], 'mobile_refresh_issue_failed', 'warning', 'No se pudo emitir refresh token móvil.');
-            }
-        }
-
         return $result;
-    }
-
-    /** @return array{ok: bool, message?: string, user?: array<string, mixed>, token?: string, expires_in?: int, refresh_token?: string, refresh_expires_in?: int} */
-    public function refreshMobileSession(string $refreshToken): array
-    {
-        try {
-            $refresh = \MobileRefreshToken::rotate($refreshToken);
-        } catch (\Throwable $error) {
-            \SecurityLog::record(null, 'mobile_refresh_failed', 'failure', 'No se pudo renovar la sesión móvil.');
-            return ['ok' => false, 'message' => 'No se pudo renovar la sesión.'];
-        }
-
-        if (!$refresh['ok']) {
-            \SecurityLog::record(null, 'mobile_refresh_failed', 'failure', $refresh['message'] ?? 'Refresh token inválido.');
-            return ['ok' => false, 'message' => $refresh['message'] ?? 'No se pudo renovar la sesión.'];
-        }
-
-        $user = $refresh['user'] ?? [];
-        $token = \Auth::tokenForUser($user);
-        \SecurityLog::record((int) ($user['id'] ?? 0), 'mobile_refresh_success', 'success', 'Sesión móvil renovada.');
-
-        return [
-            'ok' => true,
-            'user' => $user,
-            'token' => $token,
-            'expires_in' => \Auth::tokenTtlSeconds(),
-            'refresh_token' => $refresh['refresh_token'],
-            'refresh_expires_in' => $refresh['refresh_expires_in'],
-        ];
-    }
-
-    public function revokeMobileRefreshToken(string $refreshToken): bool
-    {
-        try {
-            $revoked = \MobileRefreshToken::revoke($refreshToken);
-            \SecurityLog::record(null, 'mobile_refresh_revoked', $revoked ? 'success' : 'warning', 'Refresh token móvil revocado.');
-            return $revoked;
-        } catch (\Throwable $error) {
-            \SecurityLog::record(null, 'mobile_refresh_revoke_failed', 'warning', 'No se pudo revocar refresh token móvil.');
-            return false;
-        }
     }
 
     /** @param array<string, mixed>|null $user */
