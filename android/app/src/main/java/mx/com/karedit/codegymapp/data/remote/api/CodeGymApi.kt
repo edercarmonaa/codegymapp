@@ -20,6 +20,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileSummaryResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileTodayResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.RefreshSessionRequestDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
@@ -28,6 +29,9 @@ import retrofit2.http.Query
 interface CodeGymApi {
     @POST("api/auth/login")
     suspend fun login(@Body request: LoginRequestDto): LoginResponseDto
+
+    @POST("api/auth/refresh")
+    suspend fun refreshSession(@Body request: RefreshSessionRequestDto): LoginResponseDto
 
     @GET("api/me")
     suspend fun me(): MeResponseDto

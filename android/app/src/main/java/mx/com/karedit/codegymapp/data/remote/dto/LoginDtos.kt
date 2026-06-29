@@ -11,8 +11,14 @@ data class LoginResponseDto(
     val ok: Boolean,
     val token: String?,
     @Json(name = "expires_in") val expiresIn: Int?,
+    @Json(name = "refresh_token") val refreshToken: String? = null,
+    @Json(name = "refresh_expires_in") val refreshExpiresIn: Int? = null,
     val user: UserDto?,
     val message: String?
+)
+
+data class RefreshSessionRequestDto(
+    @Json(name = "refresh_token") val refreshToken: String
 )
 
 data class MeResponseDto(

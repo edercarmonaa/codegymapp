@@ -2,9 +2,11 @@ package mx.com.karedit.codegymapp.ui.screens.auth
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.core.session.SessionExpiredReason
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.SettingsRepository
@@ -21,11 +23,12 @@ class AuthViewModel(
     }
 
     fun evaluateInitialSession() {
-        val hasToken = authRepository.hasToken()
-        val requiresBiometric = hasToken && settingsRepository.settings.value.biometricEnabled
+        val hasAccessToken = authRepository.hasToken()
+        val hasRefreshToken = authRepository.hasRefreshToken()
+        val requiresBiometric = settingsRepository.settings.value.biometricEnabled && hasRefreshToken
         _state.update {
             it.copy(
-                isAuthenticated = hasToken && !requiresBiometric,
+                isAuthenticated = hasAccessToken && !requiresBiometric,
                 biometricRequest = if (requiresBiometric) {
                     BiometricRequest(BiometricRequestReason.InitialLogin)
                 } else {
@@ -47,6 +50,11 @@ class AuthViewModel(
     }
 
     fun onSessionExpired(reason: SessionExpiredReason) {
+        if (settingsRepository.settings.value.biometricEnabled && authRepository.hasRefreshToken()) {
+            requestBiometric(BiometricRequestReason.TokenExpired)
+            return
+        }
+
         authRepository.logoutAndClear()
         _state.update {
             it.copy(
@@ -71,13 +79,36 @@ class AuthViewModel(
         }
     }
 
-    fun onBiometricSucceeded() {
-        _state.update {
-            it.copy(
-                isAuthenticated = true,
-                biometricRequest = null,
-                loginMessage = null
-            )
+    fun onBiometricSucceeded(
+        onSuccess: () -> Unit,
+        onFailure: () -> Unit
+    ) {
+        _state.update { it.copy(isRefreshing = true, loginMessage = null) }
+        viewModelScope.launch {
+            authRepository.refreshSession()
+                .onSuccess {
+                    _state.update { state ->
+                        state.copy(
+                            isAuthenticated = true,
+                            biometricRequest = null,
+                            loginMessage = null,
+                            isRefreshing = false
+                        )
+                    }
+                    onSuccess()
+                }
+                .onFailure { error ->
+                    authRepository.logoutAndClear()
+                    _state.update { state ->
+                        state.copy(
+                            isAuthenticated = false,
+                            biometricRequest = null,
+                            loginMessage = error.message ?: "No se pudo renovar la sesión. Inicia sesión con contraseña.",
+                            isRefreshing = false
+                        )
+                    }
+                    onFailure()
+                }
         }
     }
 
@@ -98,13 +129,17 @@ class AuthViewModel(
     }
 
     private fun requestBiometric(reason: BiometricRequestReason) {
-        if (!authRepository.hasToken()) {
+        if (!authRepository.hasRefreshToken()) {
             onSessionExpired(SessionExpiredReason.Manual)
             return
         }
 
         if (!settingsRepository.settings.value.biometricEnabled) {
-            _state.update { it.copy(isAuthenticated = true, biometricRequest = null) }
+            if (authRepository.hasToken()) {
+                _state.update { it.copy(isAuthenticated = true, biometricRequest = null) }
+            } else {
+                onSessionExpired(SessionExpiredReason.Manual)
+            }
             return
         }
 
@@ -134,7 +169,8 @@ class AuthViewModel(
 data class AuthUiState(
     val isAuthenticated: Boolean = false,
     val biometricRequest: BiometricRequest? = null,
-    val loginMessage: String? = null
+    val loginMessage: String? = null,
+    val isRefreshing: Boolean = false
 )
 
 data class BiometricRequest(
@@ -145,5 +181,6 @@ data class BiometricRequest(
 enum class BiometricRequestReason {
     InitialLogin,
     BackgroundTimeout,
-    ManualLock
+    ManualLock,
+    TokenExpired
 }

@@ -51,8 +51,8 @@ fun CodeGymNavHost(
 ) {
     val authState by authViewModel.state.collectAsState()
     val startDestination = when {
-        !appContainer.authRepository.hasToken() -> AppRoutes.Login
         authState.biometricRequest != null -> AppRoutes.BiometricUnlock
+        !appContainer.authRepository.hasToken() -> AppRoutes.Login
         else -> AppRoutes.Home
     }
     val navigateTab: (String) -> Unit = { route ->
@@ -94,7 +94,7 @@ fun CodeGymNavHost(
 
     LaunchedEffect(pendingNotificationRoute, authState.isAuthenticated) {
         val route = pendingNotificationRoute ?: return@LaunchedEffect
-        if (!appContainer.authRepository.hasToken() || !authState.isAuthenticated) {
+        if (!authState.isAuthenticated) {
             return@LaunchedEffect
         }
 
@@ -110,20 +110,22 @@ fun CodeGymNavHost(
         composable(AppRoutes.BiometricUnlock) {
             BiometricUnlockScreen(
                 onUnlocked = {
-                    authViewModel.onBiometricSucceeded()
-                    onAuthenticated()
-                    navController.navigate(AppRoutes.Home) {
-                        popUpTo(AppRoutes.BiometricUnlock) { inclusive = true }
-                    }
+                    authViewModel.onBiometricSucceeded(
+                        onSuccess = {
+                            onAuthenticated()
+                            navController.navigate(AppRoutes.Home) {
+                                popUpTo(AppRoutes.BiometricUnlock) { inclusive = true }
+                            }
+                        },
+                        onFailure = {
+                            navController.navigate(AppRoutes.Login) {
+                                popUpTo(0)
+                            }
+                        }
+                    )
                 },
                 onBiometricFatalError = { message ->
                     authViewModel.onBiometricCancelledOrFailed(message)
-                    navController.navigate(AppRoutes.Login) {
-                        popUpTo(0)
-                    }
-                },
-                onDisableBiometricAndLogout = {
-                    authViewModel.disableBiometricAndLogout()
                     navController.navigate(AppRoutes.Login) {
                         popUpTo(0)
                     }

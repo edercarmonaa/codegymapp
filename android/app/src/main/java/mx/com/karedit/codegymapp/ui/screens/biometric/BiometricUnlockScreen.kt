@@ -15,7 +15,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -33,8 +32,7 @@ import androidx.fragment.app.FragmentActivity
 @Composable
 fun BiometricUnlockScreen(
     onUnlocked: () -> Unit,
-    onBiometricFatalError: (String) -> Unit,
-    onDisableBiometricAndLogout: () -> Unit
+    onBiometricFatalError: (String) -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as? FragmentActivity
@@ -135,13 +133,6 @@ fun BiometricUnlockScreen(
             showProminent = showExplicitBiometricButton,
             onClick = ::showPrompt
         )
-        Spacer(modifier = Modifier.height(12.dp))
-        OutlinedButton(
-            modifier = Modifier.fillMaxWidth(),
-            onClick = onDisableBiometricAndLogout
-        ) {
-            Text("Cerrar sesión y desactivar huella")
-        }
     }
 }
 

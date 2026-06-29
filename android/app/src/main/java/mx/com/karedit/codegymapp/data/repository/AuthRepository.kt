@@ -3,6 +3,7 @@ package mx.com.karedit.codegymapp.data.repository
 import mx.com.karedit.codegymapp.core.session.SessionManager
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.LoginRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.RefreshSessionRequestDto
 import mx.com.karedit.codegymapp.domain.model.User
 
 class AuthRepository(
@@ -12,11 +13,30 @@ class AuthRepository(
     suspend fun login(username: String, password: String): Result<User> = runCatching {
         val response = api.login(LoginRequestDto(username = username, password = password))
         val token = response.token
+        val refreshToken = response.refreshToken
         val user = response.user
-        if (!response.ok || token.isNullOrBlank() || user == null) {
+        if (!response.ok || token.isNullOrBlank() || refreshToken.isNullOrBlank() || user == null) {
             error(response.message ?: "Usuario o contraseña incorrectos.")
         }
         sessionManager.saveToken(token)
+        sessionManager.saveRefreshToken(refreshToken)
+        user.toDomain()
+    }
+
+    suspend fun refreshSession(): Result<User> = runCatching {
+        val refreshToken = sessionManager.refreshToken()
+            ?.takeIf { it.isNotBlank() }
+            ?: error("No hay sesión biométrica guardada. Inicia sesión con contraseña.")
+
+        val response = api.refreshSession(RefreshSessionRequestDto(refreshToken))
+        val token = response.token
+        val rotatedRefreshToken = response.refreshToken
+        val user = response.user
+        if (!response.ok || token.isNullOrBlank() || rotatedRefreshToken.isNullOrBlank() || user == null) {
+            error(response.message ?: "No se pudo renovar la sesión.")
+        }
+        sessionManager.saveToken(token)
+        sessionManager.saveRefreshToken(rotatedRefreshToken)
         user.toDomain()
     }
 
@@ -30,6 +50,8 @@ class AuthRepository(
     }
 
     fun hasToken(): Boolean = !sessionManager.token().isNullOrBlank()
+
+    fun hasRefreshToken(): Boolean = !sessionManager.refreshToken().isNullOrBlank()
 
     fun lockSession() {
         sessionManager.lockSession()
