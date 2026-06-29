@@ -4,18 +4,16 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mx.com.karedit.codegymapp.core.session.SessionEvent
-import mx.com.karedit.codegymapp.core.session.SessionExpiredReason
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.account.AccountScreen
 import mx.com.karedit.codegymapp.ui.screens.account.AccountViewModel
+import mx.com.karedit.codegymapp.ui.screens.auth.AuthViewModel
 import mx.com.karedit.codegymapp.ui.screens.biometric.BiometricUnlockScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengeStatusFilter
@@ -45,20 +43,18 @@ import mx.com.karedit.codegymapp.ui.screens.today.TodayViewModel
 @Composable
 fun CodeGymNavHost(
     appContainer: AppContainer,
+    authViewModel: AuthViewModel,
     pendingNotificationRoute: String? = null,
     onPendingNotificationRouteHandled: () -> Unit = {},
     onAuthenticated: () -> Unit = {},
     navController: NavHostController = rememberNavController()
 ) {
-    val settings by appContainer.settingsRepository.settings.collectAsState()
-    val requiresBiometricUnlock = appContainer.authRepository.hasToken() && settings.biometricEnabled
+    val authState by authViewModel.state.collectAsState()
     val startDestination = when {
         !appContainer.authRepository.hasToken() -> AppRoutes.Login
-        requiresBiometricUnlock -> AppRoutes.BiometricUnlock
+        authState.biometricRequest != null -> AppRoutes.BiometricUnlock
         else -> AppRoutes.Home
     }
-    var loginMessage by remember { mutableStateOf<String?>(null) }
-    var biometricUnlocked by remember { mutableStateOf(!requiresBiometricUnlock) }
     val navigateTab: (String) -> Unit = { route ->
         navController.navigate(route) {
             popUpTo(AppRoutes.Home) { saveState = true }
@@ -71,19 +67,13 @@ fun CodeGymNavHost(
         appContainer.sessionManager.sessionEvents.collect { event ->
             when (event) {
                 is SessionEvent.SessionExpired -> {
-                    loginMessage = when (event.reason) {
-                        SessionExpiredReason.Inactivity -> "Sesión expirada"
-                        SessionExpiredReason.Unauthorized -> "Sesión expirada. Inicia sesión de nuevo."
-                        SessionExpiredReason.Manual -> null
-                    }
-                    biometricUnlocked = false
+                    authViewModel.onSessionExpired(event.reason)
                     navController.navigate(AppRoutes.Login) {
                         popUpTo(0)
                     }
                 }
                 SessionEvent.SessionLocked -> {
-                    loginMessage = null
-                    biometricUnlocked = false
+                    authViewModel.onSessionLocked()
                     navController.navigate(AppRoutes.BiometricUnlock) {
                         popUpTo(0)
                     }
@@ -92,9 +82,19 @@ fun CodeGymNavHost(
         }
     }
 
-    LaunchedEffect(pendingNotificationRoute, biometricUnlocked) {
+    LaunchedEffect(authState.biometricRequest?.id) {
+        if (authState.biometricRequest != null && appContainer.authRepository.hasToken()) {
+            navController.navigate(AppRoutes.BiometricUnlock) {
+                popUpTo(AppRoutes.Home) { saveState = true }
+                launchSingleTop = true
+                restoreState = true
+            }
+        }
+    }
+
+    LaunchedEffect(pendingNotificationRoute, authState.isAuthenticated) {
         val route = pendingNotificationRoute ?: return@LaunchedEffect
-        if (!appContainer.authRepository.hasToken() || !biometricUnlocked) {
+        if (!appContainer.authRepository.hasToken() || !authState.isAuthenticated) {
             return@LaunchedEffect
         }
 
@@ -110,16 +110,23 @@ fun CodeGymNavHost(
         composable(AppRoutes.BiometricUnlock) {
             BiometricUnlockScreen(
                 onUnlocked = {
-                    biometricUnlocked = true
+                    authViewModel.onBiometricSucceeded()
                     onAuthenticated()
                     navController.navigate(AppRoutes.Home) {
                         popUpTo(AppRoutes.BiometricUnlock) { inclusive = true }
                     }
                 },
+                onBiometricFailed = { message ->
+                    authViewModel.onBiometricCancelledOrFailed(message)
+                    navController.navigate(AppRoutes.Login) {
+                        popUpTo(0)
+                    }
+                },
                 onDisableBiometricAndLogout = {
-                    loginMessage = null
-                    appContainer.settingsRepository.updateBiometricEnabled(false)
-                    appContainer.authRepository.logoutAndClear()
+                    authViewModel.disableBiometricAndLogout()
+                    navController.navigate(AppRoutes.Login) {
+                        popUpTo(0)
+                    }
                 }
             )
         }
@@ -127,10 +134,9 @@ fun CodeGymNavHost(
             val viewModel = remember { LoginViewModel(appContainer.authRepository) }
             LoginScreen(
                 viewModel = viewModel,
-                sessionMessage = loginMessage,
+                sessionMessage = authState.loginMessage,
                 onLoginSuccess = {
-                    loginMessage = null
-                    biometricUnlocked = true
+                    authViewModel.onManualLoginSuccess()
                     onAuthenticated()
                     appContainer.fcmTokenRegistrar.registerCurrentToken()
                     navController.navigate(AppRoutes.Home) {

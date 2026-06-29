@@ -29,6 +29,7 @@ import androidx.fragment.app.FragmentActivity
 @Composable
 fun BiometricUnlockScreen(
     onUnlocked: () -> Unit,
+    onBiometricFailed: (String) -> Unit,
     onDisableBiometricAndLogout: () -> Unit
 ) {
     val context = LocalContext.current
@@ -37,7 +38,9 @@ fun BiometricUnlockScreen(
 
     fun showPrompt() {
         if (activity == null) {
-            message = "No se pudo iniciar la verificación biométrica."
+            val errorMessage = "No se pudo iniciar la verificación biométrica."
+            message = errorMessage
+            onBiometricFailed(errorMessage)
             return
         }
 
@@ -46,7 +49,9 @@ fun BiometricUnlockScreen(
         val canAuthenticate = biometricManager.canAuthenticate(authenticators)
 
         if (canAuthenticate != BiometricManager.BIOMETRIC_SUCCESS) {
-            message = "Huella no disponible. Cierra sesión para volver a usuario y contraseña."
+            val errorMessage = "Huella no disponible. Inicia sesión con usuario y contraseña."
+            message = errorMessage
+            onBiometricFailed(errorMessage)
             return
         }
 
@@ -62,7 +67,13 @@ fun BiometricUnlockScreen(
 
                 override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                     super.onAuthenticationError(errorCode, errString)
-                    message = errString.toString()
+                    val errorMessage = if (errString.isBlank()) {
+                        "Verificación biométrica cancelada. Inicia sesión con contraseña."
+                    } else {
+                        errString.toString()
+                    }
+                    message = errorMessage
+                    onBiometricFailed(errorMessage)
                 }
 
                 override fun onAuthenticationFailed() {
