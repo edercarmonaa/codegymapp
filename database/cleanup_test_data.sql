@@ -7,6 +7,7 @@ SET FOREIGN_KEY_CHECKS = 0;
 
 DELETE FROM notifications;
 DELETE FROM security_logs;
+DELETE FROM mobile_refresh_tokens;
 
 DELETE FROM challenge_github_links;
 DELETE FROM challenge_languages;
@@ -17,6 +18,7 @@ DELETE FROM goals;
 
 ALTER TABLE notifications AUTO_INCREMENT = 1;
 ALTER TABLE security_logs AUTO_INCREMENT = 1;
+ALTER TABLE mobile_refresh_tokens AUTO_INCREMENT = 1;
 ALTER TABLE challenge_github_links AUTO_INCREMENT = 1;
 ALTER TABLE challenge_languages AUTO_INCREMENT = 1;
 ALTER TABLE challenges AUTO_INCREMENT = 1;
