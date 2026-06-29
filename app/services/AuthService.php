@@ -50,10 +50,14 @@ final class AuthService
         ];
 
         if ($issueRefreshToken) {
-            $refresh = \MobileRefreshToken::issue((int) $user['id'], $deviceName);
-            $result['refresh_token'] = $refresh['token'];
-            $result['refresh_expires_in'] = $refresh['expires_in'];
-            \SecurityLog::record((int) $user['id'], 'mobile_refresh_issued', 'success', 'Refresh token móvil emitido.');
+            try {
+                $refresh = \MobileRefreshToken::issue((int) $user['id'], $deviceName);
+                $result['refresh_token'] = $refresh['token'];
+                $result['refresh_expires_in'] = $refresh['expires_in'];
+                \SecurityLog::record((int) $user['id'], 'mobile_refresh_issued', 'success', 'Refresh token móvil emitido.');
+            } catch (\Throwable $error) {
+                \SecurityLog::record((int) $user['id'], 'mobile_refresh_issue_failed', 'warning', 'No se pudo emitir refresh token móvil.');
+            }
         }
 
         return $result;
@@ -62,7 +66,13 @@ final class AuthService
     /** @return array{ok: bool, message?: string, user?: array<string, mixed>, token?: string, expires_in?: int, refresh_token?: string, refresh_expires_in?: int} */
     public function refreshMobileSession(string $refreshToken): array
     {
-        $refresh = \MobileRefreshToken::rotate($refreshToken);
+        try {
+            $refresh = \MobileRefreshToken::rotate($refreshToken);
+        } catch (\Throwable $error) {
+            \SecurityLog::record(null, 'mobile_refresh_failed', 'failure', 'No se pudo renovar la sesión móvil.');
+            return ['ok' => false, 'message' => 'No se pudo renovar la sesión.'];
+        }
+
         if (!$refresh['ok']) {
             \SecurityLog::record(null, 'mobile_refresh_failed', 'failure', $refresh['message'] ?? 'Refresh token inválido.');
             return ['ok' => false, 'message' => $refresh['message'] ?? 'No se pudo renovar la sesión.'];
@@ -84,9 +94,14 @@ final class AuthService
 
     public function revokeMobileRefreshToken(string $refreshToken): bool
     {
-        $revoked = \MobileRefreshToken::revoke($refreshToken);
-        \SecurityLog::record(null, 'mobile_refresh_revoked', $revoked ? 'success' : 'warning', 'Refresh token móvil revocado.');
-        return $revoked;
+        try {
+            $revoked = \MobileRefreshToken::revoke($refreshToken);
+            \SecurityLog::record(null, 'mobile_refresh_revoked', $revoked ? 'success' : 'warning', 'Refresh token móvil revocado.');
+            return $revoked;
+        } catch (\Throwable $error) {
+            \SecurityLog::record(null, 'mobile_refresh_revoke_failed', 'warning', 'No se pudo revocar refresh token móvil.');
+            return false;
+        }
     }
 
     /** @param array<string, mixed>|null $user */
