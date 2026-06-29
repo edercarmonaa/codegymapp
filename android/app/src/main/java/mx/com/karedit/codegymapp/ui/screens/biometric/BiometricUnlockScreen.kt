@@ -29,7 +29,7 @@ import androidx.fragment.app.FragmentActivity
 @Composable
 fun BiometricUnlockScreen(
     onUnlocked: () -> Unit,
-    onUsePassword: () -> Unit
+    onDisableBiometricAndLogout: () -> Unit
 ) {
     val context = LocalContext.current
     val activity = context as? FragmentActivity
@@ -41,13 +41,12 @@ fun BiometricUnlockScreen(
             return
         }
 
-        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG or
-            BiometricManager.Authenticators.DEVICE_CREDENTIAL
+        val authenticators = BiometricManager.Authenticators.BIOMETRIC_STRONG
         val biometricManager = BiometricManager.from(context)
         val canAuthenticate = biometricManager.canAuthenticate(authenticators)
 
         if (canAuthenticate != BiometricManager.BIOMETRIC_SUCCESS) {
-            message = "Biometría no disponible. Inicia sesión con usuario y contraseña."
+            message = "Huella no disponible. Cierra sesión para volver a usuario y contraseña."
             return
         }
 
@@ -75,8 +74,9 @@ fun BiometricUnlockScreen(
 
         val promptInfo = BiometricPrompt.PromptInfo.Builder()
             .setTitle("Desbloquear CodeGym")
-            .setSubtitle("Confirma tu identidad para continuar")
+            .setSubtitle("Confirma tu huella para continuar")
             .setAllowedAuthenticators(authenticators)
+            .setNegativeButtonText("Cancelar")
             .build()
 
         prompt.authenticate(promptInfo)
@@ -99,7 +99,7 @@ fun BiometricUnlockScreen(
             color = MaterialTheme.colorScheme.primary
         )
         Text(
-            text = "Desbloqueo con huella",
+            text = "Inicio de sesión con huella",
             style = MaterialTheme.typography.bodyLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
@@ -119,9 +119,9 @@ fun BiometricUnlockScreen(
         Spacer(modifier = Modifier.height(12.dp))
         OutlinedButton(
             modifier = Modifier.fillMaxWidth(),
-            onClick = onUsePassword
+            onClick = onDisableBiometricAndLogout
         ) {
-            Text("Entrar con contraseña")
+            Text("Cerrar sesión y desactivar huella")
         }
     }
 }

@@ -107,8 +107,9 @@ fun CodeGymNavHost(
                         popUpTo(AppRoutes.BiometricUnlock) { inclusive = true }
                     }
                 },
-                onUsePassword = {
+                onDisableBiometricAndLogout = {
                     loginMessage = null
+                    appContainer.settingsRepository.updateBiometricEnabled(false)
                     appContainer.authRepository.logout()
                 }
             )
