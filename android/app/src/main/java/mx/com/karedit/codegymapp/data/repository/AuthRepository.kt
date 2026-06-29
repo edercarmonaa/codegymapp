@@ -15,11 +15,13 @@ class AuthRepository(
         val token = response.token
         val refreshToken = response.refreshToken
         val user = response.user
-        if (!response.ok || token.isNullOrBlank() || refreshToken.isNullOrBlank() || user == null) {
+        if (!response.ok || token.isNullOrBlank() || user == null) {
             error(response.message ?: "Usuario o contraseña incorrectos.")
         }
         sessionManager.saveToken(token)
-        sessionManager.saveRefreshToken(refreshToken)
+        if (!refreshToken.isNullOrBlank()) {
+            sessionManager.saveRefreshToken(refreshToken)
+        }
         user.toDomain()
     }
 
