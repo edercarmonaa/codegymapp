@@ -60,7 +60,11 @@ class AuthRepository(
     }
 
     fun lockSession() {
-        sessionManager.lockSession()
+        if (hasRefreshToken()) {
+            sessionManager.lockSession()
+        } else {
+            sessionManager.clearSession()
+        }
     }
 
     fun logoutAndClear() {

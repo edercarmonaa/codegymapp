@@ -48,7 +48,7 @@ class SettingsViewModel(
     }
 
     fun logout() {
-        if (settingsRepository.settings.value.biometricEnabled) {
+        if (settingsRepository.settings.value.biometricEnabled && authRepository.hasRefreshToken()) {
             authRepository.lockSession()
         } else {
             authRepository.logoutAndClear()
