@@ -2,6 +2,7 @@ package mx.com.karedit.codegymapp.ui.navigation
 
 object AppRoutes {
     const val Login = "login"
+    const val BiometricUnlock = "biometric_unlock"
     const val Home = "home"
     const val Account = "account"
     const val Settings = "settings"
