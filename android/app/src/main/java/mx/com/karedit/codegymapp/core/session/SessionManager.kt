@@ -10,40 +10,18 @@ class SessionManager(private val tokenStorage: TokenStorage) {
 
     fun token(): String? = tokenStorage.getToken()
 
-    fun refreshToken(): String? = tokenStorage.getRefreshToken()
-
     fun saveToken(token: String) {
         tokenStorage.saveToken(token)
     }
 
-    fun saveRefreshToken(token: String) {
-        tokenStorage.saveRefreshToken(token)
-    }
-
-    fun clearRefreshToken() {
-        tokenStorage.clearRefreshToken()
-    }
-
     fun clearSession(reason: SessionExpiredReason = SessionExpiredReason.Manual) {
         tokenStorage.clearToken()
-        tokenStorage.clearRefreshToken()
         _sessionEvents.tryEmit(SessionEvent.SessionExpired(reason))
-    }
-
-    fun expireAccessToken(reason: SessionExpiredReason = SessionExpiredReason.Unauthorized) {
-        tokenStorage.clearToken()
-        _sessionEvents.tryEmit(SessionEvent.SessionExpired(reason))
-    }
-
-    fun lockSession() {
-        tokenStorage.clearToken()
-        _sessionEvents.tryEmit(SessionEvent.SessionLocked)
     }
 }
 
 sealed interface SessionEvent {
     data class SessionExpired(val reason: SessionExpiredReason) : SessionEvent
-    data object SessionLocked : SessionEvent
 }
 
 enum class SessionExpiredReason {

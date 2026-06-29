@@ -2,8 +2,6 @@ package mx.com.karedit.codegymapp.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -13,8 +11,6 @@ import mx.com.karedit.codegymapp.core.session.SessionEvent
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.account.AccountScreen
 import mx.com.karedit.codegymapp.ui.screens.account.AccountViewModel
-import mx.com.karedit.codegymapp.ui.screens.auth.AuthViewModel
-import mx.com.karedit.codegymapp.ui.screens.biometric.BiometricUnlockScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesScreen
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengeStatusFilter
 import mx.com.karedit.codegymapp.ui.screens.challenges.ChallengesViewModel
@@ -43,18 +39,11 @@ import mx.com.karedit.codegymapp.ui.screens.today.TodayViewModel
 @Composable
 fun CodeGymNavHost(
     appContainer: AppContainer,
-    authViewModel: AuthViewModel,
     pendingNotificationRoute: String? = null,
     onPendingNotificationRouteHandled: () -> Unit = {},
-    onAuthenticated: () -> Unit = {},
     navController: NavHostController = rememberNavController()
 ) {
-    val authState by authViewModel.state.collectAsState()
-    val startDestination = when {
-        authState.biometricRequest != null -> AppRoutes.BiometricUnlock
-        !appContainer.authRepository.hasToken() -> AppRoutes.Login
-        else -> AppRoutes.Home
-    }
+    val startDestination = if (appContainer.authRepository.hasToken()) AppRoutes.Home else AppRoutes.Login
     val navigateTab: (String) -> Unit = { route ->
         navController.navigate(route) {
             popUpTo(AppRoutes.Home) { saveState = true }
@@ -65,36 +54,17 @@ fun CodeGymNavHost(
 
     LaunchedEffect(appContainer.sessionManager) {
         appContainer.sessionManager.sessionEvents.collect { event ->
-            when (event) {
-                is SessionEvent.SessionExpired -> {
-                    authViewModel.onSessionExpired(event.reason)
-                    navController.navigate(AppRoutes.Login) {
-                        popUpTo(0)
-                    }
-                }
-                SessionEvent.SessionLocked -> {
-                    authViewModel.onSessionLocked()
-                    navController.navigate(AppRoutes.BiometricUnlock) {
-                        popUpTo(0)
-                    }
+            if (event is SessionEvent.SessionExpired) {
+                navController.navigate(AppRoutes.Login) {
+                    popUpTo(0)
                 }
             }
         }
     }
 
-    LaunchedEffect(authState.biometricRequest?.id) {
-        if (authState.biometricRequest != null && appContainer.authRepository.hasRefreshToken()) {
-            navController.navigate(AppRoutes.BiometricUnlock) {
-                popUpTo(AppRoutes.Home) { saveState = true }
-                launchSingleTop = true
-                restoreState = true
-            }
-        }
-    }
-
-    LaunchedEffect(pendingNotificationRoute, authState.isAuthenticated) {
+    LaunchedEffect(pendingNotificationRoute) {
         val route = pendingNotificationRoute ?: return@LaunchedEffect
-        if (!authState.isAuthenticated) {
+        if (!appContainer.authRepository.hasToken()) {
             return@LaunchedEffect
         }
 
@@ -107,39 +77,12 @@ fun CodeGymNavHost(
     }
 
     NavHost(navController = navController, startDestination = startDestination) {
-        composable(AppRoutes.BiometricUnlock) {
-            BiometricUnlockScreen(
-                onUnlocked = {
-                    authViewModel.onBiometricSucceeded(
-                        onSuccess = {
-                            onAuthenticated()
-                            navController.navigate(AppRoutes.Home) {
-                                popUpTo(AppRoutes.BiometricUnlock) { inclusive = true }
-                            }
-                        },
-                        onFailure = {
-                            navController.navigate(AppRoutes.Login) {
-                                popUpTo(0)
-                            }
-                        }
-                    )
-                },
-                onBiometricFatalError = { message ->
-                    authViewModel.onBiometricCancelledOrFailed(message)
-                    navController.navigate(AppRoutes.Login) {
-                        popUpTo(0)
-                    }
-                }
-            )
-        }
         composable(AppRoutes.Login) {
             val viewModel = remember { LoginViewModel(appContainer.authRepository) }
             LoginScreen(
                 viewModel = viewModel,
-                sessionMessage = authState.loginMessage,
+                sessionMessage = null,
                 onLoginSuccess = {
-                    authViewModel.onManualLoginSuccess()
-                    onAuthenticated()
                     appContainer.fcmTokenRegistrar.registerCurrentToken()
                     navController.navigate(AppRoutes.Home) {
                         popUpTo(AppRoutes.Login) { inclusive = true }
@@ -166,12 +109,7 @@ fun CodeGymNavHost(
             )
         }
         composable(AppRoutes.Account) {
-            val viewModel = remember {
-                AccountViewModel(
-                    authRepository = appContainer.authRepository,
-                    settingsRepository = appContainer.settingsRepository
-                )
-            }
+            val viewModel = remember { AccountViewModel(appContainer.authRepository) }
             AccountScreen(
                 viewModel = viewModel,
                 onNavigate = navigateTab

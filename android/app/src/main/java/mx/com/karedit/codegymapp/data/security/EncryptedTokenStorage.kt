@@ -19,26 +19,15 @@ class EncryptedTokenStorage(context: Context) : TokenStorage {
 
     override fun getToken(): String? = preferences.getString(KEY_TOKEN, null)
 
-    override fun getRefreshToken(): String? = preferences.getString(KEY_REFRESH_TOKEN, null)
-
     override fun saveToken(token: String) {
         preferences.edit().putString(KEY_TOKEN, token).apply()
-    }
-
-    override fun saveRefreshToken(token: String) {
-        preferences.edit().putString(KEY_REFRESH_TOKEN, token).apply()
     }
 
     override fun clearToken() {
         preferences.edit().remove(KEY_TOKEN).apply()
     }
 
-    override fun clearRefreshToken() {
-        preferences.edit().remove(KEY_REFRESH_TOKEN).apply()
-    }
-
     private companion object {
         const val KEY_TOKEN = "jwt"
-        const val KEY_REFRESH_TOKEN = "refresh_token"
     }
 }

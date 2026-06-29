@@ -16,11 +16,6 @@ class SettingsRepository(context: Context) {
         _settings.update { it.copy(themePreference = themePreference) }
     }
 
-    fun updateBiometricEnabled(enabled: Boolean) {
-        preferences.edit().putBoolean(KEY_BIOMETRIC_ENABLED, enabled).apply()
-        _settings.update { it.copy(biometricEnabled = enabled) }
-    }
-
     fun updatePushEnabled(enabled: Boolean) {
         preferences.edit().putBoolean(KEY_PUSH_ENABLED, enabled).apply()
         _settings.update { it.copy(pushEnabled = enabled) }
@@ -40,7 +35,6 @@ class SettingsRepository(context: Context) {
     private fun loadSettings(): AppSettings =
         AppSettings(
             themePreference = ThemePreference.fromValue(preferences.getString(KEY_THEME, null)),
-            biometricEnabled = preferences.getBoolean(KEY_BIOMETRIC_ENABLED, false),
             pushEnabled = preferences.getBoolean(KEY_PUSH_ENABLED, true),
             reminderTime = preferences.getString(KEY_REMINDER_TIME, null) ?: DEFAULT_REMINDER_TIME,
             lastSyncAt = preferences.getLong(KEY_LAST_SYNC_AT, 0L)
@@ -48,7 +42,6 @@ class SettingsRepository(context: Context) {
 
     private companion object {
         const val KEY_THEME = "theme"
-        const val KEY_BIOMETRIC_ENABLED = "biometric_enabled"
         const val KEY_PUSH_ENABLED = "push_enabled"
         const val KEY_REMINDER_TIME = "reminder_time"
         const val KEY_LAST_SYNC_AT = "last_sync_at"
@@ -58,7 +51,6 @@ class SettingsRepository(context: Context) {
 
 data class AppSettings(
     val themePreference: ThemePreference = ThemePreference.System,
-    val biometricEnabled: Boolean = false,
     val pushEnabled: Boolean = true,
     val reminderTime: String = "08:00",
     val lastSyncAt: Long = 0L

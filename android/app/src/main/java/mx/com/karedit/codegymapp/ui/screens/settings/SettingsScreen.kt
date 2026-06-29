@@ -84,12 +84,6 @@ fun SettingsScreen(
                 onSelected = viewModel::updateTheme
             )
             ToggleSettingsCard(
-                title = "Huella",
-                description = "Activa o desactiva el acceso con biometría. La validación segura se conectará en el siguiente paso.",
-                checked = settings.biometricEnabled,
-                onCheckedChange = viewModel::updateBiometric
-            )
-            ToggleSettingsCard(
                 title = "Push",
                 description = "Control local para recibir recordatorios push en el móvil.",
                 checked = settings.pushEnabled,

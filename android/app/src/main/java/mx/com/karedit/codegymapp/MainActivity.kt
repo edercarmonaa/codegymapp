@@ -5,6 +5,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -14,21 +15,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.ProcessLifecycleOwner
-import androidx.lifecycle.ViewModelProvider
-import mx.com.karedit.codegymapp.core.session.AppLifecycleObserver
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.data.repository.ThemePreference
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymNavHost
-import mx.com.karedit.codegymapp.ui.screens.auth.AuthViewModel
 import mx.com.karedit.codegymapp.ui.theme.CodeGymTheme
 
-class MainActivity : FragmentActivity() {
+class MainActivity : ComponentActivity() {
     private lateinit var appContainer: AppContainer
-    private lateinit var authViewModel: AuthViewModel
-    private lateinit var appLifecycleObserver: AppLifecycleObserver
     private var pendingNotificationRoute by mutableStateOf<String?>(null)
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
@@ -36,15 +30,6 @@ class MainActivity : FragmentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appContainer = AppContainer(applicationContext)
-        authViewModel = ViewModelProvider(
-            this,
-            AuthViewModel.Factory(
-                authRepository = appContainer.authRepository,
-                settingsRepository = appContainer.settingsRepository
-            )
-        )[AuthViewModel::class.java]
-        appLifecycleObserver = AppLifecycleObserver(authViewModel)
-        ProcessLifecycleOwner.get().lifecycle.addObserver(appLifecycleObserver)
         pendingNotificationRoute = routeFromNotification(intent)
         requestNotificationPermissionIfNeeded()
         appContainer.fcmTokenRegistrar.registerCurrentToken()
@@ -62,10 +47,8 @@ class MainActivity : FragmentActivity() {
                 Surface {
                     CodeGymNavHost(
                         appContainer = appContainer,
-                        authViewModel = authViewModel,
                         pendingNotificationRoute = pendingNotificationRoute,
-                        onPendingNotificationRouteHandled = { pendingNotificationRoute = null },
-                        onAuthenticated = {}
+                        onPendingNotificationRouteHandled = { pendingNotificationRoute = null }
                     )
                 }
             }
@@ -76,11 +59,6 @@ class MainActivity : FragmentActivity() {
         super.onNewIntent(intent)
         setIntent(intent)
         pendingNotificationRoute = routeFromNotification(intent)
-    }
-
-    override fun onDestroy() {
-        ProcessLifecycleOwner.get().lifecycle.removeObserver(appLifecycleObserver)
-        super.onDestroy()
     }
 
     private fun requestNotificationPermissionIfNeeded() {

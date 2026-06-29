@@ -22,16 +22,6 @@ class SettingsViewModel(
         _message.value = "Tema actualizado."
     }
 
-    fun updateBiometric(enabled: Boolean) {
-        settingsRepository.updateBiometricEnabled(enabled)
-        _message.value = if (enabled) {
-            "Huella activada. Al cerrar sesión, la app pedirá huella para volver."
-        } else {
-            authRepository.clearBiometricCredential()
-            "Huella desactivada."
-        }
-    }
-
     fun updatePush(enabled: Boolean) {
         settingsRepository.updatePushEnabled(enabled)
         _message.value = if (enabled) "Push activado." else "Push desactivado localmente."
@@ -48,11 +38,7 @@ class SettingsViewModel(
     }
 
     fun logout() {
-        if (settingsRepository.settings.value.biometricEnabled && authRepository.hasRefreshToken()) {
-            authRepository.lockSession()
-        } else {
-            authRepository.logoutAndClear()
-        }
+        authRepository.logoutAndClear()
     }
 
     fun messageShown() {

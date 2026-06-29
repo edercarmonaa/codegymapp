@@ -9,7 +9,7 @@ class UnauthorizedInterceptor(private val sessionManager: SessionManager) : Inte
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
         if (response.code == 401) {
-            sessionManager.expireAccessToken(SessionExpiredReason.Unauthorized)
+            sessionManager.clearSession(SessionExpiredReason.Unauthorized)
         }
         return response
     }
