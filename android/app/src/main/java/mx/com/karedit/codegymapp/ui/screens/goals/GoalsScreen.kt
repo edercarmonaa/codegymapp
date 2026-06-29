@@ -21,22 +21,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileGoal
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
+import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalSheet
+import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalViewModel
 
 @Composable
 fun GoalsScreen(
     viewModel: GoalsViewModel,
+    createGoalViewModel: CreateGoalViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val scrollState = rememberScrollState()
+    val coroutineScope = rememberCoroutineScope()
+    var showCreateGoalSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(state.snackbarMessage) {
         val message = state.snackbarMessage ?: return@LaunchedEffect
@@ -50,7 +59,7 @@ fun GoalsScreen(
         collapsedTitle = "Metas",
         collapsedSubtitle = "${state.goals.size} activas",
         isCollapsed = scrollState.value > 96,
-        showFab = false
+        onFabClick = { showCreateGoalSheet = true }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -75,6 +84,20 @@ fun GoalsScreen(
                 }
             }
         }
+    }
+
+    if (showCreateGoalSheet) {
+        CreateGoalSheet(
+            viewModel = createGoalViewModel,
+            onCreated = { message ->
+                showCreateGoalSheet = false
+                coroutineScope.launch {
+                    snackbarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
+                }
+                viewModel.load()
+            },
+            onDismiss = { showCreateGoalSheet = false }
+        )
     }
 }
 

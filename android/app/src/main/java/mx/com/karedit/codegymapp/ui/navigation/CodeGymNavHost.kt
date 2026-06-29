@@ -121,8 +121,10 @@ fun CodeGymNavHost(
         }
         composable(AppRoutes.Goals) {
             val viewModel = remember { GoalsViewModel(appContainer.goalsRepository) }
+            val createGoalViewModel = remember { CreateGoalViewModel(appContainer.goalsRepository) }
             GoalsScreen(
                 viewModel = viewModel,
+                createGoalViewModel = createGoalViewModel,
                 onNavigate = navigateTab
             )
         }
