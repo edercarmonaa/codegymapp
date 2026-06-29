@@ -5,6 +5,8 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
@@ -15,6 +17,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import mx.com.karedit.codegymapp.core.session.SessionExpiredReason
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.data.repository.ThemePreference
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
@@ -24,6 +27,12 @@ import mx.com.karedit.codegymapp.ui.theme.CodeGymTheme
 class MainActivity : ComponentActivity() {
     private lateinit var appContainer: AppContainer
     private var pendingNotificationRoute by mutableStateOf<String?>(null)
+    private val inactivityHandler = Handler(Looper.getMainLooper())
+    private val inactivityRunnable = Runnable {
+        if (appContainer.authRepository.hasToken()) {
+            appContainer.sessionManager.clearSession(SessionExpiredReason.Inactivity)
+        }
+    }
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
@@ -48,17 +57,40 @@ class MainActivity : ComponentActivity() {
                     CodeGymNavHost(
                         appContainer = appContainer,
                         pendingNotificationRoute = pendingNotificationRoute,
-                        onPendingNotificationRouteHandled = { pendingNotificationRoute = null }
+                        onPendingNotificationRouteHandled = { pendingNotificationRoute = null },
+                        onAuthenticated = ::resetInactivityTimer
                     )
                 }
             }
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        resetInactivityTimer()
+    }
+
+    override fun onPause() {
+        inactivityHandler.removeCallbacks(inactivityRunnable)
+        super.onPause()
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        resetInactivityTimer()
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         pendingNotificationRoute = routeFromNotification(intent)
+    }
+
+    private fun resetInactivityTimer() {
+        inactivityHandler.removeCallbacks(inactivityRunnable)
+        if (appContainer.authRepository.hasToken()) {
+            inactivityHandler.postDelayed(inactivityRunnable, INACTIVITY_TIMEOUT_MS)
+        }
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -91,5 +123,6 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val EXTRA_NOTIFICATION_TYPE = "notification_type"
         const val EXTRA_NOTIFICATION_SCREEN = "notification_screen"
+        const val INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000L
     }
 }

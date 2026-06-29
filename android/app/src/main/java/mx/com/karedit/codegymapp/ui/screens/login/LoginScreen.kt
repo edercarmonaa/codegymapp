@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun LoginScreen(
     viewModel: LoginViewModel,
+    sessionMessage: String? = null,
     onLoginSuccess: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
@@ -47,6 +48,11 @@ fun LoginScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.height(32.dp))
+
+        sessionMessage?.let {
+            Text(text = it, color = MaterialTheme.colorScheme.error)
+            Spacer(modifier = Modifier.height(12.dp))
+        }
 
         OutlinedTextField(
             value = state.username,
