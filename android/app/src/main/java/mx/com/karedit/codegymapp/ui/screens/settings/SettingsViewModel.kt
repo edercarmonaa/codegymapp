@@ -27,6 +27,7 @@ class SettingsViewModel(
         _message.value = if (enabled) {
             "Huella activada. Al cerrar sesión, la app pedirá huella para volver."
         } else {
+            authRepository.clearBiometricCredential()
             "Huella desactivada."
         }
     }

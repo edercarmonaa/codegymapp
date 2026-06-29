@@ -20,6 +20,10 @@ class SessionManager(private val tokenStorage: TokenStorage) {
         tokenStorage.saveRefreshToken(token)
     }
 
+    fun clearRefreshToken() {
+        tokenStorage.clearRefreshToken()
+    }
+
     fun clearSession(reason: SessionExpiredReason = SessionExpiredReason.Manual) {
         tokenStorage.clearToken()
         tokenStorage.clearRefreshToken()

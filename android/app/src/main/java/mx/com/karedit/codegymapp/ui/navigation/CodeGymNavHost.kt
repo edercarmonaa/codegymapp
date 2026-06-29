@@ -83,7 +83,7 @@ fun CodeGymNavHost(
     }
 
     LaunchedEffect(authState.biometricRequest?.id) {
-        if (authState.biometricRequest != null && appContainer.authRepository.hasToken()) {
+        if (authState.biometricRequest != null && appContainer.authRepository.hasRefreshToken()) {
             navController.navigate(AppRoutes.BiometricUnlock) {
                 popUpTo(AppRoutes.Home) { saveState = true }
                 launchSingleTop = true

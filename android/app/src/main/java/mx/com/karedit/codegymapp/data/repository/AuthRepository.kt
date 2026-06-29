@@ -55,6 +55,10 @@ class AuthRepository(
 
     fun hasRefreshToken(): Boolean = !sessionManager.refreshToken().isNullOrBlank()
 
+    fun clearBiometricCredential() {
+        sessionManager.clearRefreshToken()
+    }
+
     fun lockSession() {
         sessionManager.lockSession()
     }
