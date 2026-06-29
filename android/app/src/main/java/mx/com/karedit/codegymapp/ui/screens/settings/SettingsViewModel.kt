@@ -25,7 +25,7 @@ class SettingsViewModel(
     fun updateBiometric(enabled: Boolean) {
         settingsRepository.updateBiometricEnabled(enabled)
         _message.value = if (enabled) {
-            "Huella activada localmente. Falta conectar validación biométrica."
+            "Huella activada. Al cerrar sesión, la app pedirá huella para volver."
         } else {
             "Huella desactivada."
         }
@@ -47,7 +47,11 @@ class SettingsViewModel(
     }
 
     fun logout() {
-        authRepository.logout()
+        if (settingsRepository.settings.value.biometricEnabled) {
+            authRepository.lockSession()
+        } else {
+            authRepository.logoutAndClear()
+        }
     }
 
     fun messageShown() {

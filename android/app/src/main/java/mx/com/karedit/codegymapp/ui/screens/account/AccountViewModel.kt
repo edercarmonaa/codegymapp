@@ -7,9 +7,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
+import mx.com.karedit.codegymapp.data.repository.SettingsRepository
 import mx.com.karedit.codegymapp.domain.model.User
 
-class AccountViewModel(private val authRepository: AuthRepository) : ViewModel() {
+class AccountViewModel(
+    private val authRepository: AuthRepository,
+    private val settingsRepository: SettingsRepository
+) : ViewModel() {
     private val _state = MutableStateFlow(AccountUiState())
     val state: StateFlow<AccountUiState> = _state
 
@@ -28,7 +32,11 @@ class AccountViewModel(private val authRepository: AuthRepository) : ViewModel()
     }
 
     fun logout() {
-        authRepository.logout()
+        if (settingsRepository.settings.value.biometricEnabled) {
+            authRepository.lockSession()
+        } else {
+            authRepository.logoutAndClear()
+        }
     }
 }
 

@@ -30,7 +30,11 @@ class MainActivity : FragmentActivity() {
     private val inactivityHandler = Handler(Looper.getMainLooper())
     private val inactivityRunnable = Runnable {
         if (appContainer.authRepository.hasToken()) {
-            appContainer.sessionManager.clearSession(SessionExpiredReason.Inactivity)
+            if (appContainer.settingsRepository.settings.value.biometricEnabled) {
+                appContainer.sessionManager.lockSession()
+            } else {
+                appContainer.sessionManager.clearSession(SessionExpiredReason.Inactivity)
+            }
         }
     }
     private val notificationPermissionLauncher =

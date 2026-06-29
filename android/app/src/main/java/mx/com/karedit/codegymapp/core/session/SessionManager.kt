@@ -18,10 +18,15 @@ class SessionManager(private val tokenStorage: TokenStorage) {
         tokenStorage.clearToken()
         _sessionEvents.tryEmit(SessionEvent.SessionExpired(reason))
     }
+
+    fun lockSession() {
+        _sessionEvents.tryEmit(SessionEvent.SessionLocked)
+    }
 }
 
 sealed interface SessionEvent {
     data class SessionExpired(val reason: SessionExpiredReason) : SessionEvent
+    data object SessionLocked : SessionEvent
 }
 
 enum class SessionExpiredReason {

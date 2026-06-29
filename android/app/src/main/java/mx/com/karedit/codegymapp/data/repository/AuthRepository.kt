@@ -31,7 +31,11 @@ class AuthRepository(
 
     fun hasToken(): Boolean = !sessionManager.token().isNullOrBlank()
 
-    fun logout() {
+    fun lockSession() {
+        sessionManager.lockSession()
+    }
+
+    fun logoutAndClear() {
         sessionManager.clearSession()
     }
 }

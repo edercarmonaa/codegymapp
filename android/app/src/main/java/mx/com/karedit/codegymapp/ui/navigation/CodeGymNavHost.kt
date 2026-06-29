@@ -69,15 +69,24 @@ fun CodeGymNavHost(
 
     LaunchedEffect(appContainer.sessionManager) {
         appContainer.sessionManager.sessionEvents.collect { event ->
-            if (event is SessionEvent.SessionExpired) {
-                loginMessage = when (event.reason) {
-                    SessionExpiredReason.Inactivity -> "Sesión expirada"
-                    SessionExpiredReason.Unauthorized -> "Sesión expirada. Inicia sesión de nuevo."
-                    SessionExpiredReason.Manual -> null
+            when (event) {
+                is SessionEvent.SessionExpired -> {
+                    loginMessage = when (event.reason) {
+                        SessionExpiredReason.Inactivity -> "Sesión expirada"
+                        SessionExpiredReason.Unauthorized -> "Sesión expirada. Inicia sesión de nuevo."
+                        SessionExpiredReason.Manual -> null
+                    }
+                    biometricUnlocked = false
+                    navController.navigate(AppRoutes.Login) {
+                        popUpTo(0)
+                    }
                 }
-                biometricUnlocked = false
-                navController.navigate(AppRoutes.Login) {
-                    popUpTo(0)
+                SessionEvent.SessionLocked -> {
+                    loginMessage = null
+                    biometricUnlocked = false
+                    navController.navigate(AppRoutes.BiometricUnlock) {
+                        popUpTo(0)
+                    }
                 }
             }
         }
@@ -110,7 +119,7 @@ fun CodeGymNavHost(
                 onDisableBiometricAndLogout = {
                     loginMessage = null
                     appContainer.settingsRepository.updateBiometricEnabled(false)
-                    appContainer.authRepository.logout()
+                    appContainer.authRepository.logoutAndClear()
                 }
             )
         }
@@ -149,7 +158,12 @@ fun CodeGymNavHost(
             )
         }
         composable(AppRoutes.Account) {
-            val viewModel = remember { AccountViewModel(appContainer.authRepository) }
+            val viewModel = remember {
+                AccountViewModel(
+                    authRepository = appContainer.authRepository,
+                    settingsRepository = appContainer.settingsRepository
+                )
+            }
             AccountScreen(
                 viewModel = viewModel,
                 onNavigate = navigateTab
