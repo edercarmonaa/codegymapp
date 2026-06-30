@@ -32,7 +32,9 @@ import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -56,6 +58,7 @@ fun ToDoTaskCard(
         val swipeOffset = remember(challenge.id) { Animatable(0f) }
         val scope = rememberCoroutineScope()
         val density = LocalDensity.current
+        val hapticFeedback = LocalHapticFeedback.current
 
         BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
             val cardWidthPx = with(density) { maxWidth.toPx() }
@@ -79,8 +82,14 @@ fun ToDoTaskCard(
                             onDragEnd = {
                                 val currentOffset = swipeOffset.value
                                 when {
-                                    currentOffset >= threshold && canSwipeToComplete -> onCompleteClick?.invoke()
-                                    currentOffset <= -threshold && canSwipeToActions -> onActionsClick?.invoke()
+                                    currentOffset >= threshold && canSwipeToComplete -> {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onCompleteClick?.invoke()
+                                    }
+                                    currentOffset <= -threshold && canSwipeToActions -> {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        onActionsClick?.invoke()
+                                    }
                                 }
                                 scope.launch { swipeOffset.animateTo(0f) }
                             },

@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -25,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileSummary
+import mx.com.karedit.codegymapp.ui.components.MetricSkeleton
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 
@@ -67,7 +67,7 @@ fun SummaryScreen(
             )
 
             when {
-                state.isLoading -> CircularProgressIndicator()
+                state.isLoading -> MetricSkeleton(count = 3)
                 state.summary == null -> Text("No hay datos de resumen.", style = MaterialTheme.typography.bodyMedium)
                 else -> SummaryContent(summary = state.summary!!)
             }

@@ -196,7 +196,12 @@ fun CodeGymNavHost(
             )
         }
         composable(AppRoutes.Challenges) {
-            val viewModel = remember { ChallengesViewModel(appContainer.challengesRepository) }
+            val viewModel = remember {
+                ChallengesViewModel(
+                    challengesRepository = appContainer.challengesRepository,
+                    settingsRepository = appContainer.settingsRepository
+                )
+            }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
             val createGoalViewModel = remember { CreateGoalViewModel(appContainer.goalsRepository) }
@@ -216,6 +221,7 @@ fun CodeGymNavHost(
             val viewModel = remember {
                 ChallengesViewModel(
                     challengesRepository = appContainer.challengesRepository,
+                    settingsRepository = appContainer.settingsRepository,
                     initialStatus = ChallengeStatusFilter.Expired
                 )
             }

@@ -11,11 +11,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
+import mx.com.karedit.codegymapp.data.repository.SettingsRepository
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 
 class ChallengesViewModel(
     private val challengesRepository: ChallengesRepository,
-    initialStatus: ChallengeStatusFilter = ChallengeStatusFilter.Pending
+    private val settingsRepository: SettingsRepository,
+    initialStatus: ChallengeStatusFilter = ChallengeStatusFilter.fromValue(settingsRepository.settings.value.challengeStatusFilter)
 ) : ViewModel() {
     private val monthFormatter = DateTimeFormatter.ofPattern("yyyy-MM")
     private val _state = MutableStateFlow(
@@ -31,6 +33,7 @@ class ChallengesViewModel(
     }
 
     fun selectStatus(status: ChallengeStatusFilter) {
+        settingsRepository.updateChallengeStatusFilter(status.value)
         _state.update { it.copy(status = status) }
         load()
     }
@@ -124,5 +127,11 @@ enum class ChallengeStatusFilter(val value: String, val label: String) {
     Completed("completed", "Cumplidos"),
     Expired("expired", "Vencidos"),
     Missed("missed", "No realizados"),
-    All("all", "Todos")
+    Cancelled("cancelled", "Cancelados"),
+    All("all", "Todos");
+
+    companion object {
+        fun fromValue(value: String): ChallengeStatusFilter =
+            entries.firstOrNull { it.value == value } ?: Pending
+    }
 }

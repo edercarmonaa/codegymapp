@@ -11,7 +11,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
@@ -30,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileGoal
+import mx.com.karedit.codegymapp.ui.components.ListSkeleton
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalSheet
@@ -77,7 +77,7 @@ fun GoalsScreen(
             )
 
             when {
-                state.isLoading -> CircularProgressIndicator()
+                state.isLoading -> ListSkeleton(count = 3)
                 state.goals.isEmpty() -> Text("No hay metas activas.", style = MaterialTheme.typography.bodyLarge)
                 else -> state.goals.forEach { goal ->
                     GoalCard(goal = goal)

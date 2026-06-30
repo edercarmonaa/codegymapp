@@ -6,13 +6,14 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -26,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.domain.model.hasRequiredCompletionData
+import mx.com.karedit.codegymapp.ui.components.ListSkeleton
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
@@ -62,6 +64,7 @@ fun PlannedScreen(
     var showRegisterCompletedSheet by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     var quickActionChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
+    var collapsedDates by remember { mutableStateOf(setOf<String>()) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -94,16 +97,25 @@ fun PlannedScreen(
             Text("Todo planeado", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
 
             if (state.isLoading) {
-                CircularProgressIndicator()
+                ListSkeleton(count = 4)
             } else if (state.challenges.isEmpty()) {
                 Text("No hay retos pendientes próximos.", style = MaterialTheme.typography.bodyMedium)
             } else {
                 state.challenges
                     .groupBy { it.scheduledDate }
                     .forEach { (date, challenges) ->
+                        val expanded = !collapsedDates.contains(date)
                         PlannedDateGroup(
                             date = date,
                             challenges = challenges,
+                            expanded = expanded,
+                            onToggle = {
+                                collapsedDates = if (expanded) {
+                                    collapsedDates + date
+                                } else {
+                                    collapsedDates - date
+                                }
+                            },
                             onChallengeClick = { selectedChallenge = it },
                             onComplete = { challenge ->
                                 if (challenge.hasRequiredCompletionData()) {
@@ -234,19 +246,31 @@ fun PlannedScreen(
 private fun PlannedDateGroup(
     date: String,
     challenges: List<MobileChallenge>,
+    expanded: Boolean,
+    onToggle: () -> Unit,
     onChallengeClick: (MobileChallenge) -> Unit,
     onComplete: (MobileChallenge) -> Unit,
     onActions: (MobileChallenge) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(date, style = MaterialTheme.typography.titleMedium)
-        challenges.forEach { challenge ->
-            ToDoTaskCard(
-                challenge = challenge,
-                onClick = { onChallengeClick(challenge) },
-                onCompleteClick = { onComplete(challenge) },
-                onActionsClick = { onActions(challenge) }
-            )
+        androidx.compose.foundation.layout.Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("$date · ${challenges.size}", style = MaterialTheme.typography.titleMedium)
+            TextButton(onClick = onToggle) {
+                Text(if (expanded) "Ocultar" else "Ver")
+            }
+        }
+        if (expanded) {
+            challenges.forEach { challenge ->
+                ToDoTaskCard(
+                    challenge = challenge,
+                    onClick = { onChallengeClick(challenge) },
+                    onCompleteClick = { onComplete(challenge) },
+                    onActionsClick = { onActions(challenge) }
+                )
+            }
         }
     }
 }

@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
@@ -37,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileNotification
+import mx.com.karedit.codegymapp.ui.components.ListSkeleton
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import kotlinx.coroutines.launch
@@ -81,7 +81,7 @@ fun NotificationsScreen(
             )
 
             when {
-                state.isLoading -> CircularProgressIndicator()
+                state.isLoading -> ListSkeleton(count = 4)
                 state.notifications.isEmpty() -> Text("No hay avisos pendientes.", style = MaterialTheme.typography.bodyLarge)
                 else -> {
                     val unread = state.notifications.filterNot { it.isRead }

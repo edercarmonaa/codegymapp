@@ -18,6 +18,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.ui.components.DatePickerField
@@ -35,6 +37,7 @@ fun ChallengeQuickActionsSheet(
     var rescheduleDate by remember(challenge.id) { mutableStateOf(challenge.scheduledDate) }
     var confirmMiss by remember(challenge.id) { mutableStateOf(false) }
     var confirmCancel by remember(challenge.id) { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -59,7 +62,10 @@ fun ChallengeQuickActionsSheet(
                 Button(
                     modifier = Modifier.fillMaxWidth(),
                     enabled = rescheduleDate.isNotBlank() && rescheduleDate != challenge.scheduledDate,
-                    onClick = { onReschedule(rescheduleDate) }
+                    onClick = {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                        onReschedule(rescheduleDate)
+                    }
                 ) {
                     Text("Guardar nueva fecha")
                 }
@@ -75,6 +81,7 @@ fun ChallengeQuickActionsSheet(
                     if (challenge.status == "expired") {
                         confirmMiss = true
                     } else {
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         onMiss()
                     }
                 }
@@ -93,7 +100,10 @@ fun ChallengeQuickActionsSheet(
             title = "Marcar vencido como no cumplido",
             message = "Este reto vencido se cerrará como no cumplido. ¿Quieres continuar?",
             confirmText = "Sí, marcar",
-            onConfirm = onMiss,
+            onConfirm = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onMiss()
+            },
             onDismiss = { confirmMiss = false }
         )
     }
@@ -103,7 +113,10 @@ fun ChallengeQuickActionsSheet(
             title = "Cancelar reto",
             message = "El reto se cerrará como cancelado. ¿Quieres continuar?",
             confirmText = "Sí, cancelar",
-            onConfirm = onCancel,
+            onConfirm = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                onCancel()
+            },
             onDismiss = { confirmCancel = false }
         )
     }

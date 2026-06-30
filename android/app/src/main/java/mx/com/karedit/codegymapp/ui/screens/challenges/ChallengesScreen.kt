@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.domain.model.hasRequiredCompletionData
+import mx.com.karedit.codegymapp.ui.components.ListSkeleton
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
@@ -105,7 +105,7 @@ fun ChallengesScreen(
             )
 
             if (state.isLoading) {
-                CircularProgressIndicator()
+                ListSkeleton(count = 5)
             } else if (state.challenges.isEmpty()) {
                 Text("No hay retos para este filtro.", style = MaterialTheme.typography.bodyMedium)
             } else {

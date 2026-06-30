@@ -8,13 +8,18 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.Surface
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
+import kotlinx.coroutines.delay
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.data.repository.ThemePreference
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
@@ -44,7 +49,21 @@ class MainActivity : ComponentActivity() {
             }
 
             CodeGymTheme(darkTheme = darkTheme) {
-                Surface {
+                LaunchedEffect(appContainer.sessionManager) {
+                    while (true) {
+                        delay(30_000)
+                        appContainer.sessionManager.expireIfInactive()
+                    }
+                }
+
+                Surface(
+                    modifier = Modifier.pointerInput(appContainer.sessionManager) {
+                        awaitEachGesture {
+                            awaitPointerEvent()
+                            appContainer.sessionManager.recordInteraction()
+                        }
+                    }
+                ) {
                     CodeGymNavHost(
                         appContainer = appContainer,
                         pendingNotificationRoute = pendingNotificationRoute,

@@ -32,12 +32,18 @@ class SettingsRepository(context: Context) {
         _settings.update { it.copy(lastSyncAt = timestamp) }
     }
 
+    fun updateChallengeStatusFilter(status: String) {
+        preferences.edit().putString(KEY_CHALLENGE_STATUS_FILTER, status).apply()
+        _settings.update { it.copy(challengeStatusFilter = status) }
+    }
+
     private fun loadSettings(): AppSettings =
         AppSettings(
             themePreference = ThemePreference.fromValue(preferences.getString(KEY_THEME, null)),
             pushEnabled = preferences.getBoolean(KEY_PUSH_ENABLED, true),
             reminderTime = preferences.getString(KEY_REMINDER_TIME, null) ?: DEFAULT_REMINDER_TIME,
-            lastSyncAt = preferences.getLong(KEY_LAST_SYNC_AT, 0L)
+            lastSyncAt = preferences.getLong(KEY_LAST_SYNC_AT, 0L),
+            challengeStatusFilter = preferences.getString(KEY_CHALLENGE_STATUS_FILTER, null) ?: DEFAULT_CHALLENGE_STATUS_FILTER
         )
 
     private companion object {
@@ -45,7 +51,9 @@ class SettingsRepository(context: Context) {
         const val KEY_PUSH_ENABLED = "push_enabled"
         const val KEY_REMINDER_TIME = "reminder_time"
         const val KEY_LAST_SYNC_AT = "last_sync_at"
+        const val KEY_CHALLENGE_STATUS_FILTER = "challenge_status_filter"
         const val DEFAULT_REMINDER_TIME = "08:00"
+        const val DEFAULT_CHALLENGE_STATUS_FILTER = "pending"
     }
 }
 
@@ -53,7 +61,8 @@ data class AppSettings(
     val themePreference: ThemePreference = ThemePreference.System,
     val pushEnabled: Boolean = true,
     val reminderTime: String = "08:00",
-    val lastSyncAt: Long = 0L
+    val lastSyncAt: Long = 0L,
+    val challengeStatusFilter: String = "pending"
 )
 
 enum class ThemePreference(val value: String, val label: String) {
