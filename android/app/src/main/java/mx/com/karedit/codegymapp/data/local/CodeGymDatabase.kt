@@ -12,8 +12,6 @@ import mx.com.karedit.codegymapp.data.local.entity.CachedChallengeEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedGoalEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedNotificationEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedSummaryEntity
-import mx.com.karedit.codegymapp.data.local.security.DatabasePassphraseProvider
-import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Database(
     entities = [
@@ -35,14 +33,13 @@ abstract class CodeGymDatabase : RoomDatabase() {
         @Volatile
         private var instance: CodeGymDatabase? = null
 
-        fun getInstance(context: Context, passphraseProvider: DatabasePassphraseProvider): CodeGymDatabase =
+        fun getInstance(context: Context): CodeGymDatabase =
             instance ?: synchronized(this) {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     CodeGymDatabase::class.java,
                     "codegym_offline.db"
                 )
-                    .openHelperFactory(SupportOpenHelperFactory(passphraseProvider.getOrCreatePassphrase()))
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }

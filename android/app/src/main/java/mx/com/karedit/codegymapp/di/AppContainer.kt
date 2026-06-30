@@ -5,7 +5,6 @@ import mx.com.karedit.codegymapp.core.network.RetrofitFactory
 import mx.com.karedit.codegymapp.core.notifications.FcmTokenRegistrar
 import mx.com.karedit.codegymapp.core.session.SessionManager
 import mx.com.karedit.codegymapp.data.local.CodeGymDatabase
-import mx.com.karedit.codegymapp.data.local.security.DatabasePassphraseProvider
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengeDetailsRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
@@ -26,10 +25,7 @@ import kotlinx.coroutines.SupervisorJob
 class AppContainer(context: Context) {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val tokenStorage = EncryptedTokenStorage(context.applicationContext)
-    private val database = CodeGymDatabase.getInstance(
-        context.applicationContext,
-        DatabasePassphraseProvider(context.applicationContext)
-    )
+    private val database = CodeGymDatabase.getInstance(context.applicationContext)
     val sessionManager = SessionManager(tokenStorage)
     private val api = RetrofitFactory.createApi(sessionManager)
     val authRepository = AuthRepository(api, sessionManager)
