@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.data.repository.GoalsRepository
 import mx.com.karedit.codegymapp.data.repository.MobileGoalOption
+import mx.com.karedit.codegymapp.domain.model.MobileGoal
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
 
@@ -42,6 +43,34 @@ class CreateGoalViewModel(private val repository: GoalsRepository) : ViewModel()
         }
     }
 
+    fun startCreate() {
+        _state.update {
+            it.copy(
+                editingGoalId = null,
+                targetValue = "",
+                platformId = 0,
+                languageId = 0,
+                autoRenew = false,
+                message = null
+            )
+        }
+    }
+
+    fun startEdit(goal: MobileGoal) {
+        _state.update {
+            it.copy(
+                editingGoalId = goal.id,
+                goalType = goal.goalType,
+                periodType = goal.periodType,
+                targetValue = goal.targetValue.toString(),
+                platformId = goal.platformId,
+                languageId = goal.languageId,
+                autoRenew = goal.autoRenew,
+                message = null
+            )
+        }
+    }
+
     fun selectGoalType(value: String) {
         _state.update { it.copy(goalType = value) }
     }
@@ -66,7 +95,7 @@ class CreateGoalViewModel(private val repository: GoalsRepository) : ViewModel()
         _state.update { it.copy(autoRenew = value) }
     }
 
-    fun create(onCreated: (String) -> Unit) {
+    fun save(onSaved: (String) -> Unit) {
         val current = _state.value
         val target = current.targetValue.toIntOrNull() ?: 0
         if (target <= 0) {
@@ -76,17 +105,31 @@ class CreateGoalViewModel(private val repository: GoalsRepository) : ViewModel()
 
         viewModelScope.launch {
             _state.update { it.copy(isSaving = true, message = null) }
-            repository.create(
-                goalType = current.goalType,
-                periodType = current.periodType,
-                targetValue = target,
-                platformId = current.platformId,
-                languageId = current.languageId,
-                autoRenew = current.autoRenew
-            )
-                .onSuccess(onCreated)
+            val result = if (current.editingGoalId != null) {
+                repository.update(
+                    id = current.editingGoalId,
+                    goalType = current.goalType,
+                    periodType = current.periodType,
+                    targetValue = target,
+                    platformId = current.platformId,
+                    languageId = current.languageId,
+                    autoRenew = current.autoRenew
+                )
+            } else {
+                repository.create(
+                    goalType = current.goalType,
+                    periodType = current.periodType,
+                    targetValue = target,
+                    platformId = current.platformId,
+                    languageId = current.languageId,
+                    autoRenew = current.autoRenew
+                )
+            }
+
+            result
+                .onSuccess(onSaved)
                 .onFailure { error ->
-                    _state.update { it.copy(message = error.message ?: "No se pudo crear la meta.") }
+                    _state.update { it.copy(message = error.message ?: "No se pudo guardar la meta.") }
                 }
             _state.update { it.copy(isSaving = false) }
         }
@@ -98,6 +141,7 @@ data class CreateGoalUiState(
     val periodTypes: List<MobileGoalOption> = emptyList(),
     val platforms: List<MobilePlatform> = emptyList(),
     val languages: List<MobileLanguage> = emptyList(),
+    val editingGoalId: Int? = null,
     val goalType: String = "",
     val periodType: String = "",
     val targetValue: String = "",

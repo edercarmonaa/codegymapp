@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
 import mx.com.karedit.codegymapp.domain.model.MobileGoal
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
@@ -46,7 +47,9 @@ class GoalsRepository(private val api: CodeGymApi) {
                 targetValue = goal.targetValue,
                 currentValue = goal.currentValue,
                 progressPercent = goal.progressPercent,
+                platformId = goal.platformId,
                 platformName = goal.platformName,
+                languageId = goal.languageId,
                 languageName = goal.languageName,
                 periodStart = goal.periodStart,
                 periodEnd = goal.periodEnd,
@@ -86,6 +89,42 @@ class GoalsRepository(private val api: CodeGymApi) {
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo crear la meta.")
+        }
+    }
+
+    suspend fun update(
+        id: Int,
+        goalType: String,
+        periodType: String,
+        targetValue: Int,
+        platformId: Int,
+        languageId: Int,
+        autoRenew: Boolean
+    ): Result<String> = runCatching {
+        try {
+            val response = api.updateGoal(
+                MobileGoalUpdateRequestDto(
+                    id = id,
+                    goalType = goalType,
+                    periodType = periodType,
+                    targetValue = targetValue,
+                    platformId = platformId,
+                    languageId = languageId,
+                    autoRenew = autoRenew
+                )
+            )
+            if (!response.ok) {
+                error(response.message ?: "No se pudo actualizar la meta.")
+            }
+
+            response.message ?: "Meta actualizada."
+        } catch (exception: HttpException) {
+            val apiMessage = exception.response()
+                ?.errorBody()
+                ?.string()
+                ?.let { body -> errorAdapter.fromJson(body)?.message }
+
+            error(apiMessage ?: "No se pudo actualizar la meta.")
         }
     }
 }

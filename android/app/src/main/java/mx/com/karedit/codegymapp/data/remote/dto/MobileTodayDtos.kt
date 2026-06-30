@@ -166,7 +166,9 @@ data class MobileGoalDto(
     @Json(name = "target_value") val targetValue: Int,
     @Json(name = "current_value") val currentValue: Int,
     @Json(name = "progress_percent") val progressPercent: Double,
+    @Json(name = "platform_id") val platformId: Int = 0,
     @Json(name = "platform_name") val platformName: String = "",
+    @Json(name = "language_id") val languageId: Int = 0,
     @Json(name = "language_name") val languageName: String = "",
     @Json(name = "period_start") val periodStart: String = "",
     @Json(name = "period_end") val periodEnd: String = "",
@@ -180,6 +182,20 @@ data class MobileGoalCreateRequestDto(
     @Json(name = "platform_id") val platformId: Int = 0,
     @Json(name = "language_id") val languageId: Int = 0,
     @Json(name = "auto_renew") val autoRenew: Boolean = false
+)
+
+data class MobileGoalUpdateRequestDto(
+    val id: Int,
+    @Json(name = "goal_type") val goalType: String,
+    @Json(name = "period_type") val periodType: String,
+    @Json(name = "target_value") val targetValue: Int,
+    @Json(name = "platform_id") val platformId: Int = 0,
+    @Json(name = "language_id") val languageId: Int = 0,
+    @Json(name = "auto_renew") val autoRenew: Boolean = false
+)
+
+data class MobileThemeRequestDto(
+    val theme: String
 )
 
 data class MobileCreateOptionsResponseDto(

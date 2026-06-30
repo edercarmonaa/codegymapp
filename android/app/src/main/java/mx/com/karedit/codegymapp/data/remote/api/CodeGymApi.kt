@@ -13,6 +13,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileDeviceTokenRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalOptionsResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileManualChallengeRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
@@ -20,6 +21,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileSummaryResponseDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileThemeRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileTodayResponseDto
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -95,4 +97,10 @@ interface CodeGymApi {
 
     @POST("api/mobile/goals/store")
     suspend fun storeGoal(@Body request: MobileGoalCreateRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/goals/update")
+    suspend fun updateGoal(@Body request: MobileGoalUpdateRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/settings/theme")
+    suspend fun updateTheme(@Body request: MobileThemeRequestDto): MobileActionResponseDto
 }

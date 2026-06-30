@@ -4,8 +4,13 @@ import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
+import mx.com.karedit.codegymapp.data.remote.dto.MobileThemeRequestDto
 
-class SettingsRepository(context: Context) {
+class SettingsRepository(
+    context: Context,
+    private val api: CodeGymApi
+) {
     private val preferences = context.getSharedPreferences("codegym_settings", Context.MODE_PRIVATE)
 
     private val _settings = MutableStateFlow(loadSettings())
@@ -14,6 +19,19 @@ class SettingsRepository(context: Context) {
     fun updateThemePreference(themePreference: ThemePreference) {
         preferences.edit().putString(KEY_THEME, themePreference.value).apply()
         _settings.update { it.copy(themePreference = themePreference) }
+    }
+
+    suspend fun syncThemePreference(themePreference: ThemePreference): Result<String> = runCatching {
+        val apiTheme = when (themePreference) {
+            ThemePreference.Light -> "light"
+            ThemePreference.Dark -> "dark"
+            ThemePreference.System -> return@runCatching "Tema del sistema guardado localmente."
+        }
+        val response = api.updateTheme(MobileThemeRequestDto(apiTheme))
+        if (!response.ok) {
+            error(response.message ?: "No se pudo sincronizar el tema.")
+        }
+        response.message ?: "Tema sincronizado."
     }
 
     fun updatePushEnabled(enabled: Boolean) {

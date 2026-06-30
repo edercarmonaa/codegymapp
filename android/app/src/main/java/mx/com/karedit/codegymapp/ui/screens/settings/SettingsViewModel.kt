@@ -1,9 +1,11 @@
 package mx.com.karedit.codegymapp.ui.screens.settings
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.SettingsRepository
 import mx.com.karedit.codegymapp.data.repository.ThemePreference
@@ -19,7 +21,11 @@ class SettingsViewModel(
 
     fun updateTheme(themePreference: ThemePreference) {
         settingsRepository.updateThemePreference(themePreference)
-        _message.value = "Tema actualizado."
+        viewModelScope.launch {
+            settingsRepository.syncThemePreference(themePreference)
+                .onSuccess { message -> _message.value = message }
+                .onFailure { error -> _message.value = error.message ?: "Tema actualizado localmente; no se pudo sincronizar." }
+        }
     }
 
     fun updatePush(enabled: Boolean) {

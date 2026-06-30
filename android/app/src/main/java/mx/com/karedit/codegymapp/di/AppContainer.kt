@@ -38,5 +38,5 @@ class AppContainer(context: Context) {
     val createChallengeRepository = CreateChallengeRepository(api)
     val createRoutineRepository = CreateRoutineRepository(api)
     val goalsRepository = GoalsRepository(api)
-    val settingsRepository = SettingsRepository(context.applicationContext)
+    val settingsRepository = SettingsRepository(context.applicationContext, api)
 }

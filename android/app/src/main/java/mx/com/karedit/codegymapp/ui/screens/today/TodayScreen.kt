@@ -208,6 +208,7 @@ fun TodayScreen(
             },
             onCreateGoal = {
                 showQuickActions = false
+                createGoalViewModel.startCreate()
                 showGoalSheet = true
             },
             onDismiss = { showQuickActions = false }

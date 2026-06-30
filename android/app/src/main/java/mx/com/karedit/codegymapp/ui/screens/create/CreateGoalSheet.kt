@@ -41,6 +41,7 @@ fun CreateGoalSheet(
     onDismiss: () -> Unit
 ) {
     val state by viewModel.state.collectAsState()
+    val isEditing = state.editingGoalId != null
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -50,7 +51,7 @@ fun CreateGoalSheet(
                 .padding(start = 20.dp, end = 20.dp, bottom = 28.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
-            Text("Crear meta", style = MaterialTheme.typography.headlineSmall)
+            Text(if (isEditing) "Editar meta" else "Crear meta", style = MaterialTheme.typography.headlineSmall)
 
             GoalOptionDropdown(
                 label = "Tipo de meta",
@@ -103,9 +104,15 @@ fun CreateGoalSheet(
             Button(
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !state.isSaving && state.goalType.isNotBlank() && state.periodType.isNotBlank(),
-                onClick = { viewModel.create(onCreated) }
+                onClick = { viewModel.save(onCreated) }
             ) {
-                Text(if (state.isSaving) "Guardando..." else "Crear meta")
+                Text(
+                    when {
+                        state.isSaving -> "Guardando..."
+                        isEditing -> "Guardar meta"
+                        else -> "Crear meta"
+                    }
+                )
             }
         }
     }

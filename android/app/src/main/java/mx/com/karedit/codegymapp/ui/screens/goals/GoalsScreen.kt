@@ -3,6 +3,7 @@ package mx.com.karedit.codegymapp.ui.screens.goals
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -46,6 +47,7 @@ fun GoalsScreen(
     val scrollState = rememberScrollState()
     val coroutineScope = rememberCoroutineScope()
     var showCreateGoalSheet by remember { mutableStateOf(false) }
+    var selectedGoal by remember { mutableStateOf<MobileGoal?>(null) }
 
     LaunchedEffect(state.snackbarMessage) {
         val message = state.snackbarMessage ?: return@LaunchedEffect
@@ -59,7 +61,11 @@ fun GoalsScreen(
         collapsedTitle = "Metas",
         collapsedSubtitle = "${state.goals.size} activas",
         isCollapsed = scrollState.value > 96,
-        onFabClick = { showCreateGoalSheet = true }
+        onFabClick = {
+            createGoalViewModel.startCreate()
+            selectedGoal = null
+            showCreateGoalSheet = true
+        }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -80,7 +86,14 @@ fun GoalsScreen(
                 state.isLoading -> ListSkeleton(count = 3)
                 state.goals.isEmpty() -> Text("No hay metas activas.", style = MaterialTheme.typography.bodyLarge)
                 else -> state.goals.forEach { goal ->
-                    GoalCard(goal = goal)
+                    GoalCard(
+                        goal = goal,
+                        onClick = {
+                            createGoalViewModel.startEdit(goal)
+                            selectedGoal = goal
+                            showCreateGoalSheet = true
+                        }
+                    )
                 }
             }
         }
@@ -102,11 +115,13 @@ fun GoalsScreen(
 }
 
 @Composable
-private fun GoalCard(goal: MobileGoal) {
+private fun GoalCard(goal: MobileGoal, onClick: () -> Unit) {
     val progress = (goal.progressPercent / 100.0).toFloat().coerceIn(0f, 1f)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         shape = RoundedCornerShape(10.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
     ) {
