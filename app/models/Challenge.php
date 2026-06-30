@@ -558,6 +558,64 @@ final class Challenge extends BaseModel
         return (int) $stmt->fetchColumn();
     }
 
+    /** @return array<int, array<string, mixed>> */
+    public static function publicCompletedList(array $filters = [], array $state = []): array
+    {
+        [$where, $params] = self::publicCompletedFilterParts($filters);
+        $columns = [
+            'completed_date' => 'c.completed_date',
+            'platform' => 'p.name',
+            'title' => 'c.title',
+            'difficulty' => 'c.difficulty',
+            'languages' => 'language_names',
+            'challenge_url' => 'c.challenge_url',
+            'github' => 'github_urls',
+        ];
+        $orderBy = $columns[(string) ($state['sort'] ?? 'completed_date')] ?? 'c.completed_date';
+        $dir = (string) ($state['dir'] ?? 'desc') === 'asc' ? 'ASC' : 'DESC';
+
+        $sql = "SELECT
+                c.*,
+                p.name AS platform_name,
+                (
+                    SELECT GROUP_CONCAT(l.name ORDER BY l.name SEPARATOR ', ')
+                    FROM challenge_languages cl
+                    JOIN languages l ON l.id = cl.language_id
+                    WHERE cl.challenge_id = c.id
+                ) AS language_names,
+                (
+                    SELECT GROUP_CONCAT(gl.github_url ORDER BY gl.id SEPARATOR '\n')
+                    FROM challenge_github_links gl
+                    WHERE gl.challenge_id = c.id
+                ) AS github_urls
+            FROM challenges c
+            JOIN platforms p ON p.id = c.platform_id
+            WHERE " . implode(' AND ', $where) . "
+            ORDER BY {$orderBy} {$dir}, c.id DESC
+            LIMIT :limit OFFSET :offset";
+
+        $stmt = self::db()->prepare($sql);
+        foreach ($params as $key => $value) {
+            $stmt->bindValue(':' . $key, $value);
+        }
+        $stmt->bindValue(':limit', (int) ($state['per_page'] ?? 20), PDO::PARAM_INT);
+        $stmt->bindValue(':offset', (int) ($state['offset'] ?? 0), PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public static function countPublicCompleted(array $filters = []): int
+    {
+        [$where, $params] = self::publicCompletedFilterParts($filters);
+        $sql = 'SELECT COUNT(*)
+            FROM challenges c
+            JOIN platforms p ON p.id = c.platform_id
+            WHERE ' . implode(' AND ', $where);
+        $stmt = self::db()->prepare($sql);
+        $stmt->execute($params);
+        return (int) $stmt->fetchColumn();
+    }
+
     /** @return array<string, string> */
     public static function statusLabels(): array
     {
@@ -596,6 +654,48 @@ final class Challenge extends BaseModel
         if (!empty($filters['platform_id'])) {
             $where[] = 'c.platform_id = :platform_id';
             $params['platform_id'] = (int) $filters['platform_id'];
+        }
+
+        return [$where, $params];
+    }
+
+    /** @return array{0: array<int, string>, 1: array<string, mixed>} */
+    private static function publicCompletedFilterParts(array $filters): array
+    {
+        $where = ["c.status = 'completed'", 'c.completed_date IS NOT NULL'];
+        $params = [];
+
+        if (!empty($filters['platform_id'])) {
+            $where[] = 'c.platform_id = :platform_id';
+            $params['platform_id'] = (int) $filters['platform_id'];
+        }
+
+        if (!empty($filters['language_id'])) {
+            $where[] = 'EXISTS (
+                SELECT 1
+                FROM challenge_languages clf
+                WHERE clf.challenge_id = c.id
+                  AND clf.language_id = :language_id
+            )';
+            $params['language_id'] = (int) $filters['language_id'];
+        }
+
+        if (!empty($filters['difficulty'])) {
+            $difficulties = [
+                'facil' => ['Facil', 'Fácil'],
+                'medio' => ['Medio'],
+                'dificil' => ['Dificil', 'Difícil'],
+            ];
+            $options = $difficulties[(string) $filters['difficulty']] ?? [];
+            if ($options) {
+                $placeholders = [];
+                foreach ($options as $index => $difficulty) {
+                    $key = 'difficulty_' . $index;
+                    $placeholders[] = ':' . $key;
+                    $params[$key] = $difficulty;
+                }
+                $where[] = 'c.difficulty IN (' . implode(', ', $placeholders) . ')';
+            }
         }
 
         return [$where, $params];

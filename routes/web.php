@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 $router = new Router();
 
-$router->get('/', 'CalendarController', 'index');
+$router->get('/', 'PublicChallengeController', 'index', false);
 $router->get('/login', 'AuthController', 'showLogin', false);
 $router->post('/login', 'AuthController', 'login', false);
 $router->post('/logout', 'AuthController', 'logout');
