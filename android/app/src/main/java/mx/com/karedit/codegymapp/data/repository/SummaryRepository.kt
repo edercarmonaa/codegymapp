@@ -1,5 +1,10 @@
 package mx.com.karedit.codegymapp.data.repository
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import mx.com.karedit.codegymapp.data.local.dao.CachedSummaryDao
+import mx.com.karedit.codegymapp.data.local.mapper.toCacheEntity
+import mx.com.karedit.codegymapp.data.local.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileSummaryDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileSummaryDistributionDto
@@ -8,14 +13,27 @@ import mx.com.karedit.codegymapp.domain.model.MobileSummary
 import mx.com.karedit.codegymapp.domain.model.MobileSummaryDistribution
 import mx.com.karedit.codegymapp.domain.model.MobileSummarySeries
 
-class SummaryRepository(private val api: CodeGymApi) {
-    suspend fun summary(): Result<MobileSummary> = runCatching {
-        val response = api.mobileSummary()
-        if (!response.ok) {
-            error(response.message ?: "No se pudo cargar el resumen.")
-        }
+class SummaryRepository(
+    private val api: CodeGymApi,
+    private val summaryDao: CachedSummaryDao
+) {
+    private val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
 
-        response.summary?.toDomain() ?: error("No se pudo cargar el resumen.")
+    suspend fun summary(): Result<MobileSummary> = runCatching {
+        try {
+            val response = api.mobileSummary()
+            if (!response.ok) {
+                error(response.message ?: "No se pudo cargar el resumen.")
+            }
+
+            val summary = response.summary?.toDomain() ?: error("No se pudo cargar el resumen.")
+            summaryDao.upsert(summary.toCacheEntity(moshi))
+            summary
+        } catch (exception: Exception) {
+            summaryDao.get()?.toDomain(moshi) ?: throw exception
+        }
     }
 }
 

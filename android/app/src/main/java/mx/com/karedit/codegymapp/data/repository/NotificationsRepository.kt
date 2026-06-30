@@ -1,40 +1,70 @@
 package mx.com.karedit.codegymapp.data.repository
 
+import mx.com.karedit.codegymapp.data.local.dao.CachedNotificationDao
+import mx.com.karedit.codegymapp.data.local.mapper.toCacheEntity
+import mx.com.karedit.codegymapp.data.local.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationDto
 import mx.com.karedit.codegymapp.domain.model.MobileNotification
+import java.io.IOException
 
-class NotificationsRepository(private val api: CodeGymApi) {
+class NotificationsRepository(
+    private val api: CodeGymApi,
+    private val notificationDao: CachedNotificationDao
+) {
     suspend fun notifications(): Result<NotificationsData> = runCatching {
-        val response = api.mobileNotifications()
-        if (!response.ok) {
-            error(response.message ?: "No se pudieron cargar las notificaciones.")
-        }
+        try {
+            val response = api.mobileNotifications()
+            if (!response.ok) {
+                error(response.message ?: "No se pudieron cargar las notificaciones.")
+            }
 
-        NotificationsData(
-            unreadCount = response.unreadCount,
-            notifications = response.notifications.map { it.toDomain() }
-        )
+            val notifications = response.notifications.map { it.toDomain() }
+            notificationDao.replaceAll(notifications.map { it.toCacheEntity() })
+            NotificationsData(
+                unreadCount = response.unreadCount,
+                notifications = notifications
+            )
+        } catch (exception: Exception) {
+            val cached = notificationDao.all().map { it.toDomain() }
+            if (cached.isNotEmpty()) {
+                NotificationsData(
+                    unreadCount = notificationDao.unreadCount(),
+                    notifications = cached
+                )
+            } else {
+                throw exception
+            }
+        }
     }
 
-    suspend fun markRead(id: Int): Result<String> = runCatching {
-        val response = api.markNotificationRead(MobileNotificationActionRequestDto(id))
-        if (!response.ok) {
-            error(response.message ?: "No se pudo marcar la notificación.")
+    suspend fun markRead(id: Int): Result<String> =
+        notificationAction("No se pudo marcar la notificación.") {
+            api.markNotificationRead(MobileNotificationActionRequestDto(id))
         }
 
-        response.message ?: "Notificación marcada como leída."
-    }
-
-    suspend fun delete(id: Int): Result<String> = runCatching {
-        val response = api.deleteNotification(MobileNotificationActionRequestDto(id))
-        if (!response.ok) {
-            error(response.message ?: "No se pudo eliminar la notificación.")
+    suspend fun delete(id: Int): Result<String> =
+        notificationAction("No se pudo eliminar la notificación.") {
+            api.deleteNotification(MobileNotificationActionRequestDto(id))
         }
 
-        response.message ?: "Notificación eliminada."
-    }
+    private suspend fun notificationAction(
+        fallbackMessage: String,
+        action: suspend () -> mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
+    ): Result<String> =
+        runCatching {
+            try {
+                val response = action()
+                if (!response.ok) {
+                    error(response.message ?: fallbackMessage)
+                }
+
+                response.message ?: "Notificación actualizada."
+            } catch (exception: IOException) {
+                error("Disponible al iniciar sesión y tener conexión.")
+            }
+        }
 }
 
 data class NotificationsData(

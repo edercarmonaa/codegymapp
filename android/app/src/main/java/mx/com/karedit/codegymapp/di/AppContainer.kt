@@ -4,6 +4,8 @@ import android.content.Context
 import mx.com.karedit.codegymapp.core.network.RetrofitFactory
 import mx.com.karedit.codegymapp.core.notifications.FcmTokenRegistrar
 import mx.com.karedit.codegymapp.core.session.SessionManager
+import mx.com.karedit.codegymapp.data.local.CodeGymDatabase
+import mx.com.karedit.codegymapp.data.local.security.DatabasePassphraseProvider
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengeDetailsRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
@@ -24,19 +26,23 @@ import kotlinx.coroutines.SupervisorJob
 class AppContainer(context: Context) {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val tokenStorage = EncryptedTokenStorage(context.applicationContext)
+    private val database = CodeGymDatabase.getInstance(
+        context.applicationContext,
+        DatabasePassphraseProvider(context.applicationContext)
+    )
     val sessionManager = SessionManager(tokenStorage)
     private val api = RetrofitFactory.createApi(sessionManager)
     val authRepository = AuthRepository(api, sessionManager)
     private val deviceTokenRepository = DeviceTokenRepository(api)
     val fcmTokenRegistrar = FcmTokenRegistrar(authRepository, deviceTokenRepository, applicationScope)
-    val summaryRepository = SummaryRepository(api)
-    val notificationsRepository = NotificationsRepository(api)
-    val todayRepository = TodayRepository(api)
-    val plannedRepository = PlannedRepository(api)
-    val challengesRepository = ChallengesRepository(api)
+    val summaryRepository = SummaryRepository(api, database.cachedSummaryDao())
+    val notificationsRepository = NotificationsRepository(api, database.cachedNotificationDao())
+    val todayRepository = TodayRepository(api, database.cachedChallengeDao())
+    val plannedRepository = PlannedRepository(api, database.cachedChallengeDao())
+    val challengesRepository = ChallengesRepository(api, database.cachedChallengeDao())
     val challengeDetailsRepository = ChallengeDetailsRepository(api)
     val createChallengeRepository = CreateChallengeRepository(api)
     val createRoutineRepository = CreateRoutineRepository(api)
-    val goalsRepository = GoalsRepository(api)
+    val goalsRepository = GoalsRepository(api, database.cachedGoalDao())
     val settingsRepository = SettingsRepository(context.applicationContext, api)
 }

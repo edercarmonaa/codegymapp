@@ -2,27 +2,41 @@ package mx.com.karedit.codegymapp.data.repository
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import mx.com.karedit.codegymapp.data.local.dao.CachedChallengeDao
+import mx.com.karedit.codegymapp.data.local.mapper.toCacheEntity
+import mx.com.karedit.codegymapp.data.local.mapper.toDomain
 import mx.com.karedit.codegymapp.data.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import java.io.IOException
 import retrofit2.HttpException
 
-class PlannedRepository(private val api: CodeGymApi) {
+class PlannedRepository(
+    private val api: CodeGymApi,
+    private val challengeDao: CachedChallengeDao
+) {
     private val errorAdapter = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
         .adapter(MobileActionResponseDto::class.java)
 
     suspend fun planned(): Result<List<MobileChallenge>> = runCatching {
-        val response = api.mobilePlanned()
-        if (!response.ok) {
-            error(response.message ?: "No se pudo cargar Planeado.")
-        }
+        try {
+            val response = api.mobilePlanned()
+            if (!response.ok) {
+                error(response.message ?: "No se pudo cargar Planeado.")
+            }
 
-        response.planned.map { it.toDomain() }
+            val planned = response.planned.map { it.toDomain() }
+            challengeDao.replaceSection(SECTION_PLANNED, planned.map { it.toCacheEntity(SECTION_PLANNED) })
+            planned
+        } catch (exception: Exception) {
+            val cached = challengeDao.getBySection(SECTION_PLANNED).map { it.toDomain() }
+            if (cached.isNotEmpty()) cached else throw exception
+        }
     }
 
     suspend fun completeChallenge(id: Int): Result<String> = runCatching {
@@ -40,6 +54,8 @@ class PlannedRepository(private val api: CodeGymApi) {
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo actualizar el reto.")
+        } catch (exception: IOException) {
+            error("Disponible al iniciar sesión y tener conexión.")
         }
     }
 
@@ -83,6 +99,10 @@ class PlannedRepository(private val api: CodeGymApi) {
                     ?.let { body -> errorAdapter.fromJson(body)?.message }
 
                 error(apiMessage ?: "No se pudo actualizar el reto.")
+            } catch (exception: IOException) {
+                error("Disponible al iniciar sesión y tener conexión.")
             }
         }
 }
+
+private const val SECTION_PLANNED = "planned"
