@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "451359375449",
+    "project_id": "codegymapp",
+    "storage_bucket": "codegymapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:451359375449:android:2ba816b28c255e8275f148",
+        "android_client_info": {
+          "package_name": "mx.com.karedit.codegymapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFTCOM7wlRZ560zHnVbN1PgDK4Swla8no"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
