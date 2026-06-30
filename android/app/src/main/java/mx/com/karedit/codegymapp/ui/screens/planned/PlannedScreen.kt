@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import mx.com.karedit.codegymapp.domain.model.hasRequiredCompletionData
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
@@ -37,6 +38,7 @@ import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeQuickActionsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
@@ -59,6 +61,7 @@ fun PlannedScreen(
     var showGoalSheet by remember { mutableStateOf(false) }
     var showRegisterCompletedSheet by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
+    var quickActionChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -102,8 +105,14 @@ fun PlannedScreen(
                             date = date,
                             challenges = challenges,
                             onChallengeClick = { selectedChallenge = it },
-                            onComplete = viewModel::completeChallenge,
-                            onMiss = viewModel::missChallenge
+                            onComplete = { challenge ->
+                                if (challenge.hasRequiredCompletionData()) {
+                                    viewModel.completeChallenge(challenge.id)
+                                } else {
+                                    selectedChallenge = challenge
+                                }
+                            },
+                            onActions = { quickActionChallenge = it }
                         )
                     }
             }
@@ -200,6 +209,25 @@ fun PlannedScreen(
             onDismiss = { selectedChallenge = null }
         )
     }
+
+    quickActionChallenge?.let { challenge ->
+        ChallengeQuickActionsSheet(
+            challenge = challenge,
+            onReschedule = { scheduledDate ->
+                quickActionChallenge = null
+                viewModel.rescheduleChallenge(challenge.id, scheduledDate)
+            },
+            onMiss = {
+                quickActionChallenge = null
+                viewModel.missChallenge(challenge.id)
+            },
+            onCancel = {
+                quickActionChallenge = null
+                viewModel.cancelChallenge(challenge.id)
+            },
+            onDismiss = { quickActionChallenge = null }
+        )
+    }
 }
 
 @Composable
@@ -207,8 +235,8 @@ private fun PlannedDateGroup(
     date: String,
     challenges: List<MobileChallenge>,
     onChallengeClick: (MobileChallenge) -> Unit,
-    onComplete: (Int) -> Unit,
-    onMiss: (Int) -> Unit
+    onComplete: (MobileChallenge) -> Unit,
+    onActions: (MobileChallenge) -> Unit
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(date, style = MaterialTheme.typography.titleMedium)
@@ -216,8 +244,8 @@ private fun PlannedDateGroup(
             ToDoTaskCard(
                 challenge = challenge,
                 onClick = { onChallengeClick(challenge) },
-                onCompleteClick = { onComplete(challenge.id) },
-                onMissClick = { onMiss(challenge.id) }
+                onCompleteClick = { onComplete(challenge) },
+                onActionsClick = { onActions(challenge) }
             )
         }
     }

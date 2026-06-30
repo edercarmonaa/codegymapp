@@ -101,10 +101,16 @@ fun CodeGymNavHost(
             }
             val createViewModel = remember { CreateChallengeViewModel(appContainer.createChallengeRepository) }
             val createRoutineViewModel = remember { CreateRoutineViewModel(appContainer.createRoutineRepository) }
+            val createGoalViewModel = remember { CreateGoalViewModel(appContainer.goalsRepository) }
+            val registerCompletedChallengeViewModel = remember {
+                RegisterCompletedChallengeViewModel(appContainer.createChallengeRepository)
+            }
             HomeScreen(
                 viewModel = viewModel,
                 createChallengeViewModel = createViewModel,
                 createRoutineViewModel = createRoutineViewModel,
+                createGoalViewModel = createGoalViewModel,
+                registerCompletedChallengeViewModel = registerCompletedChallengeViewModel,
                 onNavigate = navigateTab
             )
         }

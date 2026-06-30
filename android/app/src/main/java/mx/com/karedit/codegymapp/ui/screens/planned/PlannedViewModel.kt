@@ -45,6 +45,14 @@ class PlannedViewModel(private val plannedRepository: PlannedRepository) : ViewM
         runChallengeAction { plannedRepository.missChallenge(id) }
     }
 
+    fun cancelChallenge(id: Int) {
+        runChallengeAction { plannedRepository.cancelChallenge(id) }
+    }
+
+    fun rescheduleChallenge(id: Int, scheduledDate: String) {
+        runChallengeAction { plannedRepository.rescheduleChallenge(id, scheduledDate) }
+    }
+
     private fun runChallengeAction(action: suspend () -> Result<String>) {
         viewModelScope.launch {
             _state.update { it.copy(snackbarMessage = null) }

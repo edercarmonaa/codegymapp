@@ -45,14 +45,14 @@ fun ToDoTaskCard(
     modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     onCompleteClick: (() -> Unit)? = null,
-    onMissClick: (() -> Unit)? = null
+    onActionsClick: (() -> Unit)? = null
 ) {
     val isCompleted = challenge.status == "completed"
     val canChangeStatus = challenge.status == "pending" || challenge.status == "expired"
     val canSwipeToComplete = canChangeStatus && onCompleteClick != null
-    val canSwipeToMiss = canChangeStatus && onMissClick != null
+    val canSwipeToActions = canChangeStatus && onActionsClick != null
 
-    if (canSwipeToComplete || canSwipeToMiss) {
+    if (canSwipeToComplete || canSwipeToActions) {
         val swipeOffset = remember(challenge.id) { Animatable(0f) }
         val scope = rememberCoroutineScope()
         val density = LocalDensity.current
@@ -66,11 +66,11 @@ fun ToDoTaskCard(
                 challenge = challenge,
                 modifier = Modifier
                     .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
-                    .pointerInput(canSwipeToComplete, canSwipeToMiss, cardWidthPx) {
+                    .pointerInput(canSwipeToComplete, canSwipeToActions, cardWidthPx) {
                         detectHorizontalDragGestures(
                             onHorizontalDrag = { change, dragAmount ->
                                 change.consume()
-                                val minOffset = if (canSwipeToMiss) -cardWidthPx else 0f
+                                val minOffset = if (canSwipeToActions) -cardWidthPx else 0f
                                 val maxOffset = if (canSwipeToComplete) cardWidthPx else 0f
                                 val nextOffset = (swipeOffset.value + dragAmount)
                                     .coerceIn(minOffset, maxOffset)
@@ -80,7 +80,7 @@ fun ToDoTaskCard(
                                 val currentOffset = swipeOffset.value
                                 when {
                                     currentOffset >= threshold && canSwipeToComplete -> onCompleteClick?.invoke()
-                                    currentOffset <= -threshold && canSwipeToMiss -> onMissClick?.invoke()
+                                    currentOffset <= -threshold && canSwipeToActions -> onActionsClick?.invoke()
                                 }
                                 scope.launch { swipeOffset.animateTo(0f) }
                             },
@@ -159,7 +159,7 @@ private fun SwipeBackground(offsetX: Float) {
     val alignment = if (isCompleting) Alignment.CenterStart else Alignment.CenterEnd
     val label = when {
         isCompleting -> "Cumplido"
-        isMissing -> "No cumplido"
+        isMissing -> "Acciones"
         else -> ""
     }
 

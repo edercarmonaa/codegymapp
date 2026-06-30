@@ -7,6 +7,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeDetailsRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengesResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileCreateOptionsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileDeviceTokenRequestDto
@@ -76,6 +77,12 @@ interface CodeGymApi {
 
     @POST("api/mobile/challenges/miss")
     suspend fun missChallenge(@Body request: MobileChallengeActionRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/challenges/reschedule")
+    suspend fun rescheduleChallenge(@Body request: MobileChallengeRescheduleRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/challenges/cancel")
+    suspend fun cancelChallenge(@Body request: MobileChallengeActionRequestDto): MobileActionResponseDto
 
     @POST("api/mobile/routines/store")
     suspend fun storeRoutine(@Body request: MobileRoutineCreateRequestDto): MobileActionResponseDto

@@ -6,6 +6,7 @@ import mx.com.karedit.codegymapp.data.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import retrofit2.HttpException
 
@@ -32,6 +33,12 @@ class TodayRepository(private val api: CodeGymApi) {
 
     suspend fun missChallenge(id: Int): Result<String> =
         challengeAction { api.missChallenge(MobileChallengeActionRequestDto(id)) }
+
+    suspend fun cancelChallenge(id: Int): Result<String> =
+        challengeAction { api.cancelChallenge(MobileChallengeActionRequestDto(id)) }
+
+    suspend fun rescheduleChallenge(id: Int, scheduledDate: String): Result<String> =
+        challengeAction { api.rescheduleChallenge(MobileChallengeRescheduleRequestDto(id, scheduledDate)) }
 
     private suspend fun challengeAction(action: suspend () -> MobileActionResponseDto): Result<String> =
         runCatching {

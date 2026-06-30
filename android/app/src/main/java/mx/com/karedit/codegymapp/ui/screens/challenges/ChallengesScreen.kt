@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import mx.com.karedit.codegymapp.domain.model.hasRequiredCompletionData
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
@@ -42,6 +43,7 @@ import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeQuickActionsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
@@ -64,6 +66,7 @@ fun ChallengesScreen(
     var showGoalSheet by remember { mutableStateOf(false) }
     var showRegisterCompletedSheet by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
+    var quickActionChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     val scrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
 
@@ -111,8 +114,14 @@ fun ChallengesScreen(
                         ToDoTaskCard(
                             challenge = challenge,
                             onClick = { selectedChallenge = challenge },
-                            onCompleteClick = { viewModel.completeChallenge(challenge.id) },
-                            onMissClick = { viewModel.missChallenge(challenge.id) }
+                            onCompleteClick = {
+                                if (challenge.hasRequiredCompletionData()) {
+                                    viewModel.completeChallenge(challenge.id)
+                                } else {
+                                    selectedChallenge = challenge
+                                }
+                            },
+                            onActionsClick = { quickActionChallenge = challenge }
                         )
                     }
                 }
@@ -208,6 +217,25 @@ fun ChallengesScreen(
                 viewModel.missChallenge(challenge.id)
             },
             onDismiss = { selectedChallenge = null }
+        )
+    }
+
+    quickActionChallenge?.let { challenge ->
+        ChallengeQuickActionsSheet(
+            challenge = challenge,
+            onReschedule = { scheduledDate ->
+                quickActionChallenge = null
+                viewModel.rescheduleChallenge(challenge.id, scheduledDate)
+            },
+            onMiss = {
+                quickActionChallenge = null
+                viewModel.missChallenge(challenge.id)
+            },
+            onCancel = {
+                quickActionChallenge = null
+                viewModel.cancelChallenge(challenge.id)
+            },
+            onDismiss = { quickActionChallenge = null }
         )
     }
 }

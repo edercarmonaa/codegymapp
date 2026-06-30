@@ -35,20 +35,30 @@ import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalSheet
+import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
+import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
+import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeSheet
+import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeViewModel
 
 @Composable
 fun HomeScreen(
     viewModel: HomeViewModel,
     createChallengeViewModel: CreateChallengeViewModel,
     createRoutineViewModel: CreateRoutineViewModel,
+    createGoalViewModel: CreateGoalViewModel,
+    registerCompletedChallengeViewModel: RegisterCompletedChallengeViewModel,
     onNavigate: (String) -> Unit
 ) {
     val state by viewModel.state.collectAsState()
     val user = state.user
     var showCreateSheet by remember { mutableStateOf(false) }
     var showRoutineSheet by remember { mutableStateOf(false) }
+    var showGoalSheet by remember { mutableStateOf(false) }
+    var showRegisterCompletedSheet by remember { mutableStateOf(false) }
+    var showQuickActions by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -137,10 +147,31 @@ fun HomeScreen(
             Spacer(modifier = Modifier.weight(1f))
 
             HomeBottomActions(
-                onCreateRoutine = { showRoutineSheet = true },
-                onCreateChallenge = { showCreateSheet = true }
+                onCreateAction = { showQuickActions = true }
             )
         }
+    }
+
+    if (showQuickActions) {
+        QuickCreateActionSheet(
+            onScheduleChallenge = {
+                showQuickActions = false
+                showCreateSheet = true
+            },
+            onRegisterCompletedChallenge = {
+                showQuickActions = false
+                showRegisterCompletedSheet = true
+            },
+            onCreateRoutine = {
+                showQuickActions = false
+                showRoutineSheet = true
+            },
+            onCreateGoal = {
+                showQuickActions = false
+                showGoalSheet = true
+            },
+            onDismiss = { showQuickActions = false }
+        )
     }
 
     if (showCreateSheet) {
@@ -166,38 +197,37 @@ fun HomeScreen(
             onDismiss = { showRoutineSheet = false }
         )
     }
+
+    if (showRegisterCompletedSheet) {
+        RegisterCompletedChallengeSheet(
+            viewModel = registerCompletedChallengeViewModel,
+            onCreated = { message ->
+                showRegisterCompletedSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                viewModel.load()
+            },
+            onDismiss = { showRegisterCompletedSheet = false }
+        )
+    }
+
+    if (showGoalSheet) {
+        CreateGoalSheet(
+            viewModel = createGoalViewModel,
+            onCreated = { message ->
+                showGoalSheet = false
+                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+            },
+            onDismiss = { showGoalSheet = false }
+        )
+    }
 }
 
 @Composable
 private fun HomeBottomActions(
-    onCreateRoutine: () -> Unit,
-    onCreateChallenge: () -> Unit
+    onCreateAction: () -> Unit
 ) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Row(
-            modifier = Modifier
-                .weight(1f)
-                .clickable(onClick = onCreateRoutine)
-                .padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(
-                text = "+",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.width(56.dp)
-            )
-            Text(
-                text = "Nueva rutina",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        }
-
-        FloatingActionButton(onClick = onCreateChallenge) {
+    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+        FloatingActionButton(onClick = onCreateAction) {
             Text("+", style = MaterialTheme.typography.displaySmall)
         }
     }

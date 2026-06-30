@@ -18,3 +18,9 @@ data class MobileChallenge(
     val origin: String,
     val isRescheduled: Boolean
 )
+
+fun MobileChallenge.hasRequiredCompletionData(): Boolean =
+    title.isNotBlank() &&
+        difficulty.isNotBlank() &&
+        timeSpentMinutes > 0 &&
+        languageIds.isNotEmpty()

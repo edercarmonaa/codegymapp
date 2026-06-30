@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import mx.com.karedit.codegymapp.domain.model.hasRequiredCompletionData
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
@@ -45,6 +46,7 @@ import mx.com.karedit.codegymapp.ui.screens.create.CreateRoutineViewModel
 import mx.com.karedit.codegymapp.ui.screens.create.QuickCreateActionSheet
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.RegisterCompletedChallengeViewModel
+import mx.com.karedit.codegymapp.ui.screens.details.ChallengeQuickActionsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsSheet
 import mx.com.karedit.codegymapp.ui.screens.details.ChallengeDetailsViewModel
 
@@ -63,6 +65,7 @@ fun TodayScreen(
     var todayExpanded by remember { mutableStateOf(true) }
     var expiredExpanded by remember { mutableStateOf(false) }
     var selectedChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
+    var quickActionChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     var showQuickActions by remember { mutableStateOf(false) }
     var showCreateSheet by remember { mutableStateOf(false) }
     var showRoutineSheet by remember { mutableStateOf(false) }
@@ -119,8 +122,14 @@ fun TodayScreen(
                     challenges = state.todayChallenges,
                     onToggle = { todayExpanded = !todayExpanded },
                     onChallengeClick = { selectedChallenge = it },
-                    onCompleteClick = { viewModel.completeChallenge(it.id) },
-                    onMissClick = { viewModel.missChallenge(it.id) }
+                    onCompleteClick = { challenge ->
+                        if (challenge.hasRequiredCompletionData()) {
+                            viewModel.completeChallenge(challenge.id)
+                        } else {
+                            selectedChallenge = challenge
+                        }
+                    },
+                    onActionsClick = { quickActionChallenge = it }
                 )
                 ChallengeSection(
                     title = "Vencidos pendientes",
@@ -130,8 +139,14 @@ fun TodayScreen(
                     challenges = state.expiredChallenges,
                     onToggle = { expiredExpanded = !expiredExpanded },
                     onChallengeClick = { selectedChallenge = it },
-                    onCompleteClick = { viewModel.completeChallenge(it.id) },
-                    onMissClick = { viewModel.missChallenge(it.id) }
+                    onCompleteClick = { challenge ->
+                        if (challenge.hasRequiredCompletionData()) {
+                            viewModel.completeChallenge(challenge.id)
+                        } else {
+                            selectedChallenge = challenge
+                        }
+                    },
+                    onActionsClick = { quickActionChallenge = it }
                 )
             }
         }
@@ -156,6 +171,25 @@ fun TodayScreen(
                 selectedChallenge = null
             },
             onDismiss = { selectedChallenge = null }
+        )
+    }
+
+    quickActionChallenge?.let { challenge ->
+        ChallengeQuickActionsSheet(
+            challenge = challenge,
+            onReschedule = { scheduledDate ->
+                quickActionChallenge = null
+                viewModel.rescheduleChallenge(challenge.id, scheduledDate)
+            },
+            onMiss = {
+                quickActionChallenge = null
+                viewModel.missChallenge(challenge.id)
+            },
+            onCancel = {
+                quickActionChallenge = null
+                viewModel.cancelChallenge(challenge.id)
+            },
+            onDismiss = { quickActionChallenge = null }
         )
     }
 
@@ -273,7 +307,7 @@ private fun ChallengeSection(
     onToggle: () -> Unit,
     onChallengeClick: (MobileChallenge) -> Unit,
     onCompleteClick: (MobileChallenge) -> Unit,
-    onMissClick: (MobileChallenge) -> Unit
+    onActionsClick: (MobileChallenge) -> Unit
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -300,7 +334,7 @@ private fun ChallengeSection(
                                 challenge = challenge,
                                 onClick = { onChallengeClick(challenge) },
                                 onCompleteClick = { onCompleteClick(challenge) },
-                                onMissClick = { onMissClick(challenge) }
+                                onActionsClick = { onActionsClick(challenge) }
                             )
                         }
                     }

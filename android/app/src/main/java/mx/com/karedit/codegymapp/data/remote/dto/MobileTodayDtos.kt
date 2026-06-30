@@ -100,6 +100,11 @@ data class MobileChallengeActionRequestDto(
     val id: Int
 )
 
+data class MobileChallengeRescheduleRequestDto(
+    val id: Int,
+    @Json(name = "scheduled_date") val scheduledDate: String
+)
+
 data class MobileChallengeDetailsRequestDto(
     val id: Int,
     @Json(name = "platform_id") val platformId: Int,

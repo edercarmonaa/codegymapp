@@ -57,6 +57,14 @@ class TodayViewModel(
         runChallengeAction { todayRepository.missChallenge(id) }
     }
 
+    fun cancelChallenge(id: Int) {
+        runChallengeAction { todayRepository.cancelChallenge(id) }
+    }
+
+    fun rescheduleChallenge(id: Int, scheduledDate: String) {
+        runChallengeAction { todayRepository.rescheduleChallenge(id, scheduledDate) }
+    }
+
     private fun runChallengeAction(action: suspend () -> Result<String>) {
         viewModelScope.launch {
             _state.update { it.copy(isActionLoading = true, snackbarMessage = null) }
