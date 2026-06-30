@@ -232,6 +232,16 @@ final class ApiMobileController
         $this->respond($this->calendarService->missChallenge($this->jsonInput()));
     }
 
+    public function rescheduleChallenge(): void
+    {
+        $this->respond($this->calendarService->updateChallengeDate($this->jsonInput()));
+    }
+
+    public function cancelChallenge(): void
+    {
+        $this->respond($this->calendarService->cancelChallenge($this->jsonInput()));
+    }
+
     public function storeRoutine(): void
     {
         $this->respond($this->calendarService->createRoutine($this->jsonInput()));
