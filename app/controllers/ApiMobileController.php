@@ -285,6 +285,35 @@ final class ApiMobileController
         Response::json(['ok' => true, 'message' => 'Meta creada correctamente.']);
     }
 
+    public function updateGoal(): void
+    {
+        $result = $this->goalService->update($this->jsonInput());
+        if (!$result['ok']) {
+            http_response_code(422);
+            Response::json([
+                'ok' => false,
+                'message' => $result['message'] ?? 'No se pudo actualizar la meta.',
+            ]);
+            return;
+        }
+
+        Response::json(['ok' => true, 'message' => 'Meta actualizada correctamente.']);
+    }
+
+    public function updateTheme(): void
+    {
+        $user = Auth::user();
+        $theme = (string) ($this->jsonInput()['theme'] ?? '');
+        if (!$user || !in_array($theme, ['light', 'dark'], true)) {
+            http_response_code(422);
+            Response::json(['ok' => false, 'message' => 'No se pudo actualizar el tema.']);
+            return;
+        }
+
+        User::updateTheme((int) $user['id'], $theme);
+        Response::json(['ok' => true, 'message' => 'Tema actualizado.']);
+    }
+
     /** @param array<string, mixed> $goal @return array<string, mixed> */
     private function goalResource(array $goal): array
     {

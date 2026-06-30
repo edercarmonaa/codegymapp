@@ -54,6 +54,44 @@ final class Goal extends BaseModel
         ]);
     }
 
+    /** @param array<string, mixed> $data */
+    public static function updateActive(int $id, array $data): bool
+    {
+        if ($id <= 0) {
+            return false;
+        }
+
+        $goalType = in_array($data['goal_type'] ?? '', array_keys(self::goalTypes()), true) ? (string) $data['goal_type'] : 'completed_challenges';
+        $periodType = in_array($data['period_type'] ?? '', array_keys(self::periodTypes()), true) ? (string) $data['period_type'] : 'monthly';
+        [$start, $end] = self::periodRange($periodType);
+
+        $stmt = self::db()->prepare(
+            "UPDATE goals
+             SET goal_type = :goal_type,
+                 period_type = :period_type,
+                 target_value = :target_value,
+                 platform_id = :platform_id,
+                 language_id = :language_id,
+                 period_start = :period_start,
+                 period_end = :period_end,
+                 auto_renew = :auto_renew,
+                 updated_at = NOW()
+             WHERE id = :id AND status = 'active'"
+        );
+
+        return $stmt->execute([
+            'id' => $id,
+            'goal_type' => $goalType,
+            'period_type' => $periodType,
+            'target_value' => (int) $data['target_value'],
+            'platform_id' => self::nullableId($data['platform_id'] ?? 0),
+            'language_id' => self::nullableId($data['language_id'] ?? 0),
+            'period_start' => $start,
+            'period_end' => $end,
+            'auto_renew' => (int) ($data['auto_renew'] ?? 0),
+        ]);
+    }
+
     public static function refreshActiveProgress(): void
     {
         foreach (self::activeGoals() as $goal) {
