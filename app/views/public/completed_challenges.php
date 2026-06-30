@@ -38,14 +38,8 @@ $sortIcon = static function (string $column) use ($sort, $dir): string {
                 <span class="badge text-bg-success mb-3">Retos cumplidos</span>
                 <h1 class="display-6 fw-semibold mb-3">Historial público de práctica</h1>
                 <p class="lead text-body-secondary mb-0">
-                    Consulta los retos completados, filtra por plataforma, lenguaje o dificultad y abre las soluciones directamente.
+                    Un espacio donde publico  retos de programación para practicar lógica, resolver problemas y mejorar paso a paso mis habilidades como desarrollador.
                 </p>
-            </div>
-            <div class="col-lg-4 text-lg-end">
-                <a class="btn btn-outline-primary" href="/login">
-                    Entrar al panel
-                    <i class="bi bi-box-arrow-in-right ms-1"></i>
-                </a>
             </div>
         </div>
     </section>
