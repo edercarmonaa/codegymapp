@@ -11,7 +11,7 @@ final class MobileReminderService
     ) {
     }
 
-    /** @return array{ok: bool, sent: int, skipped: bool, forced: bool, pending: int, users: int, message: string} */
+    /** @return array{ok: bool, sent: int, skipped: bool, forced: bool, pending: int, users: int, recipients: list<array{user_id: int, azure_accepted: bool, detail: string|null}>, message: string} */
     public function sendTodayReminder(bool $force = false): array
     {
         \Challenge::expirePending();
@@ -25,6 +25,7 @@ final class MobileReminderService
                 'forced' => $force,
                 'pending' => 0,
                 'users' => 0,
+                'recipients' => [],
                 'message' => 'No hay retos pendientes para hoy.',
             ];
         }
@@ -40,17 +41,26 @@ final class MobileReminderService
                 'forced' => false,
                 'pending' => $pending,
                 'users' => count($userIds),
+                'recipients' => [],
                 'message' => 'El recordatorio de hoy ya fue enviado. Usa force=1 para reenviarlo manualmente.',
             ];
         }
 
         $sent = 0;
+        $recipients = [];
         foreach ($userIds as $userId) {
-            if ($this->notificationHubService->sendToUser($userId, 'Retos pendientes', $this->message($pending), [
+            $accepted = $this->notificationHubService->sendToUser($userId, 'Retos pendientes', $this->message($pending), [
                 'type' => 'today_reminder',
                 'screen' => 'today',
                 'action_url' => $actionUrl,
-            ])) {
+            ]);
+            $recipients[] = [
+                'user_id' => $userId,
+                'azure_accepted' => $accepted,
+                'detail' => $accepted ? null : $this->notificationHubService->lastError(),
+            ];
+
+            if ($accepted) {
                 $sent++;
             }
         }
@@ -62,6 +72,7 @@ final class MobileReminderService
             'forced' => $force,
             'pending' => $pending,
             'users' => count($userIds),
+            'recipients' => $recipients,
             'message' => $sent > 0
                 ? ($force ? 'Recordatorio reenviado manualmente.' : 'Recordatorio enviado.')
                 : ($this->notificationHubService->lastError() ?? 'No se pudo enviar el recordatorio.'),
@@ -74,7 +85,7 @@ final class MobileReminderService
         return $result;
     }
 
-    /** @return array{ok: bool, sent: int, skipped: bool, forced: bool, pending: int, users: int, message: string} */
+    /** @return array{ok: bool, sent: int, skipped: bool, forced: bool, pending: int, users: int, recipients: list<array{user_id: int, azure_accepted: bool, detail: string|null}>, message: string} */
     public function sendExpiredReviewReminder(bool $force = false): array
     {
         \Challenge::expirePending();
@@ -88,6 +99,7 @@ final class MobileReminderService
                 'forced' => $force,
                 'pending' => 0,
                 'users' => 0,
+                'recipients' => [],
                 'message' => 'No hay retos vencidos pendientes de revisar.',
             ];
         }
@@ -103,17 +115,26 @@ final class MobileReminderService
                 'forced' => false,
                 'pending' => $pending,
                 'users' => count($userIds),
+                'recipients' => [],
                 'message' => 'El recordatorio de retos vencidos ya fue enviado. Usa force=1 para reenviarlo manualmente.',
             ];
         }
 
         $sent = 0;
+        $recipients = [];
         foreach ($userIds as $userId) {
-            if ($this->notificationHubService->sendToUser($userId, 'Retos vencidos', $this->expiredReviewMessage($pending), [
+            $accepted = $this->notificationHubService->sendToUser($userId, 'Retos vencidos', $this->expiredReviewMessage($pending), [
                 'type' => 'expired_review_reminder',
                 'screen' => 'challenges_expired',
                 'action_url' => $actionUrl,
-            ])) {
+            ]);
+            $recipients[] = [
+                'user_id' => $userId,
+                'azure_accepted' => $accepted,
+                'detail' => $accepted ? null : $this->notificationHubService->lastError(),
+            ];
+
+            if ($accepted) {
                 $sent++;
             }
         }
@@ -125,6 +146,7 @@ final class MobileReminderService
             'forced' => $force,
             'pending' => $pending,
             'users' => count($userIds),
+            'recipients' => $recipients,
             'message' => $sent > 0
                 ? ($force ? 'Recordatorio de retos vencidos reenviado manualmente.' : 'Recordatorio de retos vencidos enviado.')
                 : ($this->notificationHubService->lastError() ?? 'No se pudo enviar el recordatorio de retos vencidos.'),

@@ -136,9 +136,19 @@ final class ApiMobileController
             return;
         }
 
-        $this->notificationHubService->registerInstallation($user, $input);
+        $azureRegistered = $this->notificationHubService->registerInstallation($user, $input);
 
-        Response::json(['ok' => true, 'message' => 'Dispositivo registrado.']);
+        Response::json([
+            'ok' => true,
+            'message' => $azureRegistered
+                ? 'Dispositivo registrado.'
+                : 'Dispositivo guardado, pero Azure no confirmó el registro push.',
+            'push' => [
+                'local_saved' => true,
+                'azure_registered' => $azureRegistered,
+                'detail' => $azureRegistered ? null : $this->notificationHubService->lastError(),
+            ],
+        ]);
     }
 
     public function testNotification(): void
