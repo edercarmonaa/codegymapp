@@ -11,8 +11,8 @@ final class MobileReminderService
     ) {
     }
 
-    /** @return array{ok: bool, sent: int, skipped: bool, pending: int, users: int, message: string} */
-    public function sendTodayReminder(): array
+    /** @return array{ok: bool, sent: int, skipped: bool, forced: bool, pending: int, users: int, message: string} */
+    public function sendTodayReminder(bool $force = false): array
     {
         \Challenge::expirePending();
 
@@ -22,6 +22,7 @@ final class MobileReminderService
                 'ok' => true,
                 'sent' => 0,
                 'skipped' => false,
+                'forced' => $force,
                 'pending' => 0,
                 'users' => 0,
                 'message' => 'No hay retos pendientes para hoy.',
@@ -30,19 +31,20 @@ final class MobileReminderService
 
         $notificationType = 'mobile_today_reminder';
         $actionUrl = '/calendario';
-        if (\Notification::existsToday($notificationType, $actionUrl)) {
+        $userIds = \MobileDeviceToken::activeUserIds();
+        if (!$force && \Notification::existsToday($notificationType, $actionUrl)) {
             return [
                 'ok' => true,
                 'sent' => 0,
                 'skipped' => true,
+                'forced' => false,
                 'pending' => $pending,
-                'users' => 0,
-                'message' => 'El recordatorio de hoy ya fue enviado.',
+                'users' => count($userIds),
+                'message' => 'El recordatorio de hoy ya fue enviado. Usa force=1 para reenviarlo manualmente.',
             ];
         }
 
         $sent = 0;
-        $userIds = \MobileDeviceToken::activeUserIds();
         foreach ($userIds as $userId) {
             if ($this->notificationHubService->sendToUser($userId, 'Retos pendientes', $this->message($pending), [
                 'type' => 'today_reminder',
@@ -57,10 +59,11 @@ final class MobileReminderService
             'ok' => $sent > 0,
             'sent' => $sent,
             'skipped' => false,
+            'forced' => $force,
             'pending' => $pending,
             'users' => count($userIds),
             'message' => $sent > 0
-                ? 'Recordatorio enviado.'
+                ? ($force ? 'Recordatorio reenviado manualmente.' : 'Recordatorio enviado.')
                 : ($this->notificationHubService->lastError() ?? 'No se pudo enviar el recordatorio.'),
         ];
 
@@ -71,8 +74,8 @@ final class MobileReminderService
         return $result;
     }
 
-    /** @return array{ok: bool, sent: int, skipped: bool, pending: int, users: int, message: string} */
-    public function sendExpiredReviewReminder(): array
+    /** @return array{ok: bool, sent: int, skipped: bool, forced: bool, pending: int, users: int, message: string} */
+    public function sendExpiredReviewReminder(bool $force = false): array
     {
         \Challenge::expirePending();
 
@@ -82,6 +85,7 @@ final class MobileReminderService
                 'ok' => true,
                 'sent' => 0,
                 'skipped' => false,
+                'forced' => $force,
                 'pending' => 0,
                 'users' => 0,
                 'message' => 'No hay retos vencidos pendientes de revisar.',
@@ -90,19 +94,20 @@ final class MobileReminderService
 
         $notificationType = 'mobile_expired_review_reminder';
         $actionUrl = '/retos?status=expired';
-        if (\Notification::existsToday($notificationType, $actionUrl)) {
+        $userIds = \MobileDeviceToken::activeUserIds();
+        if (!$force && \Notification::existsToday($notificationType, $actionUrl)) {
             return [
                 'ok' => true,
                 'sent' => 0,
                 'skipped' => true,
+                'forced' => false,
                 'pending' => $pending,
-                'users' => 0,
-                'message' => 'El recordatorio de retos vencidos ya fue enviado.',
+                'users' => count($userIds),
+                'message' => 'El recordatorio de retos vencidos ya fue enviado. Usa force=1 para reenviarlo manualmente.',
             ];
         }
 
         $sent = 0;
-        $userIds = \MobileDeviceToken::activeUserIds();
         foreach ($userIds as $userId) {
             if ($this->notificationHubService->sendToUser($userId, 'Retos vencidos', $this->expiredReviewMessage($pending), [
                 'type' => 'expired_review_reminder',
@@ -117,10 +122,11 @@ final class MobileReminderService
             'ok' => $sent > 0,
             'sent' => $sent,
             'skipped' => false,
+            'forced' => $force,
             'pending' => $pending,
             'users' => count($userIds),
             'message' => $sent > 0
-                ? 'Recordatorio de retos vencidos enviado.'
+                ? ($force ? 'Recordatorio de retos vencidos reenviado manualmente.' : 'Recordatorio de retos vencidos enviado.')
                 : ($this->notificationHubService->lastError() ?? 'No se pudo enviar el recordatorio de retos vencidos.'),
         ];
 

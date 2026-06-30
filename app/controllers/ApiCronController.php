@@ -19,7 +19,7 @@ final class ApiCronController
             return;
         }
 
-        Response::json($this->mobileReminderService->sendTodayReminder());
+        Response::json($this->mobileReminderService->sendTodayReminder($this->forceSend()));
     }
 
     public function expiredReviewReminder(): void
@@ -30,7 +30,7 @@ final class ApiCronController
             return;
         }
 
-        Response::json($this->mobileReminderService->sendExpiredReviewReminder());
+        Response::json($this->mobileReminderService->sendExpiredReviewReminder($this->forceSend()));
     }
 
     private function authorized(): bool
@@ -42,5 +42,10 @@ final class ApiCronController
 
         $provided = trim((string) ($_GET['key'] ?? ($_SERVER['HTTP_X_CRON_SECRET'] ?? '')));
         return $provided !== '' && hash_equals($secret, $provided);
+    }
+
+    private function forceSend(): bool
+    {
+        return filter_var($_GET['force'] ?? false, FILTER_VALIDATE_BOOL);
     }
 }

@@ -140,10 +140,22 @@ Para enviar el recordatorio móvil de retos pendientes de hoy desde cron:
 GET /api/cron/mobile/today-reminder?key=TU_CRON_SECRET
 ```
 
+Para reenviarlo manualmente durante pruebas aunque ya se haya enviado hoy:
+
+```http
+GET /api/cron/mobile/today-reminder?key=TU_CRON_SECRET&force=1
+```
+
 Para enviar el recordatorio móvil de retos vencidos pendientes de revisar desde cron:
 
 ```http
 GET /api/cron/mobile/expired-review-reminder?key=TU_CRON_SECRET
+```
+
+Para reenviarlo manualmente durante pruebas aunque ya se haya enviado hoy:
+
+```http
+GET /api/cron/mobile/expired-review-reminder?key=TU_CRON_SECRET&force=1
 ```
 
 En cPanel puedes programarlos una vez al día con `curl`:
