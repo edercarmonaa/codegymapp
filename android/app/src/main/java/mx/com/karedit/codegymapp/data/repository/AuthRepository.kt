@@ -21,12 +21,16 @@ class AuthRepository(
     }
 
     suspend fun me(): Result<User> = runCatching {
-        val response = api.me()
-        val user = response.user
-        if (!response.ok || user == null) {
-            error(response.message ?: "No se pudo cargar la sesión.")
+        try {
+            val response = api.me()
+            val user = response.user
+            if (!response.ok || user == null) {
+                error(response.message ?: "No se pudo cargar la sesión.")
+            }
+            user.toDomain()
+        } catch (exception: Exception) {
+            throw exception.toOfflineSessionException()
         }
-        user.toDomain()
     }
 
     fun hasToken(): Boolean = !sessionManager.token().isNullOrBlank()

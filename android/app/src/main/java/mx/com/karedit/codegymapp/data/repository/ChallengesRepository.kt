@@ -11,7 +11,6 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
-import java.io.IOException
 import retrofit2.HttpException
 
 class ChallengesRepository(
@@ -36,7 +35,7 @@ class ChallengesRepository(
             challenges
         } catch (exception: Exception) {
             val cached = challengeDao.getBySection(section).map { it.toDomain() }
-            if (cached.isNotEmpty()) cached else throw exception
+            if (cached.isNotEmpty()) cached else throw exception.toOfflineReadException("Retos")
         }
     }
 
@@ -55,8 +54,8 @@ class ChallengesRepository(
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo actualizar el reto.")
-        } catch (exception: IOException) {
-            error("Disponible al iniciar sesión y tener conexión.")
+        } catch (exception: java.io.IOException) {
+            error(OFFLINE_ACTION_MESSAGE)
         }
     }
 
@@ -100,8 +99,8 @@ class ChallengesRepository(
                     ?.let { body -> errorAdapter.fromJson(body)?.message }
 
                 error(apiMessage ?: "No se pudo actualizar el reto.")
-            } catch (exception: IOException) {
-                error("Disponible al iniciar sesión y tener conexión.")
+            } catch (exception: java.io.IOException) {
+                error(OFFLINE_ACTION_MESSAGE)
             }
         }
 }

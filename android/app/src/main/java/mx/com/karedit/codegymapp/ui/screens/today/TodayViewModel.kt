@@ -29,7 +29,9 @@ class TodayViewModel(
             authRepository.me()
                 .onSuccess { user -> _state.update { it.copy(user = user) } }
                 .onFailure { error ->
-                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar la sesión.") }
+                    if (_state.value.todayChallenges.isEmpty() && _state.value.expiredChallenges.isEmpty()) {
+                        _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar la sesión.") }
+                    }
                 }
 
             todayRepository.today()

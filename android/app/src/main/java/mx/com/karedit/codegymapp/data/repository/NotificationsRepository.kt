@@ -7,7 +7,6 @@ import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationDto
 import mx.com.karedit.codegymapp.domain.model.MobileNotification
-import java.io.IOException
 
 class NotificationsRepository(
     private val api: CodeGymApi,
@@ -34,7 +33,7 @@ class NotificationsRepository(
                     notifications = cached
                 )
             } else {
-                throw exception
+                throw exception.toOfflineReadException("Notificaciones")
             }
         }
     }
@@ -61,8 +60,8 @@ class NotificationsRepository(
                 }
 
                 response.message ?: "Notificación actualizada."
-            } catch (exception: IOException) {
-                error("Disponible al iniciar sesión y tener conexión.")
+            } catch (exception: java.io.IOException) {
+                error(OFFLINE_ACTION_MESSAGE)
             }
         }
 }

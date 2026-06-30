@@ -11,7 +11,6 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
-import java.io.IOException
 import retrofit2.HttpException
 
 class TodayRepository(
@@ -41,7 +40,7 @@ class TodayRepository(
             if (cachedToday.isNotEmpty() || cachedExpired.isNotEmpty()) {
                 TodayData(today = cachedToday, expired = cachedExpired)
             } else {
-                throw exception
+                throw exception.toOfflineReadException("Mi día")
             }
         }
     }
@@ -74,8 +73,8 @@ class TodayRepository(
                     ?.let { body -> errorAdapter.fromJson(body)?.message }
 
                 error(apiMessage ?: "No se pudo actualizar el reto.")
-            } catch (exception: IOException) {
-                error("Disponible al iniciar sesión y tener conexión.")
+            } catch (exception: java.io.IOException) {
+                error(OFFLINE_ACTION_MESSAGE)
             }
         }
 }

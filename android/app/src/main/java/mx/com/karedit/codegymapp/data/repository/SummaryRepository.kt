@@ -32,7 +32,7 @@ class SummaryRepository(
             summaryDao.upsert(summary.toCacheEntity(moshi))
             summary
         } catch (exception: Exception) {
-            summaryDao.get()?.toDomain(moshi) ?: throw exception
+            summaryDao.get()?.toDomain(moshi) ?: throw exception.toOfflineReadException("Resumen")
         }
     }
 }

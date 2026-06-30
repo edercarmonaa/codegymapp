@@ -52,19 +52,25 @@ class ChallengeDetailsRepository(private val api: CodeGymApi) {
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo actualizar el reto.")
+        } catch (exception: java.io.IOException) {
+            error(OFFLINE_ACTION_MESSAGE)
         }
     }
 
     suspend fun options(): Result<ChallengeDetailsOptions> = runCatching {
-        val response = api.mobileCreateOptions()
-        if (!response.ok) {
-            error(response.message ?: "No se pudieron cargar los catálogos.")
-        }
+        try {
+            val response = api.mobileCreateOptions()
+            if (!response.ok) {
+                error(response.message ?: "No se pudieron cargar los catálogos.")
+            }
 
-        ChallengeDetailsOptions(
-            platforms = response.platforms.map { MobilePlatform(id = it.id, name = it.name) },
-            languages = response.languages.map { MobileLanguage(id = it.id, name = it.name) }
-        )
+            ChallengeDetailsOptions(
+                platforms = response.platforms.map { MobilePlatform(id = it.id, name = it.name) },
+                languages = response.languages.map { MobileLanguage(id = it.id, name = it.name) }
+            )
+        } catch (exception: Exception) {
+            throw exception.toOfflineReadException("los catálogos del detalle")
+        }
     }
 }
 

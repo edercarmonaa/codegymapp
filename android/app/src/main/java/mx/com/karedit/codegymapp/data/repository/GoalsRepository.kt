@@ -12,7 +12,6 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
 import mx.com.karedit.codegymapp.domain.model.MobileGoal
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
-import java.io.IOException
 import retrofit2.HttpException
 
 class GoalsRepository(
@@ -25,17 +24,21 @@ class GoalsRepository(
         .adapter(MobileActionResponseDto::class.java)
 
     suspend fun options(): Result<MobileGoalOptions> = runCatching {
-        val response = api.mobileGoalOptions()
-        if (!response.ok) {
-            error(response.message ?: "No se pudieron cargar las opciones de metas.")
-        }
+        try {
+            val response = api.mobileGoalOptions()
+            if (!response.ok) {
+                error(response.message ?: "No se pudieron cargar las opciones de metas.")
+            }
 
-        MobileGoalOptions(
-            goalTypes = response.goalTypes.map { MobileGoalOption(it.key, it.value) },
-            periodTypes = response.periodTypes.map { MobileGoalOption(it.key, it.value) },
-            platforms = response.platforms.map { MobilePlatform(id = it.id, name = it.name) },
-            languages = response.languages.map { MobileLanguage(id = it.id, name = it.name) }
-        )
+            MobileGoalOptions(
+                goalTypes = response.goalTypes.map { MobileGoalOption(it.key, it.value) },
+                periodTypes = response.periodTypes.map { MobileGoalOption(it.key, it.value) },
+                platforms = response.platforms.map { MobilePlatform(id = it.id, name = it.name) },
+                languages = response.languages.map { MobileLanguage(id = it.id, name = it.name) }
+            )
+        } catch (exception: Exception) {
+            throw exception.toOfflineReadException("las opciones de metas")
+        }
     }
 
     suspend fun activeGoals(): Result<List<MobileGoal>> = runCatching {
@@ -68,7 +71,7 @@ class GoalsRepository(
             goals
         } catch (exception: Exception) {
             val cached = goalDao.all().map { it.toDomain() }
-            if (cached.isNotEmpty()) cached else throw exception
+            if (cached.isNotEmpty()) cached else throw exception.toOfflineReadException("Metas")
         }
     }
 
@@ -103,8 +106,8 @@ class GoalsRepository(
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo crear la meta.")
-        } catch (exception: IOException) {
-            error("Disponible al iniciar sesión y tener conexión.")
+        } catch (exception: java.io.IOException) {
+            error(OFFLINE_ACTION_MESSAGE)
         }
     }
 
@@ -141,8 +144,8 @@ class GoalsRepository(
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo actualizar la meta.")
-        } catch (exception: IOException) {
-            error("Disponible al iniciar sesión y tener conexión.")
+        } catch (exception: java.io.IOException) {
+            error(OFFLINE_ACTION_MESSAGE)
         }
     }
 }
