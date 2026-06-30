@@ -146,6 +146,23 @@ Para reenviarlo manualmente durante pruebas aunque ya se haya enviado hoy:
 GET /api/cron/mobile/today-reminder?key=TU_CRON_SECRET&force=1
 ```
 
+La respuesta incluye diagnóstico de entrega por usuario:
+
+```json
+{
+  "pending": 2,
+  "users": 1,
+  "sent": 1,
+  "recipients": [
+    {
+      "user_id": 1,
+      "azure_accepted": true,
+      "detail": null
+    }
+  ]
+}
+```
+
 Para enviar el recordatorio móvil de retos vencidos pendientes de revisar desde cron:
 
 ```http

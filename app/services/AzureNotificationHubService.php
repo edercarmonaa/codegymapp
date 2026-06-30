@@ -11,6 +11,8 @@ final class AzureNotificationHubService
     /** @param array<string, mixed> $user @param array<string, mixed> $device */
     public function registerInstallation(array $user, array $device): bool
     {
+        $this->lastError = null;
+
         if (!\Env::get('NOTIFICATION_HUB_ENABLED', false)) {
             return true;
         }
@@ -20,6 +22,7 @@ final class AzureNotificationHubService
         $token = trim((string) ($device['token'] ?? ''));
 
         if ($hubName === '' || $token === '' || !$connection) {
+            $this->lastError = 'Falta NOTIFICATION_HUB_NAME, token o NOTIFICATION_HUB_CONNECTION_STRING no es válida.';
             \SecurityLog::record((int) ($user['id'] ?? 0), 'notification_hub_config_missing', 'warning', 'Azure Notification Hub no está configurado.');
             return false;
         }
@@ -159,12 +162,14 @@ final class AzureNotificationHubService
     private function putJson(string $url, array $payload, string $authorization): bool
     {
         if (!function_exists('curl_init')) {
+            $this->lastError = 'cURL no está disponible en PHP.';
             \SecurityLog::record(null, 'notification_hub_curl_missing', 'warning', 'cURL no está disponible para registrar Azure Notification Hub.');
             return false;
         }
 
         $ch = curl_init($url);
         if ($ch === false) {
+            $this->lastError = 'No se pudo inicializar cURL.';
             return false;
         }
 
@@ -180,7 +185,7 @@ final class AzureNotificationHubService
             CURLOPT_TIMEOUT => 10,
         ]);
 
-        curl_exec($ch);
+        $response = (string) curl_exec($ch);
         $status = (int) curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
         $error = curl_error($ch);
         curl_close($ch);
@@ -189,7 +194,9 @@ final class AzureNotificationHubService
             return true;
         }
 
-        \SecurityLog::record(null, 'notification_hub_register_failed', 'warning', 'Azure Notification Hub respondió ' . $status . ($error !== '' ? ': ' . $error : '.'));
+        $detail = $error !== '' ? $error : substr($response, 0, 180);
+        $this->lastError = 'Azure respondió HTTP ' . $status . ($detail !== '' ? ': ' . $detail : '.');
+        \SecurityLog::record(null, 'notification_hub_register_failed', 'warning', 'Azure Notification Hub respondió ' . $status . ($detail !== '' ? ': ' . $detail : '.'));
         return false;
     }
 
