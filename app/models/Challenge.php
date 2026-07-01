@@ -281,36 +281,86 @@ final class Challenge extends BaseModel
     }
 
     /** @return array<string, mixed> */
-    public static function dashboardStats(): array
+    public static function dashboardStats(?string $month = null): array
     {
+        [$start, $end] = self::monthRange($month);
+        $stmt = self::db()->prepare(
+            "SELECT
+                SUM(CASE WHEN status = 'completed' AND completed_date BETWEEN :start_completed AND :end_completed THEN 1 ELSE 0 END) AS completed_month,
+                SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) AS expired_review,
+                COALESCE(SUM(CASE WHEN status = 'completed' AND completed_date BETWEEN :start_time AND :end_time THEN time_spent_minutes ELSE 0 END), 0) AS time_month,
+                SUM(CASE
+                    WHEN origin IN ('calendar','routine') AND scheduled_date BETWEEN :start_scheduled AND :end_scheduled THEN 1
+                    WHEN origin = 'manual' AND status = 'completed' AND completed_date BETWEEN :start_manual AND :end_manual THEN 1
+                    ELSE 0
+                END) AS scheduled_month,
+                SUM(CASE WHEN origin IN ('calendar','routine') AND status = 'completed' AND completed_date = scheduled_date AND completed_date BETWEEN :start_ontime AND :end_ontime THEN 1 ELSE 0 END) AS on_time_month
+             FROM challenges"
+        );
+        $stmt->execute([
+            'start_completed' => $start,
+            'end_completed' => $end,
+            'start_time' => $start,
+            'end_time' => $end,
+            'start_scheduled' => $start,
+            'end_scheduled' => $end,
+            'start_manual' => $start,
+            'end_manual' => $end,
+            'start_ontime' => $start,
+            'end_ontime' => $end,
+        ]);
+        $stats = $stmt->fetch() ?: [];
+
         return [
-            'completed_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
-            'expired_review' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'expired'")->fetchColumn(),
-            'time_month' => (int) self::db()->query("SELECT COALESCE(SUM(time_spent_minutes), 0) FROM challenges WHERE status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
-            'scheduled_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE ((origin IN ('calendar','routine') AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())) OR (origin = 'manual' AND status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())))")->fetchColumn(),
-            'on_time_month' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE origin IN ('calendar','routine') AND status = 'completed' AND completed_date = scheduled_date AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
+            'completed_month' => (int) ($stats['completed_month'] ?? 0),
+            'expired_review' => (int) ($stats['expired_review'] ?? 0),
+            'time_month' => (int) ($stats['time_month'] ?? 0),
+            'scheduled_month' => (int) ($stats['scheduled_month'] ?? 0),
+            'on_time_month' => (int) ($stats['on_time_month'] ?? 0),
         ];
     }
 
     /** @return array<string, int> */
-    public static function dashboardDistribution(): array
+    public static function dashboardDistribution(?string $month = null): array
     {
+        [$start, $end] = self::monthRange($month);
+        $stmt = self::db()->prepare(
+            "SELECT
+                SUM(CASE WHEN status = 'completed' AND completed_date BETWEEN :start_completed AND :end_completed THEN 1 ELSE 0 END) AS completed,
+                SUM(CASE WHEN status = 'missed' AND scheduled_date BETWEEN :start_missed AND :end_missed THEN 1 ELSE 0 END) AS missed,
+                SUM(CASE WHEN status = 'expired' AND scheduled_date BETWEEN :start_expired AND :end_expired THEN 1 ELSE 0 END) AS expired,
+                SUM(CASE WHEN status = 'cancelled' AND scheduled_date BETWEEN :start_cancelled AND :end_cancelled THEN 1 ELSE 0 END) AS cancelled
+             FROM challenges"
+        );
+        $stmt->execute([
+            'start_completed' => $start,
+            'end_completed' => $end,
+            'start_missed' => $start,
+            'end_missed' => $end,
+            'start_expired' => $start,
+            'end_expired' => $end,
+            'start_cancelled' => $start,
+            'end_cancelled' => $end,
+        ]);
+        $distribution = $stmt->fetch() ?: [];
+
         return [
-            'completed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'completed' AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
-            'missed' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'missed' AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
-            'expired' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'expired' AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
-            'cancelled' => (int) self::db()->query("SELECT COUNT(*) FROM challenges WHERE status = 'cancelled' AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())")->fetchColumn(),
+            'completed' => (int) ($distribution['completed'] ?? 0),
+            'missed' => (int) ($distribution['missed'] ?? 0),
+            'expired' => (int) ($distribution['expired'] ?? 0),
+            'cancelled' => (int) ($distribution['cancelled'] ?? 0),
         ];
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function dashboardWeeklyCompliance(): array
+    public static function dashboardWeeklyCompliance(?string $month = null): array
     {
+        [$start, $end] = self::monthRange($month);
         $scheduled = self::countsByDate(
             "SELECT scheduled_date AS date_value, COUNT(*) AS total
              FROM challenges
              WHERE origin IN ('calendar', 'routine')
-               AND scheduled_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+               AND scheduled_date BETWEEN '{$start}' AND '{$end}'
              GROUP BY scheduled_date"
         );
         $manualCompleted = self::countsByDate(
@@ -318,20 +368,20 @@ final class Challenge extends BaseModel
              FROM challenges
              WHERE origin = 'manual'
                AND status = 'completed'
-               AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+               AND completed_date BETWEEN '{$start}' AND '{$end}'
              GROUP BY completed_date"
         );
         $completed = self::countsByDate(
             "SELECT completed_date AS date_value, COUNT(*) AS total
              FROM challenges
              WHERE status = 'completed'
-               AND completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+               AND completed_date BETWEEN '{$start}' AND '{$end}'
              GROUP BY completed_date"
         );
 
         $rows = [];
-        $monthStart = new DateTimeImmutable('first day of this month');
-        $monthEnd = new DateTimeImmutable('last day of this month');
+        $monthStart = new DateTimeImmutable($start);
+        $monthEnd = new DateTimeImmutable($end);
         for ($weekStart = $monthStart; $weekStart <= $monthEnd; $weekStart = $weekStart->modify('+7 days')) {
             $weekEnd = $weekStart->modify('+6 days');
             if ($weekEnd > $monthEnd) {
@@ -357,34 +407,40 @@ final class Challenge extends BaseModel
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function dashboardTopPlatforms(): array
+    public static function dashboardTopPlatforms(?string $month = null): array
     {
-        return self::db()->query(
+        [$start, $end] = self::monthRange($month);
+        $stmt = self::db()->prepare(
             "SELECT p.name AS label, COUNT(*) AS value, COALESCE(SUM(c.time_spent_minutes), 0) AS minutes
              FROM challenges c
              JOIN platforms p ON p.id = c.platform_id
              WHERE c.status = 'completed'
-               AND c.completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+               AND c.completed_date BETWEEN :start AND :end
              GROUP BY p.id, p.name
              ORDER BY value DESC, minutes DESC, p.name ASC
              LIMIT 5"
-        )->fetchAll();
+        );
+        $stmt->execute(['start' => $start, 'end' => $end]);
+        return $stmt->fetchAll();
     }
 
     /** @return array<int, array<string, mixed>> */
-    public static function dashboardTopLanguages(): array
+    public static function dashboardTopLanguages(?string $month = null): array
     {
-        return self::db()->query(
+        [$start, $end] = self::monthRange($month);
+        $stmt = self::db()->prepare(
             "SELECT l.name AS label, COUNT(DISTINCT c.id) AS value, COALESCE(SUM(c.time_spent_minutes), 0) AS minutes
              FROM challenges c
              JOIN challenge_languages cl ON cl.challenge_id = c.id
              JOIN languages l ON l.id = cl.language_id
              WHERE c.status = 'completed'
-               AND c.completed_date BETWEEN DATE_FORMAT(CURDATE(), '%Y-%m-01') AND LAST_DAY(CURDATE())
+               AND c.completed_date BETWEEN :start AND :end
              GROUP BY l.id, l.name
              ORDER BY value DESC, minutes DESC, l.name ASC
              LIMIT 5"
-        )->fetchAll();
+        );
+        $stmt->execute(['start' => $start, 'end' => $end]);
+        return $stmt->fetchAll();
     }
 
     /** @return array<string, int> */
@@ -883,6 +939,14 @@ final class Challenge extends BaseModel
 
         $parsed = DateTimeImmutable::createFromFormat('Y-m-d', substr($date, 0, 10));
         return $parsed instanceof DateTimeImmutable && $parsed->format('Y-m-d') === substr($date, 0, 10);
+    }
+
+    /** @return array{0: string, 1: string} */
+    private static function monthRange(?string $month): array
+    {
+        $month = preg_match('/^\d{4}-\d{2}$/', (string) $month) === 1 ? (string) $month : date('Y-m');
+        $start = $month . '-01';
+        return [$start, date('Y-m-t', strtotime($start))];
     }
 
     private static function blankToNull(string $value): ?string
