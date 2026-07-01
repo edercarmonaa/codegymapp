@@ -21,6 +21,38 @@ interface CachedChallengeDao {
     @Query("UPDATE cached_challenges SET scheduledDate = :scheduledDate, isRescheduled = 1 WHERE id = :id")
     suspend fun updateScheduledDate(id: Int, scheduledDate: String)
 
+    @Query(
+        """
+        UPDATE cached_challenges
+        SET platformId = :platformId,
+            platformName = :platformName,
+            title = :title,
+            challengeUrl = :challengeUrl,
+            difficulty = :difficulty,
+            timeSpentMinutes = :timeSpentMinutes,
+            notes = :notes,
+            languageIds = :languageIds,
+            languageNames = :languageNames,
+            githubLinks = :githubLinks,
+            cachedAt = :cachedAt
+        WHERE id = :id
+        """
+    )
+    suspend fun updateDetails(
+        id: Int,
+        platformId: Int,
+        platformName: String,
+        title: String,
+        challengeUrl: String,
+        difficulty: String,
+        timeSpentMinutes: Int,
+        notes: String,
+        languageIds: String,
+        languageNames: String,
+        githubLinks: String,
+        cachedAt: Long = System.currentTimeMillis()
+    )
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(challenges: List<CachedChallengeEntity>)
 

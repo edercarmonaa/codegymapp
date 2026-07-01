@@ -49,7 +49,7 @@ fun ChallengeDetailsSheet(
 ) {
     val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
-    val canClose = challenge.status == "pending" || challenge.status == "expired"
+    val canClose = challenge.id > 0 && (challenge.status == "pending" || challenge.status == "expired")
     var platformMenuExpanded by remember { mutableStateOf(false) }
     val selectedPlatform = state.platforms.firstOrNull { it.id == state.platformId }
 

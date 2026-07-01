@@ -49,8 +49,18 @@ class AppContainer(context: Context) {
     val todayRepository = TodayRepository(api, database.cachedChallengeDao(), offlineActionQueue)
     val plannedRepository = PlannedRepository(api, database.cachedChallengeDao(), offlineActionQueue)
     val challengesRepository = ChallengesRepository(api, database.cachedChallengeDao(), offlineActionQueue)
-    val challengeDetailsRepository = ChallengeDetailsRepository(api, database.cachedCatalogDao())
-    val createChallengeRepository = CreateChallengeRepository(api, database.cachedCatalogDao(), offlineActionQueue)
+    val challengeDetailsRepository = ChallengeDetailsRepository(
+        api,
+        database.cachedCatalogDao(),
+        database.cachedChallengeDao(),
+        offlineActionQueue
+    )
+    val createChallengeRepository = CreateChallengeRepository(
+        api,
+        database.cachedCatalogDao(),
+        database.cachedChallengeDao(),
+        offlineActionQueue
+    )
     val createRoutineRepository = CreateRoutineRepository(api, database.cachedCatalogDao())
     val goalsRepository = GoalsRepository(api, database.cachedGoalDao(), database.cachedCatalogDao(), offlineActionQueue)
     val settingsRepository = SettingsRepository(context.applicationContext, api)

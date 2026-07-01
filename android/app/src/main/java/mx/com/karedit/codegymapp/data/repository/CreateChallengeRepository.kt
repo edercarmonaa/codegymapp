@@ -3,7 +3,9 @@ package mx.com.karedit.codegymapp.data.repository
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import java.io.IOException
+import java.time.LocalDate
 import mx.com.karedit.codegymapp.data.local.dao.CachedCatalogDao
+import mx.com.karedit.codegymapp.data.local.dao.CachedChallengeDao
 import mx.com.karedit.codegymapp.data.local.mapper.toCacheEntity
 import mx.com.karedit.codegymapp.data.local.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
@@ -12,12 +14,14 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileManualChallengeRequestDto
 import mx.com.karedit.codegymapp.data.sync.OfflineActionQueue
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
+import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
 import retrofit2.HttpException
 
 class CreateChallengeRepository(
     private val api: CodeGymApi,
     private val catalogDao: CachedCatalogDao,
+    private val challengeDao: CachedChallengeDao,
     private val offlineActionQueue: OfflineActionQueue
 ) {
     private val errorAdapter = Moshi.Builder()
@@ -83,7 +87,9 @@ class CreateChallengeRepository(
 
             error(apiMessage ?: "No se pudo crear el reto.")
         } catch (exception: IOException) {
-            offlineActionQueue.enqueueChallengeCreate(platformId, scheduledDate)
+            val localId = -System.currentTimeMillis().toInt().let { if (it < 0) -it else it }
+            offlineActionQueue.enqueueChallengeCreate(localId, platformId, scheduledDate)
+            cacheOfflineChallenge(localId, platformId, scheduledDate)
             "Reto guardado para sincronizar."
         }
     }
@@ -152,6 +158,39 @@ class CreateChallengeRepository(
             platforms = catalogDao.platforms().map { it.toDomain() },
             languages = catalogDao.languages().map { it.toDomain() }
         )
+
+    private suspend fun cacheOfflineChallenge(localId: Int, platformId: Int, scheduledDate: String) {
+        val platformName = catalogDao.platforms().firstOrNull { it.id == platformId }?.name.orEmpty()
+        val challenge = MobileChallenge(
+            id = localId,
+            platformId = platformId,
+            platformName = platformName,
+            title = "",
+            scheduledDate = scheduledDate,
+            completedDate = null,
+            status = "pending",
+            difficulty = "",
+            challengeUrl = null,
+            timeSpentMinutes = 0,
+            notes = "",
+            languageIds = emptyList(),
+            languageNames = "",
+            githubLinks = emptyList(),
+            origin = "offline",
+            isRescheduled = false
+        )
+        val sections = buildList {
+            val month = scheduledDate.take(7)
+            add("challenges:$month:pending")
+            add("challenges:$month:all")
+            val today = LocalDate.now().toString()
+            when {
+                scheduledDate == today -> add("today")
+                scheduledDate > today -> add("planned")
+            }
+        }.distinct()
+        challengeDao.insertAll(sections.map { section -> challenge.toCacheEntity(section) })
+    }
 }
 
 data class MobileChallengeOptions(

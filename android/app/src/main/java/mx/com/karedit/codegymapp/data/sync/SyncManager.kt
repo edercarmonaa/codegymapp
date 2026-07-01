@@ -47,9 +47,29 @@ class SyncManager(
         when (type) {
             ActionTypes.CHALLENGE_CREATE -> {
                 val payload = moshi.adapter(ChallengeCreatePayload::class.java).fromJson(payloadJson) ?: return false
-                api.storeChallenge(
+                val response = api.storeChallenge(
                     MobileChallengeCreateRequestDto(payload.platformId, payload.scheduledDate)
-                ).ok
+                )
+                val serverId = response.id
+                if (!response.ok) {
+                    false
+                } else if (serverId == null || !payload.hasDetails()) {
+                    true
+                } else {
+                    api.saveChallengeDetails(
+                        mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeDetailsRequestDto(
+                            id = serverId,
+                            platformId = payload.platformId,
+                            title = payload.title,
+                            challengeUrl = payload.challengeUrl,
+                            difficulty = payload.difficulty,
+                            timeSpentMinutes = payload.timeSpentMinutes,
+                            notes = payload.notes,
+                            languageIds = payload.languageIds,
+                            githubLinks = payload.githubLinks
+                        )
+                    ).ok
+                }
             }
             ActionTypes.CHALLENGE_MANUAL_CREATE -> {
                 val payload = moshi.adapter(ManualChallengePayload::class.java).fromJson(payloadJson) ?: return false
@@ -128,3 +148,12 @@ class SyncManager(
     private fun goalPayload(payloadJson: String): GoalPayload =
         moshi.adapter(GoalPayload::class.java).fromJson(payloadJson) ?: error("Meta inválida.")
 }
+
+private fun ChallengeCreatePayload.hasDetails(): Boolean =
+    title.isNotBlank() ||
+        challengeUrl.isNotBlank() ||
+        difficulty.isNotBlank() ||
+        (timeSpentMinutes ?: 0) > 0 ||
+        notes.isNotBlank() ||
+        languageIds.isNotEmpty() ||
+        githubLinks.isNotBlank()

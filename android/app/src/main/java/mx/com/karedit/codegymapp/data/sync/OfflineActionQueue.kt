@@ -14,8 +14,46 @@ class OfflineActionQueue(
         enqueue(type, IdPayload(id))
     }
 
-    suspend fun enqueueChallengeCreate(platformId: Int, scheduledDate: String) {
-        enqueue(ActionTypes.CHALLENGE_CREATE, ChallengeCreatePayload(platformId, scheduledDate))
+    suspend fun enqueueChallengeCreate(localId: Int, platformId: Int, scheduledDate: String) {
+        enqueue(
+            ActionTypes.CHALLENGE_CREATE,
+            ChallengeCreatePayload(localId = localId, platformId = platformId, scheduledDate = scheduledDate)
+        )
+    }
+
+    suspend fun updateChallengeCreateDetails(
+        localId: Int,
+        platformId: Int,
+        scheduledDate: String,
+        title: String,
+        challengeUrl: String,
+        difficulty: String,
+        timeSpentMinutes: Int?,
+        notes: String,
+        languageIds: List<Int>,
+        githubLinks: String
+    ) {
+        val action = pendingActionDao.findByTypeAndPayloadPattern(
+            type = ActionTypes.CHALLENGE_CREATE,
+            payloadPattern = "%\"localId\":$localId%"
+        ) ?: return
+        val current = moshi.adapter(ChallengeCreatePayload::class.java).fromJson(action.payloadJson) ?: return
+        pendingActionDao.updatePayload(
+            id = action.id,
+            payloadJson = moshi.adapter(ChallengeCreatePayload::class.java).toJson(
+                current.copy(
+                    platformId = platformId,
+                    scheduledDate = scheduledDate.ifBlank { current.scheduledDate },
+                    title = title,
+                    challengeUrl = challengeUrl,
+                    difficulty = difficulty,
+                    timeSpentMinutes = timeSpentMinutes,
+                    notes = notes,
+                    languageIds = languageIds,
+                    githubLinks = githubLinks
+                )
+            )
+        )
     }
 
     suspend fun enqueueManualChallengeCreate(
@@ -115,7 +153,18 @@ object ActionTypes {
 }
 
 data class IdPayload(val id: Int)
-data class ChallengeCreatePayload(val platformId: Int, val scheduledDate: String)
+data class ChallengeCreatePayload(
+    val localId: Int = 0,
+    val platformId: Int,
+    val scheduledDate: String,
+    val title: String = "",
+    val challengeUrl: String = "",
+    val difficulty: String = "",
+    val timeSpentMinutes: Int? = null,
+    val notes: String = "",
+    val languageIds: List<Int> = emptyList(),
+    val githubLinks: String = ""
+)
 data class ManualChallengePayload(
     val platformId: Int,
     val title: String,

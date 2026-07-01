@@ -217,6 +217,7 @@ data class MobileLanguageDto(
 
 data class MobileActionResponseDto(
     val ok: Boolean,
+    val id: Int? = null,
     val message: String? = null
 )
 

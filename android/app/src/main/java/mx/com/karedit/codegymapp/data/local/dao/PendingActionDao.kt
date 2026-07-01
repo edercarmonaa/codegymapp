@@ -15,6 +15,9 @@ interface PendingActionDao {
     @Query("SELECT COUNT(*) FROM pending_actions")
     fun pendingCountFlow(): Flow<Int>
 
+    @Query("SELECT * FROM pending_actions WHERE type = :type AND payloadJson LIKE :payloadPattern ORDER BY createdAt ASC LIMIT 1")
+    suspend fun findByTypeAndPayloadPattern(type: String, payloadPattern: String): PendingActionEntity?
+
     @Insert
     suspend fun insert(action: PendingActionEntity)
 
@@ -23,4 +26,7 @@ interface PendingActionDao {
 
     @Query("UPDATE pending_actions SET attempts = attempts + 1, lastError = :message WHERE id = :id")
     suspend fun markFailed(id: Long, message: String)
+
+    @Query("UPDATE pending_actions SET payloadJson = :payloadJson, lastError = '' WHERE id = :id")
+    suspend fun updatePayload(id: Long, payloadJson: String)
 }
