@@ -12,6 +12,7 @@ import mx.com.karedit.codegymapp.data.local.dao.CachedSummaryDao
 import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
 import mx.com.karedit.codegymapp.data.local.entity.CachedLanguageEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedPlatformEntity
+import mx.com.karedit.codegymapp.data.local.entity.CachedCatalogOptionEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedChallengeEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedGoalEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedNotificationEntity
@@ -26,9 +27,10 @@ import mx.com.karedit.codegymapp.data.local.entity.PendingActionEntity
         CachedGoalEntity::class,
         PendingActionEntity::class,
         CachedPlatformEntity::class,
-        CachedLanguageEntity::class
+        CachedLanguageEntity::class,
+        CachedCatalogOptionEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = false
 )
 abstract class CodeGymDatabase : RoomDatabase() {

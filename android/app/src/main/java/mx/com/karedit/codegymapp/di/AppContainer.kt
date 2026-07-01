@@ -57,10 +57,12 @@ class AppContainer(context: Context) {
 
     init {
         applicationScope.launch {
+            goalsRepository.seedStaticCatalogs()
+        }
+        applicationScope.launch {
             networkMonitor.isOnline.collectLatest { isOnline ->
                 if (isOnline && authRepository.hasToken()) {
-                    syncManager.syncNow()
-                    createChallengeRepository.options()
+                    syncLocalData()
                 }
             }
         }
@@ -72,8 +74,14 @@ class AppContainer(context: Context) {
         }
 
         applicationScope.launch {
-            syncManager.syncNow()
-            createChallengeRepository.options()
+            syncLocalData()
         }
+    }
+
+    private suspend fun syncLocalData() {
+        runCatching { syncManager.syncNow() }
+        runCatching { goalsRepository.seedStaticCatalogs() }
+        runCatching { createChallengeRepository.options() }
+        runCatching { goalsRepository.options() }
     }
 }

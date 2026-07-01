@@ -6,6 +6,8 @@ import mx.com.karedit.codegymapp.data.local.dao.CachedCatalogDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedGoalDao
 import mx.com.karedit.codegymapp.data.local.mapper.toCacheEntity
 import mx.com.karedit.codegymapp.data.local.mapper.toDomain
+import mx.com.karedit.codegymapp.data.local.mapper.toCacheOption
+import mx.com.karedit.codegymapp.data.local.mapper.toGoalOption
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
@@ -37,6 +39,18 @@ class GoalsRepository(
             val now = System.currentTimeMillis()
             catalogDao.replacePlatforms(response.platforms.map { it.toCacheEntity(now) })
             catalogDao.replaceLanguages(response.languages.map { it.toCacheEntity(now) })
+            catalogDao.replaceOptions(
+                CatalogOptionKinds.GOAL_TYPES,
+                response.goalTypes.entries.mapIndexed { index, option ->
+                    option.toCacheOption(CatalogOptionKinds.GOAL_TYPES, index, now)
+                }
+            )
+            catalogDao.replaceOptions(
+                CatalogOptionKinds.PERIOD_TYPES,
+                response.periodTypes.entries.mapIndexed { index, option ->
+                    option.toCacheOption(CatalogOptionKinds.PERIOD_TYPES, index, now)
+                }
+            )
             MobileGoalOptions(
                 goalTypes = response.goalTypes.map { MobileGoalOption(it.key, it.value) },
                 periodTypes = response.periodTypes.map { MobileGoalOption(it.key, it.value) },
@@ -45,12 +59,17 @@ class GoalsRepository(
             )
         } catch (exception: Exception) {
             val cached = MobileGoalOptions(
-                goalTypes = defaultGoalTypes(),
-                periodTypes = defaultPeriodTypes(),
+                goalTypes = cachedGoalTypes(),
+                periodTypes = cachedPeriodTypes(),
                 platforms = catalogDao.platforms().map { it.toDomain() },
                 languages = catalogDao.languages().map { it.toDomain() }
             )
-            if (cached.platforms.isNotEmpty() || cached.languages.isNotEmpty()) {
+            if (
+                cached.goalTypes.isNotEmpty() ||
+                cached.periodTypes.isNotEmpty() ||
+                cached.platforms.isNotEmpty() ||
+                cached.languages.isNotEmpty()
+            ) {
                 cached
             } else {
                 throw exception.toOfflineReadException("las opciones de metas")
@@ -168,6 +187,52 @@ class GoalsRepository(
             "Acción guardada para sincronizar."
         }
     }
+
+    suspend fun seedStaticCatalogs() {
+        val now = System.currentTimeMillis()
+        if (catalogDao.options(CatalogOptionKinds.GOAL_TYPES).isEmpty()) {
+            catalogDao.replaceOptions(
+                CatalogOptionKinds.GOAL_TYPES,
+                defaultGoalTypes().mapIndexed { index, option ->
+                    option.toCacheEntity(CatalogOptionKinds.GOAL_TYPES, index, now)
+                }
+            )
+        }
+        if (catalogDao.options(CatalogOptionKinds.PERIOD_TYPES).isEmpty()) {
+            catalogDao.replaceOptions(
+                CatalogOptionKinds.PERIOD_TYPES,
+                defaultPeriodTypes().mapIndexed { index, option ->
+                    option.toCacheEntity(CatalogOptionKinds.PERIOD_TYPES, index, now)
+                }
+            )
+        }
+        catalogDao.replaceOptions(
+            CatalogOptionKinds.DIFFICULTIES,
+            difficultyOptions().mapIndexed { index, option ->
+                option.toCacheEntity(CatalogOptionKinds.DIFFICULTIES, index, now)
+            }
+        )
+        catalogDao.replaceOptions(
+            CatalogOptionKinds.CHALLENGE_STATUSES,
+            challengeStatusOptions().mapIndexed { index, option ->
+                option.toCacheEntity(CatalogOptionKinds.CHALLENGE_STATUSES, index, now)
+            }
+        )
+        catalogDao.replaceOptions(
+            CatalogOptionKinds.ROUTINE_FREQUENCIES,
+            routineFrequencyOptions().mapIndexed { index, option ->
+                option.toCacheEntity(CatalogOptionKinds.ROUTINE_FREQUENCIES, index, now)
+            }
+        )
+    }
+
+    private suspend fun cachedGoalTypes(): List<MobileGoalOption> =
+        catalogDao.options(CatalogOptionKinds.GOAL_TYPES).map { it.toGoalOption() }
+            .ifEmpty { defaultGoalTypes() }
+
+    private suspend fun cachedPeriodTypes(): List<MobileGoalOption> =
+        catalogDao.options(CatalogOptionKinds.PERIOD_TYPES).map { it.toGoalOption() }
+            .ifEmpty { defaultPeriodTypes() }
 }
 
 data class MobileGoalOptions(
@@ -192,4 +257,46 @@ private fun defaultPeriodTypes(): List<MobileGoalOption> = listOf(
     MobileGoalOption("weekly", "Semanal"),
     MobileGoalOption("monthly", "Mensual"),
     MobileGoalOption("annual", "Anual")
+)
+
+private fun MobileGoalOption.toCacheEntity(
+    kind: String,
+    sortOrder: Int,
+    cachedAt: Long
+): mx.com.karedit.codegymapp.data.local.entity.CachedCatalogOptionEntity =
+    mx.com.karedit.codegymapp.data.local.entity.CachedCatalogOptionEntity(
+        kind = kind,
+        value = value,
+        label = label,
+        sortOrder = sortOrder,
+        cachedAt = cachedAt
+    )
+
+object CatalogOptionKinds {
+    const val GOAL_TYPES = "goal_types"
+    const val PERIOD_TYPES = "period_types"
+    const val DIFFICULTIES = "difficulties"
+    const val CHALLENGE_STATUSES = "challenge_statuses"
+    const val ROUTINE_FREQUENCIES = "routine_frequencies"
+}
+
+private fun difficultyOptions(): List<MobileGoalOption> = listOf(
+    MobileGoalOption("facil", "Fácil"),
+    MobileGoalOption("medio", "Medio"),
+    MobileGoalOption("dificil", "Difícil")
+)
+
+private fun challengeStatusOptions(): List<MobileGoalOption> = listOf(
+    MobileGoalOption("pending", "Pendientes"),
+    MobileGoalOption("completed", "Cumplidos"),
+    MobileGoalOption("expired", "Vencidos"),
+    MobileGoalOption("missed", "No realizados"),
+    MobileGoalOption("cancelled", "Cancelados"),
+    MobileGoalOption("all", "Todos")
+)
+
+private fun routineFrequencyOptions(): List<MobileGoalOption> = listOf(
+    MobileGoalOption("daily", "Diaria"),
+    MobileGoalOption("weekly", "Semanal"),
+    MobileGoalOption("monthly", "Mensual")
 )

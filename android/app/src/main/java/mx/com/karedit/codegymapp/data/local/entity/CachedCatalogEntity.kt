@@ -15,3 +15,12 @@ data class CachedLanguageEntity(
     val name: String,
     val cachedAt: Long
 )
+
+@Entity(tableName = "cached_catalog_options", primaryKeys = ["kind", "value"])
+data class CachedCatalogOptionEntity(
+    val kind: String,
+    val value: String,
+    val label: String,
+    val sortOrder: Int,
+    val cachedAt: Long
+)
