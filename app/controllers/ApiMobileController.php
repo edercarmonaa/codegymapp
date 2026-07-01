@@ -54,8 +54,11 @@ final class ApiMobileController
 
     public function summary(): void
     {
+        $month = preg_match('/^\d{4}-\d{2}$/', (string) ($_GET['month'] ?? '')) === 1
+            ? (string) $_GET['month']
+            : date('Y-m');
         $this->dashboardService->refreshDashboardData();
-        $payload = $this->dashboardService->dashboardPayload();
+        $payload = $this->dashboardService->dashboardPayload($month);
         $stats = $payload['stats'] ?? [];
         $streaks = $payload['streaks'] ?? [];
         $attention = $payload['attention'] ?? [];
@@ -64,6 +67,7 @@ final class ApiMobileController
         Response::json([
             'ok' => true,
             'summary' => [
+                'month' => $month,
                 'completed_month' => (int) ($stats['completed_month'] ?? 0),
                 'general_percent' => (float) ($stats['general_percent'] ?? 0),
                 'on_time_percent' => (float) ($stats['on_time_percent'] ?? 0),
