@@ -8,6 +8,9 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.compose.setContent
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.isSystemInDarkTheme
@@ -44,6 +47,11 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         appContainer = AppContainer(applicationContext)
+        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+            override fun onStart(owner: LifecycleOwner) {
+                appContainer.syncNow()
+            }
+        })
         pendingNotificationRoute = routeFromNotification(intent)
         requestNotificationPermissionIfNeeded()
         appContainer.fcmTokenRegistrar.registerCurrentToken()
@@ -59,6 +67,7 @@ class MainActivity : ComponentActivity() {
 
             CodeGymTheme(darkTheme = darkTheme) {
                 val isOnline by appContainer.networkMonitor.isOnline.collectAsState()
+                val pendingActions by appContainer.offlineActionQueue.pendingCount.collectAsState(initial = 0)
 
                 LaunchedEffect(appContainer.sessionManager) {
                     while (true) {
@@ -77,7 +86,9 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column {
                         if (!isOnline) {
-                            OfflineBanner()
+                            OfflineBanner(pendingActions = pendingActions)
+                        } else if (pendingActions > 0) {
+                            PendingSyncBanner(pendingActions = pendingActions)
                         }
                         Box(modifier = Modifier.weight(1f)) {
                             CodeGymNavHost(
@@ -132,14 +143,33 @@ class MainActivity : ComponentActivity() {
 }
 
 @androidx.compose.runtime.Composable
-private fun OfflineBanner() {
+private fun OfflineBanner(pendingActions: Int) {
+    val suffix = if (pendingActions > 0) {
+        " · $pendingActions pendiente${if (pendingActions == 1) "" else "s"} por sincronizar"
+    } else {
+        " · Datos guardados"
+    }
     Text(
-        text = "Sin conexión a internet",
+        text = "Sin conexión a internet$suffix",
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.errorContainer)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         color = MaterialTheme.colorScheme.onErrorContainer,
+        fontWeight = FontWeight.SemiBold,
+        style = MaterialTheme.typography.bodyMedium
+    )
+}
+
+@androidx.compose.runtime.Composable
+private fun PendingSyncBanner(pendingActions: Int) {
+    Text(
+        text = "$pendingActions acción${if (pendingActions == 1) "" else "es"} pendiente${if (pendingActions == 1) "" else "s"} por sincronizar",
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondaryContainer)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        color = MaterialTheme.colorScheme.onSecondaryContainer,
         fontWeight = FontWeight.SemiBold,
         style = MaterialTheme.typography.bodyMedium
     )

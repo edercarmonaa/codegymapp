@@ -6,11 +6,14 @@ import mx.com.karedit.codegymapp.data.local.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationDto
+import mx.com.karedit.codegymapp.data.sync.ActionTypes
+import mx.com.karedit.codegymapp.data.sync.OfflineActionQueue
 import mx.com.karedit.codegymapp.domain.model.MobileNotification
 
 class NotificationsRepository(
     private val api: CodeGymApi,
-    private val notificationDao: CachedNotificationDao
+    private val notificationDao: CachedNotificationDao,
+    private val offlineActionQueue: OfflineActionQueue
 ) {
     suspend fun notifications(): Result<NotificationsData> = runCatching {
         try {
@@ -39,17 +42,30 @@ class NotificationsRepository(
     }
 
     suspend fun markRead(id: Int): Result<String> =
-        notificationAction("No se pudo marcar la notificación.") {
+        notificationAction(
+            fallbackMessage = "No se pudo marcar la notificación.",
+            offline = {
+                offlineActionQueue.enqueueNotificationAction(ActionTypes.NOTIFICATION_MARK_READ, id)
+                notificationDao.markRead(id)
+            }
+        ) {
             api.markNotificationRead(MobileNotificationActionRequestDto(id))
         }
 
     suspend fun delete(id: Int): Result<String> =
-        notificationAction("No se pudo eliminar la notificación.") {
+        notificationAction(
+            fallbackMessage = "No se pudo eliminar la notificación.",
+            offline = {
+                offlineActionQueue.enqueueNotificationAction(ActionTypes.NOTIFICATION_DELETE, id)
+                notificationDao.delete(id)
+            }
+        ) {
             api.deleteNotification(MobileNotificationActionRequestDto(id))
         }
 
     private suspend fun notificationAction(
         fallbackMessage: String,
+        offline: suspend () -> Unit,
         action: suspend () -> mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
     ): Result<String> =
         runCatching {
@@ -61,7 +77,8 @@ class NotificationsRepository(
 
                 response.message ?: "Notificación actualizada."
             } catch (exception: java.io.IOException) {
-                error(OFFLINE_ACTION_MESSAGE)
+                offline()
+                "Acción guardada para sincronizar."
             }
         }
 }

@@ -1,6 +1,8 @@
 package mx.com.karedit.codegymapp.di
 
 import android.content.Context
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import mx.com.karedit.codegymapp.core.network.NetworkMonitor
 import mx.com.karedit.codegymapp.core.network.RetrofitFactory
 import mx.com.karedit.codegymapp.core.notifications.FcmTokenRegistrar
@@ -19,28 +21,57 @@ import mx.com.karedit.codegymapp.data.repository.SettingsRepository
 import mx.com.karedit.codegymapp.data.repository.SummaryRepository
 import mx.com.karedit.codegymapp.data.repository.TodayRepository
 import mx.com.karedit.codegymapp.data.security.EncryptedTokenStorage
+import mx.com.karedit.codegymapp.data.sync.OfflineActionQueue
+import mx.com.karedit.codegymapp.data.sync.SyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class AppContainer(context: Context) {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     val networkMonitor = NetworkMonitor(context.applicationContext)
+    private val moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
     private val tokenStorage = EncryptedTokenStorage(context.applicationContext)
     private val database = CodeGymDatabase.getInstance(context.applicationContext)
+    val offlineActionQueue = OfflineActionQueue(database.pendingActionDao(), moshi)
     val sessionManager = SessionManager(tokenStorage)
     private val api = RetrofitFactory.createApi(sessionManager)
+    val syncManager = SyncManager(api, database.pendingActionDao(), moshi)
     val authRepository = AuthRepository(api, sessionManager)
     private val deviceTokenRepository = DeviceTokenRepository(api)
     val fcmTokenRegistrar = FcmTokenRegistrar(authRepository, deviceTokenRepository, applicationScope)
     val summaryRepository = SummaryRepository(api, database.cachedSummaryDao())
-    val notificationsRepository = NotificationsRepository(api, database.cachedNotificationDao())
-    val todayRepository = TodayRepository(api, database.cachedChallengeDao())
-    val plannedRepository = PlannedRepository(api, database.cachedChallengeDao())
-    val challengesRepository = ChallengesRepository(api, database.cachedChallengeDao())
+    val notificationsRepository = NotificationsRepository(api, database.cachedNotificationDao(), offlineActionQueue)
+    val todayRepository = TodayRepository(api, database.cachedChallengeDao(), offlineActionQueue)
+    val plannedRepository = PlannedRepository(api, database.cachedChallengeDao(), offlineActionQueue)
+    val challengesRepository = ChallengesRepository(api, database.cachedChallengeDao(), offlineActionQueue)
     val challengeDetailsRepository = ChallengeDetailsRepository(api)
     val createChallengeRepository = CreateChallengeRepository(api)
     val createRoutineRepository = CreateRoutineRepository(api)
-    val goalsRepository = GoalsRepository(api, database.cachedGoalDao())
+    val goalsRepository = GoalsRepository(api, database.cachedGoalDao(), offlineActionQueue)
     val settingsRepository = SettingsRepository(context.applicationContext, api)
+
+    init {
+        applicationScope.launch {
+            networkMonitor.isOnline.collectLatest { isOnline ->
+                if (isOnline && authRepository.hasToken()) {
+                    syncManager.syncNow()
+                }
+            }
+        }
+    }
+
+    fun syncNow() {
+        if (!authRepository.hasToken()) {
+            return
+        }
+
+        applicationScope.launch {
+            syncManager.syncNow()
+        }
+    }
 }

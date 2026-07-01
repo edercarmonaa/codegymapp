@@ -10,12 +10,16 @@ import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
+import mx.com.karedit.codegymapp.data.sync.ActionTypes
+import mx.com.karedit.codegymapp.data.sync.OfflineActionQueue
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
+import java.time.LocalDate
 import retrofit2.HttpException
 
 class ChallengesRepository(
     private val api: CodeGymApi,
-    private val challengeDao: CachedChallengeDao
+    private val challengeDao: CachedChallengeDao,
+    private val offlineActionQueue: OfflineActionQueue
 ) {
     private val errorAdapter = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -55,7 +59,9 @@ class ChallengesRepository(
 
             error(apiMessage ?: "No se pudo actualizar el reto.")
         } catch (exception: java.io.IOException) {
-            error(OFFLINE_ACTION_MESSAGE)
+            offlineActionQueue.enqueueChallengeAction(ActionTypes.CHALLENGE_COMPLETE, id)
+            challengeDao.updateStatus(id, "completed", LocalDate.now().toString())
+            "Acción guardada para sincronizar."
         }
     }
 
@@ -74,16 +80,33 @@ class ChallengesRepository(
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo actualizar el reto.")
+        } catch (exception: java.io.IOException) {
+            offlineActionQueue.enqueueChallengeAction(ActionTypes.CHALLENGE_MISS, id)
+            challengeDao.updateStatus(id, "missed", null)
+            "Acción guardada para sincronizar."
         }
     }
 
     suspend fun cancelChallenge(id: Int): Result<String> =
-        challengeAction { api.cancelChallenge(MobileChallengeActionRequestDto(id)) }
+        challengeAction(
+            offline = {
+                offlineActionQueue.enqueueChallengeAction(ActionTypes.CHALLENGE_CANCEL, id)
+                challengeDao.updateStatus(id, "cancelled", null)
+            }
+        ) { api.cancelChallenge(MobileChallengeActionRequestDto(id)) }
 
     suspend fun rescheduleChallenge(id: Int, scheduledDate: String): Result<String> =
-        challengeAction { api.rescheduleChallenge(MobileChallengeRescheduleRequestDto(id, scheduledDate)) }
+        challengeAction(
+            offline = {
+                offlineActionQueue.enqueueReschedule(id, scheduledDate)
+                challengeDao.updateScheduledDate(id, scheduledDate)
+            }
+        ) { api.rescheduleChallenge(MobileChallengeRescheduleRequestDto(id, scheduledDate)) }
 
-    private suspend fun challengeAction(action: suspend () -> MobileActionResponseDto): Result<String> =
+    private suspend fun challengeAction(
+        offline: suspend () -> Unit,
+        action: suspend () -> MobileActionResponseDto
+    ): Result<String> =
         runCatching {
             try {
                 val response = action()
@@ -100,7 +123,8 @@ class ChallengesRepository(
 
                 error(apiMessage ?: "No se pudo actualizar el reto.")
             } catch (exception: java.io.IOException) {
-                error(OFFLINE_ACTION_MESSAGE)
+                offline()
+                "Acción guardada para sincronizar."
             }
         }
 }

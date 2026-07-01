@@ -15,6 +15,12 @@ interface CachedChallengeDao {
     @Query("DELETE FROM cached_challenges WHERE section = :section")
     suspend fun deleteSection(section: String)
 
+    @Query("UPDATE cached_challenges SET status = :status, completedDate = :completedDate WHERE id = :id")
+    suspend fun updateStatus(id: Int, status: String, completedDate: String?)
+
+    @Query("UPDATE cached_challenges SET scheduledDate = :scheduledDate, isRescheduled = 1 WHERE id = :id")
+    suspend fun updateScheduledDate(id: Int, scheduledDate: String)
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(challenges: List<CachedChallengeEntity>)
 

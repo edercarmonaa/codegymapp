@@ -15,6 +15,12 @@ interface CachedNotificationDao {
     @Query("SELECT COUNT(*) FROM cached_notifications WHERE isRead = 0")
     suspend fun unreadCount(): Int
 
+    @Query("UPDATE cached_notifications SET isRead = 1 WHERE id = :id")
+    suspend fun markRead(id: Int)
+
+    @Query("DELETE FROM cached_notifications WHERE id = :id")
+    suspend fun delete(id: Int)
+
     @Query("DELETE FROM cached_notifications")
     suspend fun deleteAll()
 

@@ -84,6 +84,7 @@ fun CodeGymNavHost(
                 sessionMessage = null,
                 onLoginSuccess = {
                     appContainer.fcmTokenRegistrar.registerCurrentToken()
+                    appContainer.syncNow()
                     navController.navigate(AppRoutes.Home) {
                         popUpTo(AppRoutes.Login) { inclusive = true }
                     }

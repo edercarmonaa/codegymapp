@@ -8,19 +8,22 @@ import mx.com.karedit.codegymapp.data.local.dao.CachedChallengeDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedGoalDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedNotificationDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedSummaryDao
+import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
 import mx.com.karedit.codegymapp.data.local.entity.CachedChallengeEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedGoalEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedNotificationEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedSummaryEntity
+import mx.com.karedit.codegymapp.data.local.entity.PendingActionEntity
 
 @Database(
     entities = [
         CachedChallengeEntity::class,
         CachedNotificationEntity::class,
         CachedSummaryEntity::class,
-        CachedGoalEntity::class
+        CachedGoalEntity::class,
+        PendingActionEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 abstract class CodeGymDatabase : RoomDatabase() {
@@ -28,6 +31,7 @@ abstract class CodeGymDatabase : RoomDatabase() {
     abstract fun cachedNotificationDao(): CachedNotificationDao
     abstract fun cachedSummaryDao(): CachedSummaryDao
     abstract fun cachedGoalDao(): CachedGoalDao
+    abstract fun pendingActionDao(): PendingActionDao
 
     companion object {
         @Volatile

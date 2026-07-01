@@ -9,6 +9,7 @@ import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
+import mx.com.karedit.codegymapp.data.sync.OfflineActionQueue
 import mx.com.karedit.codegymapp.domain.model.MobileGoal
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
@@ -16,7 +17,8 @@ import retrofit2.HttpException
 
 class GoalsRepository(
     private val api: CodeGymApi,
-    private val goalDao: CachedGoalDao
+    private val goalDao: CachedGoalDao,
+    private val offlineActionQueue: OfflineActionQueue
 ) {
     private val errorAdapter = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -107,7 +109,8 @@ class GoalsRepository(
 
             error(apiMessage ?: "No se pudo crear la meta.")
         } catch (exception: java.io.IOException) {
-            error(OFFLINE_ACTION_MESSAGE)
+            offlineActionQueue.enqueueGoalCreate(goalType, periodType, targetValue, platformId, languageId, autoRenew)
+            "Acción guardada para sincronizar."
         }
     }
 
@@ -145,7 +148,9 @@ class GoalsRepository(
 
             error(apiMessage ?: "No se pudo actualizar la meta.")
         } catch (exception: java.io.IOException) {
-            error(OFFLINE_ACTION_MESSAGE)
+            offlineActionQueue.enqueueGoalUpdate(id, goalType, periodType, targetValue, platformId, languageId, autoRenew)
+            goalDao.updateGoal(id, goalType, periodType, targetValue, platformId, languageId, autoRenew)
+            "Acción guardada para sincronizar."
         }
     }
 }

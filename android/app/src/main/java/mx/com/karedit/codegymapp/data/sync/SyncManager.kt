@@ -1,0 +1,107 @@
+package mx.com.karedit.codegymapp.data.sync
+
+import com.squareup.moshi.Moshi
+import java.util.concurrent.atomic.AtomicBoolean
+import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
+import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
+
+class SyncManager(
+    private val api: CodeGymApi,
+    private val pendingActionDao: PendingActionDao,
+    private val moshi: Moshi
+) {
+    private val isSyncing = AtomicBoolean(false)
+
+    suspend fun syncNow() {
+        if (!isSyncing.compareAndSet(false, true)) {
+            return
+        }
+
+        try {
+            pendingActionDao.pending().forEach { action ->
+                try {
+                    val ok = execute(action.type, action.payloadJson)
+                    if (ok) {
+                        pendingActionDao.delete(action)
+                    } else {
+                        pendingActionDao.markFailed(action.id, "El servidor no aceptó la acción.")
+                    }
+                } catch (exception: Exception) {
+                    pendingActionDao.markFailed(action.id, exception.message ?: "No se pudo sincronizar.")
+                    return
+                }
+            }
+        } finally {
+            isSyncing.set(false)
+        }
+    }
+
+    private suspend fun execute(type: String, payloadJson: String): Boolean =
+        when (type) {
+            ActionTypes.CHALLENGE_COMPLETE -> {
+                val payload = idPayload(payloadJson)
+                api.completeChallenge(MobileChallengeActionRequestDto(payload.id)).ok
+            }
+            ActionTypes.CHALLENGE_MISS -> {
+                val payload = idPayload(payloadJson)
+                api.missChallenge(MobileChallengeActionRequestDto(payload.id)).ok
+            }
+            ActionTypes.CHALLENGE_CANCEL -> {
+                val payload = idPayload(payloadJson)
+                api.cancelChallenge(MobileChallengeActionRequestDto(payload.id)).ok
+            }
+            ActionTypes.CHALLENGE_RESCHEDULE -> {
+                val payload = moshi.adapter(ReschedulePayload::class.java).fromJson(payloadJson) ?: return false
+                api.rescheduleChallenge(
+                    MobileChallengeRescheduleRequestDto(payload.id, payload.scheduledDate)
+                ).ok
+            }
+            ActionTypes.NOTIFICATION_MARK_READ -> {
+                val payload = idPayload(payloadJson)
+                api.markNotificationRead(MobileNotificationActionRequestDto(payload.id)).ok
+            }
+            ActionTypes.NOTIFICATION_DELETE -> {
+                val payload = idPayload(payloadJson)
+                api.deleteNotification(MobileNotificationActionRequestDto(payload.id)).ok
+            }
+            ActionTypes.GOAL_CREATE -> {
+                val payload = goalPayload(payloadJson)
+                api.storeGoal(
+                    MobileGoalCreateRequestDto(
+                        goalType = payload.goalType,
+                        periodType = payload.periodType,
+                        targetValue = payload.targetValue,
+                        platformId = payload.platformId,
+                        languageId = payload.languageId,
+                        autoRenew = payload.autoRenew
+                    )
+                ).ok
+            }
+            ActionTypes.GOAL_UPDATE -> {
+                val payload = goalPayload(payloadJson)
+                api.updateGoal(
+                    MobileGoalUpdateRequestDto(
+                        id = payload.id,
+                        goalType = payload.goalType,
+                        periodType = payload.periodType,
+                        targetValue = payload.targetValue,
+                        platformId = payload.platformId,
+                        languageId = payload.languageId,
+                        autoRenew = payload.autoRenew
+                    )
+                ).ok
+            }
+            else -> true
+        }
+
+    private fun idPayload(payloadJson: String): IdPayload =
+        moshi.adapter(IdPayload::class.java).fromJson(payloadJson) ?: error("Acción inválida.")
+
+    private fun goalPayload(payloadJson: String): GoalPayload =
+        moshi.adapter(GoalPayload::class.java).fromJson(payloadJson) ?: error("Meta inválida.")
+}
