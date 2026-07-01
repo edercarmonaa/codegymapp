@@ -35,8 +35,7 @@ $sortIcon = static function (string $column) use ($sort, $dir): string {
     <section class="rounded-4 border bg-body-tertiary p-4 p-lg-5 mb-4">
         <div class="row align-items-center g-4">
             <div class="col-lg-8">
-                <span class="badge text-bg-success mb-3">Retos cumplidos</span>
-                <h1 class="display-6 fw-semibold mb-3">Historial público de práctica</h1>
+                <h1 class="display-6 fw-semibold mb-3">Code Gym: Retos de Programación</h1>
                 <p class="lead text-body-secondary mb-0">
                     Un espacio donde publico  retos de programación para practicar lógica, resolver problemas y mejorar paso a paso mis habilidades como desarrollador.
                 </p>
