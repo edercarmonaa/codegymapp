@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -85,29 +84,24 @@ private fun MonthSelector(
     onNext: () -> Unit,
     onCurrent: () -> Unit
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            TextButton(onClick = onPrevious) {
-                Text("‹")
-            }
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        TextButton(onClick = onPrevious, modifier = Modifier.weight(0.18f)) {
+            Text("‹", style = MaterialTheme.typography.headlineMedium)
+        }
+        Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = monthLabel,
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                style = MaterialTheme.typography.headlineSmall
             )
-            TextButton(onClick = onNext) {
-                Text("›")
+            TextButton(onClick = onCurrent) {
+                Text("Mes actual")
             }
         }
-        Button(
-            modifier = Modifier.align(Alignment.CenterHorizontally),
-            onClick = onCurrent
-        ) {
-            Text("Mes actual")
+        TextButton(onClick = onNext, modifier = Modifier.weight(0.18f)) {
+            Text("›", style = MaterialTheme.typography.headlineMedium)
         }
     }
 }

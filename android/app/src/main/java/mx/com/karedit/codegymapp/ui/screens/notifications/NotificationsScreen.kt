@@ -1,7 +1,9 @@
 package mx.com.karedit.codegymapp.ui.screens.notifications
 
 import androidx.compose.animation.core.Animatable
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,13 +16,17 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -35,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.domain.model.MobileNotification
 import mx.com.karedit.codegymapp.ui.components.ListSkeleton
@@ -196,13 +203,23 @@ private fun NotificationCardContent(
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
+                ReadStatusCircle(
+                    isRead = notification.isRead,
+                    onClick = if (!notification.isRead) onMarkRead else null
+                )
+                Spacer(modifier = Modifier.width(16.dp))
                 Text(
                     text = notification.title,
                     style = MaterialTheme.typography.titleLarge,
-                    modifier = Modifier.weight(1f)
+                    modifier = Modifier.weight(1f),
+                    color = if (notification.isRead) {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    },
+                    textDecoration = if (notification.isRead) TextDecoration.LineThrough else TextDecoration.None
                 )
                 if (!notification.isRead) {
                     Text(
@@ -213,19 +230,6 @@ private fun NotificationCardContent(
                 }
             }
             Text(notification.message, style = MaterialTheme.typography.bodyLarge)
-            if (!notification.isRead) {
-                TextButton(
-                    modifier = Modifier.align(Alignment.End),
-                    onClick = onMarkRead
-                ) {
-                    Text("Marcar como leída")
-                }
-            }
-            Text(
-                text = "Desliza a la izquierda para eliminar",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
             if (notification.createdAt.isNotBlank()) {
                 Text(
                     text = notification.createdAt,
@@ -233,6 +237,36 @@ private fun NotificationCardContent(
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun ReadStatusCircle(isRead: Boolean, onClick: (() -> Unit)?) {
+    val color = if (isRead) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline
+    val modifier = onClick?.let {
+        Modifier
+            .padding(end = 2.dp)
+            .clickable(onClick = it)
+    } ?: Modifier.padding(end = 2.dp)
+
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center
+    ) {
+        Canvas(modifier = Modifier.size(34.dp)) {
+            drawCircle(
+                color = color,
+                radius = 17.dp.toPx(),
+                style = if (isRead) Fill else Stroke(width = 3.dp.toPx())
+            )
+        }
+        if (isRead) {
+            Text(
+                text = "✓",
+                style = MaterialTheme.typography.titleLarge,
+                color = Color.Black
+            )
         }
     }
 }
