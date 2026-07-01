@@ -1,6 +1,7 @@
 package mx.com.karedit.codegymapp.di
 
 import android.content.Context
+import mx.com.karedit.codegymapp.core.network.NetworkMonitor
 import mx.com.karedit.codegymapp.core.network.RetrofitFactory
 import mx.com.karedit.codegymapp.core.notifications.FcmTokenRegistrar
 import mx.com.karedit.codegymapp.core.session.SessionManager
@@ -24,6 +25,7 @@ import kotlinx.coroutines.SupervisorJob
 
 class AppContainer(context: Context) {
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    val networkMonitor = NetworkMonitor(context.applicationContext)
     private val tokenStorage = EncryptedTokenStorage(context.applicationContext)
     private val database = CodeGymDatabase.getInstance(context.applicationContext)
     val sessionManager = SessionManager(tokenStorage)
