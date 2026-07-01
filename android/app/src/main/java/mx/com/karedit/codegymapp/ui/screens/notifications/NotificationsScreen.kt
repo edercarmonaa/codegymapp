@@ -20,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -137,8 +138,7 @@ private fun NotificationCard(
     onMarkRead: () -> Unit,
     onDelete: () -> Unit
 ) {
-    val canMarkRead = !notification.isRead
-    val canDelete = notification.isRead
+    val canDelete = true
     val swipeOffset = remember(notification.id, notification.isRead) { Animatable(0f) }
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
@@ -150,23 +150,23 @@ private fun NotificationCard(
         NotificationSwipeBackground(offsetX = swipeOffset.value)
         NotificationCardContent(
             notification = notification,
+            onMarkRead = onMarkRead,
             modifier = Modifier
                 .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
-                .pointerInput(canMarkRead, canDelete, cardWidthPx) {
+                .pointerInput(canDelete, cardWidthPx) {
                     detectHorizontalDragGestures(
                         onHorizontalDrag = { change, dragAmount ->
                             change.consume()
                             val minOffset = if (canDelete) -cardWidthPx else 0f
-                            val maxOffset = if (canMarkRead) cardWidthPx else 0f
+                            val maxOffset = 0f
                             val nextOffset = (swipeOffset.value + dragAmount)
                                 .coerceIn(minOffset, maxOffset)
                             scope.launch { swipeOffset.snapTo(nextOffset) }
                         },
                         onDragEnd = {
                             val currentOffset = swipeOffset.value
-                            when {
-                                currentOffset >= threshold && canMarkRead -> onMarkRead()
-                                currentOffset <= -threshold && canDelete -> onDelete()
+                            if (currentOffset <= -threshold && canDelete) {
+                                onDelete()
                             }
                             scope.launch { swipeOffset.animateTo(0f) }
                         },
@@ -182,6 +182,7 @@ private fun NotificationCard(
 @Composable
 private fun NotificationCardContent(
     notification: MobileNotification,
+    onMarkRead: () -> Unit,
     modifier: Modifier
 ) {
     Card(
@@ -213,18 +214,18 @@ private fun NotificationCardContent(
             }
             Text(notification.message, style = MaterialTheme.typography.bodyLarge)
             if (!notification.isRead) {
-                Text(
-                    text = "Desliza a la derecha para marcar como leída",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
-                )
-            } else {
-                Text(
-                    text = "Desliza a la izquierda para eliminar",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                TextButton(
+                    modifier = Modifier.align(Alignment.End),
+                    onClick = onMarkRead
+                ) {
+                    Text("Marcar como leída")
+                }
             }
+            Text(
+                text = "Desliza a la izquierda para eliminar",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
             if (notification.createdAt.isNotBlank()) {
                 Text(
                     text = notification.createdAt,
@@ -238,16 +239,13 @@ private fun NotificationCardContent(
 
 @Composable
 private fun NotificationSwipeBackground(offsetX: Float) {
-    val isMarkingRead = offsetX > 0f
     val isDeleting = offsetX < 0f
     val backgroundColor = when {
-        isMarkingRead -> Color(0xFF2E7D50)
         isDeleting -> Color(0xFF8E1D2D)
         else -> Color.Transparent
     }
-    val alignment = if (isMarkingRead) Alignment.CenterStart else Alignment.CenterEnd
+    val alignment = Alignment.CenterEnd
     val label = when {
-        isMarkingRead -> "Leída"
         isDeleting -> "Eliminar"
         else -> ""
     }

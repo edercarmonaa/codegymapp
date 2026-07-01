@@ -8,8 +8,8 @@ import mx.com.karedit.codegymapp.data.local.entity.CachedSummaryEntity
 
 @Dao
 interface CachedSummaryDao {
-    @Query("SELECT * FROM cached_summary WHERE id = 'summary' LIMIT 1")
-    suspend fun get(): CachedSummaryEntity?
+    @Query("SELECT * FROM cached_summary WHERE id = :month LIMIT 1")
+    suspend fun get(month: String): CachedSummaryEntity?
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsert(summary: CachedSummaryEntity)

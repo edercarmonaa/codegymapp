@@ -117,12 +117,13 @@ fun CachedGoalEntity.toDomain(): MobileGoal =
         autoRenew = autoRenew
     )
 
-fun MobileSummary.toCacheEntity(moshi: Moshi, cachedAt: Long = System.currentTimeMillis()): CachedSummaryEntity {
+fun MobileSummary.toCacheEntity(month: String, moshi: Moshi, cachedAt: Long = System.currentTimeMillis()): CachedSummaryEntity {
     val seriesJsonAdapter = moshi.adapter<List<MobileSummarySeries>>(
         Types.newParameterizedType(List::class.java, MobileSummarySeries::class.java)
     )
 
     return CachedSummaryEntity(
+        id = month,
         completedMonth = completedMonth,
         generalPercent = generalPercent,
         onTimePercent = onTimePercent,

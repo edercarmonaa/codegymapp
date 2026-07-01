@@ -61,15 +61,11 @@ class NotificationsViewModel(private val repository: NotificationsRepository) : 
     }
 
     fun delete(notification: MobileNotification) {
-        if (!notification.isRead) {
-            _state.update { it.copy(snackbarMessage = "Primero marca la notificación como leída.") }
-            return
-        }
-
         viewModelScope.launch {
             _state.update { state ->
                 state.copy(
                     notifications = state.notifications.filterNot { it.id == notification.id },
+                    unreadCount = if (notification.isRead) state.unreadCount else (state.unreadCount - 1).coerceAtLeast(0),
                     snackbarMessage = null
                 )
             }

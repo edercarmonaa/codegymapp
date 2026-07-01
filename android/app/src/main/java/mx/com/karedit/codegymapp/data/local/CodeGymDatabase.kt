@@ -20,7 +20,7 @@ import mx.com.karedit.codegymapp.data.local.entity.CachedSummaryEntity
         CachedSummaryEntity::class,
         CachedGoalEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 abstract class CodeGymDatabase : RoomDatabase() {

@@ -21,18 +21,18 @@ class SummaryRepository(
         .add(KotlinJsonAdapterFactory())
         .build()
 
-    suspend fun summary(): Result<MobileSummary> = runCatching {
+    suspend fun summary(month: String): Result<MobileSummary> = runCatching {
         try {
-            val response = api.mobileSummary()
+            val response = api.mobileSummary(month)
             if (!response.ok) {
                 error(response.message ?: "No se pudo cargar el resumen.")
             }
 
             val summary = response.summary?.toDomain() ?: error("No se pudo cargar el resumen.")
-            summaryDao.upsert(summary.toCacheEntity(moshi))
+            summaryDao.upsert(summary.toCacheEntity(month, moshi))
             summary
         } catch (exception: Exception) {
-            summaryDao.get()?.toDomain(moshi) ?: throw exception.toOfflineReadException("Resumen")
+            summaryDao.get(month)?.toDomain(moshi) ?: throw exception.toOfflineReadException("Resumen")
         }
     }
 }

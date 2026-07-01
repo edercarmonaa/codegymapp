@@ -36,7 +36,7 @@ interface CodeGymApi {
     suspend fun me(): MeResponseDto
 
     @GET("api/mobile/summary")
-    suspend fun mobileSummary(): MobileSummaryResponseDto
+    suspend fun mobileSummary(@Query("month") month: String): MobileSummaryResponseDto
 
     @GET("api/mobile/notifications")
     suspend fun mobileNotifications(): MobileNotificationsResponseDto

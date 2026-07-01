@@ -9,12 +9,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -47,7 +49,7 @@ fun SummaryScreen(
         onBackHome = { onNavigate(AppRoutes.Home) },
         snackbarHostState = snackbarHostState,
         collapsedTitle = "Resumen",
-        collapsedSubtitle = "Mes actual",
+        collapsedSubtitle = state.monthLabel,
         isCollapsed = scrollState.value > 96,
         showFab = false
     ) { padding ->
@@ -60,10 +62,11 @@ fun SummaryScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text("Resumen", style = MaterialTheme.typography.displayMedium)
-            Text(
-                text = "Mes actual",
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+            MonthSelector(
+                monthLabel = state.monthLabel,
+                onPrevious = viewModel::previousMonth,
+                onNext = viewModel::nextMonth,
+                onCurrent = viewModel::currentMonth
             )
 
             when {
@@ -71,6 +74,40 @@ fun SummaryScreen(
                 state.summary == null -> Text("No hay datos de resumen.", style = MaterialTheme.typography.bodyMedium)
                 else -> SummaryContent(summary = state.summary!!)
             }
+        }
+    }
+}
+
+@Composable
+private fun MonthSelector(
+    monthLabel: String,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onCurrent: () -> Unit
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            TextButton(onClick = onPrevious) {
+                Text("‹")
+            }
+            Text(
+                text = monthLabel,
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            TextButton(onClick = onNext) {
+                Text("›")
+            }
+        }
+        Button(
+            modifier = Modifier.align(Alignment.CenterHorizontally),
+            onClick = onCurrent
+        ) {
+            Text("Mes actual")
         }
     }
 }

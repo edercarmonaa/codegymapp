@@ -5,7 +5,7 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "cached_summary")
 data class CachedSummaryEntity(
-    @PrimaryKey val id: String = "summary",
+    @PrimaryKey val id: String,
     val completedMonth: Int,
     val generalPercent: Double,
     val onTimePercent: Double,
