@@ -14,6 +14,35 @@ class OfflineActionQueue(
         enqueue(type, IdPayload(id))
     }
 
+    suspend fun enqueueChallengeCreate(platformId: Int, scheduledDate: String) {
+        enqueue(ActionTypes.CHALLENGE_CREATE, ChallengeCreatePayload(platformId, scheduledDate))
+    }
+
+    suspend fun enqueueManualChallengeCreate(
+        platformId: Int,
+        title: String,
+        challengeUrl: String,
+        difficulty: String,
+        timeSpentMinutes: Int,
+        notes: String,
+        languageIds: List<Int>,
+        githubLinks: String
+    ) {
+        enqueue(
+            ActionTypes.CHALLENGE_MANUAL_CREATE,
+            ManualChallengePayload(
+                platformId = platformId,
+                title = title,
+                challengeUrl = challengeUrl,
+                difficulty = difficulty,
+                timeSpentMinutes = timeSpentMinutes,
+                notes = notes,
+                languageIds = languageIds,
+                githubLinks = githubLinks
+            )
+        )
+    }
+
     suspend fun enqueueReschedule(id: Int, scheduledDate: String) {
         enqueue(ActionTypes.CHALLENGE_RESCHEDULE, ReschedulePayload(id, scheduledDate))
     }
@@ -73,6 +102,8 @@ class OfflineActionQueue(
 }
 
 object ActionTypes {
+    const val CHALLENGE_CREATE = "challenge.create"
+    const val CHALLENGE_MANUAL_CREATE = "challenge.manual_create"
     const val CHALLENGE_COMPLETE = "challenge.complete"
     const val CHALLENGE_MISS = "challenge.miss"
     const val CHALLENGE_CANCEL = "challenge.cancel"
@@ -84,6 +115,17 @@ object ActionTypes {
 }
 
 data class IdPayload(val id: Int)
+data class ChallengeCreatePayload(val platformId: Int, val scheduledDate: String)
+data class ManualChallengePayload(
+    val platformId: Int,
+    val title: String,
+    val challengeUrl: String,
+    val difficulty: String,
+    val timeSpentMinutes: Int,
+    val notes: String,
+    val languageIds: List<Int>,
+    val githubLinks: String
+)
 data class ReschedulePayload(val id: Int, val scheduledDate: String)
 data class GoalPayload(
     val id: Int,

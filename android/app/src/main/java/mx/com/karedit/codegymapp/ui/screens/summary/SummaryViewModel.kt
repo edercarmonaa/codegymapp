@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mx.com.karedit.codegymapp.core.network.isOfflineUiMessage
 import mx.com.karedit.codegymapp.data.repository.SummaryRepository
 import mx.com.karedit.codegymapp.domain.model.MobileSummary
 
@@ -29,7 +30,9 @@ class SummaryViewModel(private val summaryRepository: SummaryRepository) : ViewM
             summaryRepository.summary(month)
                 .onSuccess { summary -> _state.update { it.copy(summary = summary) } }
                 .onFailure { error ->
-                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar el resumen.") }
+                    if (!error.isOfflineUiMessage()) {
+                        _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar el resumen.") }
+                    }
                 }
             _state.update { it.copy(isLoading = false) }
         }

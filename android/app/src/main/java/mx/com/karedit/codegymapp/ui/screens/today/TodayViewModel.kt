@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mx.com.karedit.codegymapp.core.network.isOfflineUiMessage
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.TodayRepository
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
@@ -29,7 +30,10 @@ class TodayViewModel(
             authRepository.me()
                 .onSuccess { user -> _state.update { it.copy(user = user) } }
                 .onFailure { error ->
-                    if (_state.value.todayChallenges.isEmpty() && _state.value.expiredChallenges.isEmpty()) {
+                    if (!error.isOfflineUiMessage() &&
+                        _state.value.todayChallenges.isEmpty() &&
+                        _state.value.expiredChallenges.isEmpty()
+                    ) {
                         _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar la sesión.") }
                     }
                 }
@@ -44,7 +48,9 @@ class TodayViewModel(
                     }
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar Mi día.") }
+                    if (!error.isOfflineUiMessage()) {
+                        _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar Mi día.") }
+                    }
                 }
 
             _state.update { it.copy(isLoading = false) }
@@ -93,7 +99,9 @@ class TodayViewModel(
                 }
             }
             .onFailure { error ->
-                _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar Mi día.") }
+                if (!error.isOfflineUiMessage()) {
+                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudo cargar Mi día.") }
+                }
             }
     }
 

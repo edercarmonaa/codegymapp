@@ -2,6 +2,7 @@ package mx.com.karedit.codegymapp.data.repository
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import mx.com.karedit.codegymapp.data.local.dao.CachedCatalogDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedGoalDao
 import mx.com.karedit.codegymapp.data.local.mapper.toCacheEntity
 import mx.com.karedit.codegymapp.data.local.mapper.toDomain
@@ -18,6 +19,7 @@ import retrofit2.HttpException
 class GoalsRepository(
     private val api: CodeGymApi,
     private val goalDao: CachedGoalDao,
+    private val catalogDao: CachedCatalogDao,
     private val offlineActionQueue: OfflineActionQueue
 ) {
     private val errorAdapter = Moshi.Builder()
@@ -32,14 +34,27 @@ class GoalsRepository(
                 error(response.message ?: "No se pudieron cargar las opciones de metas.")
             }
 
+            val now = System.currentTimeMillis()
+            catalogDao.replacePlatforms(response.platforms.map { it.toCacheEntity(now) })
+            catalogDao.replaceLanguages(response.languages.map { it.toCacheEntity(now) })
             MobileGoalOptions(
                 goalTypes = response.goalTypes.map { MobileGoalOption(it.key, it.value) },
                 periodTypes = response.periodTypes.map { MobileGoalOption(it.key, it.value) },
-                platforms = response.platforms.map { MobilePlatform(id = it.id, name = it.name) },
-                languages = response.languages.map { MobileLanguage(id = it.id, name = it.name) }
+                platforms = response.platforms.map { it.toDomain() },
+                languages = response.languages.map { it.toDomain() }
             )
         } catch (exception: Exception) {
-            throw exception.toOfflineReadException("las opciones de metas")
+            val cached = MobileGoalOptions(
+                goalTypes = defaultGoalTypes(),
+                periodTypes = defaultPeriodTypes(),
+                platforms = catalogDao.platforms().map { it.toDomain() },
+                languages = catalogDao.languages().map { it.toDomain() }
+            )
+            if (cached.platforms.isNotEmpty() || cached.languages.isNotEmpty()) {
+                cached
+            } else {
+                throw exception.toOfflineReadException("las opciones de metas")
+            }
         }
     }
 
@@ -165,4 +180,16 @@ data class MobileGoalOptions(
 data class MobileGoalOption(
     val value: String,
     val label: String
+)
+
+private fun defaultGoalTypes(): List<MobileGoalOption> = listOf(
+    MobileGoalOption("completed_challenges", "Retos cumplidos"),
+    MobileGoalOption("practice_time", "Tiempo practicado"),
+    MobileGoalOption("streak", "Racha")
+)
+
+private fun defaultPeriodTypes(): List<MobileGoalOption> = listOf(
+    MobileGoalOption("weekly", "Semanal"),
+    MobileGoalOption("monthly", "Mensual"),
+    MobileGoalOption("annual", "Anual")
 )

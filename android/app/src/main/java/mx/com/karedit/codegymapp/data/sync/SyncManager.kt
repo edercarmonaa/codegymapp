@@ -5,9 +5,11 @@ import java.util.concurrent.atomic.AtomicBoolean
 import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileManualChallengeRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
 
 class SyncManager(
@@ -43,6 +45,27 @@ class SyncManager(
 
     private suspend fun execute(type: String, payloadJson: String): Boolean =
         when (type) {
+            ActionTypes.CHALLENGE_CREATE -> {
+                val payload = moshi.adapter(ChallengeCreatePayload::class.java).fromJson(payloadJson) ?: return false
+                api.storeChallenge(
+                    MobileChallengeCreateRequestDto(payload.platformId, payload.scheduledDate)
+                ).ok
+            }
+            ActionTypes.CHALLENGE_MANUAL_CREATE -> {
+                val payload = moshi.adapter(ManualChallengePayload::class.java).fromJson(payloadJson) ?: return false
+                api.storeManualChallenge(
+                    MobileManualChallengeRequestDto(
+                        platformId = payload.platformId,
+                        title = payload.title,
+                        challengeUrl = payload.challengeUrl,
+                        difficulty = payload.difficulty,
+                        timeSpentMinutes = payload.timeSpentMinutes,
+                        notes = payload.notes,
+                        languageIds = payload.languageIds,
+                        githubLinks = payload.githubLinks
+                    )
+                ).ok
+            }
             ActionTypes.CHALLENGE_COMPLETE -> {
                 val payload = idPayload(payloadJson)
                 api.completeChallenge(MobileChallengeActionRequestDto(payload.id)).ok

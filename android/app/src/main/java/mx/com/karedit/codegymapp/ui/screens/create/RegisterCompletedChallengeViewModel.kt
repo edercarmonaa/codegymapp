@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mx.com.karedit.codegymapp.core.network.isOfflineUiMessage
 import mx.com.karedit.codegymapp.data.repository.CreateChallengeRepository
 import mx.com.karedit.codegymapp.domain.model.MobileLanguage
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
@@ -34,7 +35,9 @@ class RegisterCompletedChallengeViewModel(
                     }
                 }
                 .onFailure { error ->
-                    _state.update { it.copy(message = error.message ?: "No se pudieron cargar los catálogos.") }
+                    if (!error.isOfflineUiMessage()) {
+                        _state.update { it.copy(message = error.message ?: "No se pudieron cargar los catálogos.") }
+                    }
                 }
             _state.update { it.copy(isLoading = false) }
         }

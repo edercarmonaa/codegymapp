@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import mx.com.karedit.codegymapp.core.network.isOfflineUiMessage
 import mx.com.karedit.codegymapp.data.repository.GoalsRepository
 import mx.com.karedit.codegymapp.domain.model.MobileGoal
 
@@ -23,7 +24,9 @@ class GoalsViewModel(private val repository: GoalsRepository) : ViewModel() {
             repository.activeGoals()
                 .onSuccess { goals -> _state.update { it.copy(goals = goals) } }
                 .onFailure { error ->
-                    _state.update { it.copy(snackbarMessage = error.message ?: "No se pudieron cargar las metas.") }
+                    if (!error.isOfflineUiMessage()) {
+                        _state.update { it.copy(snackbarMessage = error.message ?: "No se pudieron cargar las metas.") }
+                    }
                 }
             _state.update { it.copy(isLoading = false) }
         }

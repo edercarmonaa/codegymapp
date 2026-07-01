@@ -4,11 +4,14 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import mx.com.karedit.codegymapp.data.local.dao.CachedCatalogDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedChallengeDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedGoalDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedNotificationDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedSummaryDao
 import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
+import mx.com.karedit.codegymapp.data.local.entity.CachedLanguageEntity
+import mx.com.karedit.codegymapp.data.local.entity.CachedPlatformEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedChallengeEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedGoalEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedNotificationEntity
@@ -21,9 +24,11 @@ import mx.com.karedit.codegymapp.data.local.entity.PendingActionEntity
         CachedNotificationEntity::class,
         CachedSummaryEntity::class,
         CachedGoalEntity::class,
-        PendingActionEntity::class
+        PendingActionEntity::class,
+        CachedPlatformEntity::class,
+        CachedLanguageEntity::class
     ],
-    version = 3,
+    version = 4,
     exportSchema = false
 )
 abstract class CodeGymDatabase : RoomDatabase() {
@@ -31,6 +36,7 @@ abstract class CodeGymDatabase : RoomDatabase() {
     abstract fun cachedNotificationDao(): CachedNotificationDao
     abstract fun cachedSummaryDao(): CachedSummaryDao
     abstract fun cachedGoalDao(): CachedGoalDao
+    abstract fun cachedCatalogDao(): CachedCatalogDao
     abstract fun pendingActionDao(): PendingActionDao
 
     companion object {

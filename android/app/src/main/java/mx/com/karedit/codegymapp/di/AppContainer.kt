@@ -49,10 +49,10 @@ class AppContainer(context: Context) {
     val todayRepository = TodayRepository(api, database.cachedChallengeDao(), offlineActionQueue)
     val plannedRepository = PlannedRepository(api, database.cachedChallengeDao(), offlineActionQueue)
     val challengesRepository = ChallengesRepository(api, database.cachedChallengeDao(), offlineActionQueue)
-    val challengeDetailsRepository = ChallengeDetailsRepository(api)
-    val createChallengeRepository = CreateChallengeRepository(api)
-    val createRoutineRepository = CreateRoutineRepository(api)
-    val goalsRepository = GoalsRepository(api, database.cachedGoalDao(), offlineActionQueue)
+    val challengeDetailsRepository = ChallengeDetailsRepository(api, database.cachedCatalogDao())
+    val createChallengeRepository = CreateChallengeRepository(api, database.cachedCatalogDao(), offlineActionQueue)
+    val createRoutineRepository = CreateRoutineRepository(api, database.cachedCatalogDao())
+    val goalsRepository = GoalsRepository(api, database.cachedGoalDao(), database.cachedCatalogDao(), offlineActionQueue)
     val settingsRepository = SettingsRepository(context.applicationContext, api)
 
     init {
@@ -60,6 +60,7 @@ class AppContainer(context: Context) {
             networkMonitor.isOnline.collectLatest { isOnline ->
                 if (isOnline && authRepository.hasToken()) {
                     syncManager.syncNow()
+                    createChallengeRepository.options()
                 }
             }
         }
@@ -72,6 +73,7 @@ class AppContainer(context: Context) {
 
         applicationScope.launch {
             syncManager.syncNow()
+            createChallengeRepository.options()
         }
     }
 }

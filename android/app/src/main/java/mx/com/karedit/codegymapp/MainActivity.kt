@@ -67,8 +67,6 @@ class MainActivity : ComponentActivity() {
 
             CodeGymTheme(darkTheme = darkTheme) {
                 val isOnline by appContainer.networkMonitor.isOnline.collectAsState()
-                val pendingActions by appContainer.offlineActionQueue.pendingCount.collectAsState(initial = 0)
-
                 LaunchedEffect(appContainer.sessionManager) {
                     while (true) {
                         delay(30_000)
@@ -86,9 +84,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     Column {
                         if (!isOnline) {
-                            OfflineBanner(pendingActions = pendingActions)
-                        } else if (pendingActions > 0) {
-                            PendingSyncBanner(pendingActions = pendingActions)
+                            OfflineBanner()
                         }
                         Box(modifier = Modifier.weight(1f)) {
                             CodeGymNavHost(
@@ -143,33 +139,14 @@ class MainActivity : ComponentActivity() {
 }
 
 @androidx.compose.runtime.Composable
-private fun OfflineBanner(pendingActions: Int) {
-    val suffix = if (pendingActions > 0) {
-        " · $pendingActions pendiente${if (pendingActions == 1) "" else "s"} por sincronizar"
-    } else {
-        " · Datos guardados"
-    }
+private fun OfflineBanner() {
     Text(
-        text = "Sin conexión a internet$suffix",
+        text = "Sin conexión a internet",
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colorScheme.errorContainer)
             .padding(horizontal = 16.dp, vertical = 8.dp),
         color = MaterialTheme.colorScheme.onErrorContainer,
-        fontWeight = FontWeight.SemiBold,
-        style = MaterialTheme.typography.bodyMedium
-    )
-}
-
-@androidx.compose.runtime.Composable
-private fun PendingSyncBanner(pendingActions: Int) {
-    Text(
-        text = "$pendingActions acción${if (pendingActions == 1) "" else "es"} pendiente${if (pendingActions == 1) "" else "s"} por sincronizar",
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.secondaryContainer)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        color = MaterialTheme.colorScheme.onSecondaryContainer,
         fontWeight = FontWeight.SemiBold,
         style = MaterialTheme.typography.bodyMedium
     )
