@@ -18,6 +18,8 @@ import mx.com.karedit.codegymapp.data.local.entity.CachedGoalEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedNotificationEntity
 import mx.com.karedit.codegymapp.data.local.entity.CachedSummaryEntity
 import mx.com.karedit.codegymapp.data.local.entity.PendingActionEntity
+import mx.com.karedit.codegymapp.data.security.DatabaseKeyProvider
+import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
 
 @Database(
     entities = [
@@ -50,8 +52,11 @@ abstract class CodeGymDatabase : RoomDatabase() {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     CodeGymDatabase::class.java,
-                    "codegym_offline.db"
+                    "codegym_offline_encrypted.db"
                 )
+                    .openHelperFactory(
+                        SupportOpenHelperFactory(DatabaseKeyProvider(context.applicationContext).passphrase())
+                    )
                     .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }
