@@ -12,6 +12,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileManualChallengeRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
 
 class SyncManager(
     private val api: CodeGymApi,
@@ -100,6 +101,19 @@ class SyncManager(
                         notes = payload.notes,
                         languageIds = payload.languageIds,
                         githubLinks = payload.githubLinks
+                    )
+                ).ok
+            }
+            ActionTypes.ROUTINE_CREATE -> {
+                val payload = moshi.adapter(RoutinePayload::class.java).fromJson(payloadJson) ?: return false
+                api.storeRoutine(
+                    MobileRoutineCreateRequestDto(
+                        platformId = payload.platformId,
+                        frequencyType = payload.frequencyType,
+                        weekDays = payload.weekDays,
+                        monthDay = payload.monthDay,
+                        startDate = payload.startDate,
+                        endDate = payload.endDate
                     )
                 ).ok
             }

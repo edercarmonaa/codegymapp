@@ -43,7 +43,8 @@ class AppContainer(context: Context) {
     val syncManager = SyncManager(api, database.pendingActionDao(), moshi)
     val authRepository = AuthRepository(api, sessionManager)
     private val deviceTokenRepository = DeviceTokenRepository(api)
-    val fcmTokenRegistrar = FcmTokenRegistrar(authRepository, deviceTokenRepository, applicationScope)
+    val settingsRepository = SettingsRepository(context.applicationContext, api)
+    val fcmTokenRegistrar = FcmTokenRegistrar(authRepository, deviceTokenRepository, settingsRepository, applicationScope)
     val summaryRepository = SummaryRepository(api, database.cachedSummaryDao())
     val notificationsRepository = NotificationsRepository(api, database.cachedNotificationDao(), offlineActionQueue)
     val todayRepository = TodayRepository(api, database.cachedChallengeDao(), offlineActionQueue)
@@ -61,9 +62,8 @@ class AppContainer(context: Context) {
         database.cachedChallengeDao(),
         offlineActionQueue
     )
-    val createRoutineRepository = CreateRoutineRepository(api, database.cachedCatalogDao())
+    val createRoutineRepository = CreateRoutineRepository(api, database.cachedCatalogDao(), offlineActionQueue)
     val goalsRepository = GoalsRepository(api, database.cachedGoalDao(), database.cachedCatalogDao(), offlineActionQueue)
-    val settingsRepository = SettingsRepository(context.applicationContext, api)
 
     init {
         applicationScope.launch {
@@ -93,5 +93,6 @@ class AppContainer(context: Context) {
         runCatching { goalsRepository.seedStaticCatalogs() }
         runCatching { createChallengeRepository.options() }
         runCatching { goalsRepository.options() }
+        runCatching { settingsRepository.syncSettings() }
     }
 }

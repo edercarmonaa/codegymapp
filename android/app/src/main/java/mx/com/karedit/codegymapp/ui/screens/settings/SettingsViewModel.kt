@@ -22,7 +22,7 @@ class SettingsViewModel(
     fun updateTheme(themePreference: ThemePreference) {
         settingsRepository.updateThemePreference(themePreference)
         viewModelScope.launch {
-            settingsRepository.syncThemePreference(themePreference)
+            settingsRepository.syncSettings()
                 .onSuccess { message -> _message.value = message }
                 .onFailure { error -> _message.value = error.message ?: "Tema actualizado localmente; no se pudo sincronizar." }
         }
@@ -30,17 +30,34 @@ class SettingsViewModel(
 
     fun updatePush(enabled: Boolean) {
         settingsRepository.updatePushEnabled(enabled)
-        _message.value = if (enabled) "Push activado." else "Push desactivado localmente."
+        viewModelScope.launch {
+            settingsRepository.syncSettings()
+                .onSuccess { message -> _message.value = message }
+                .onFailure { error ->
+                    _message.value = error.message ?: if (enabled) {
+                        "Push activado localmente; no se pudo sincronizar."
+                    } else {
+                        "Push desactivado localmente; no se pudo sincronizar."
+                    }
+                }
+        }
     }
 
     fun updateReminderTime(time: String) {
         settingsRepository.updateReminderTime(time)
-        _message.value = "Hora de recordatorio actualizada."
+        viewModelScope.launch {
+            settingsRepository.syncSettings()
+                .onSuccess { message -> _message.value = message }
+                .onFailure { error -> _message.value = error.message ?: "Hora actualizada localmente; no se pudo sincronizar." }
+        }
     }
 
     fun syncNow() {
-        settingsRepository.markSyncedNow()
-        _message.value = "Sincronización registrada."
+        viewModelScope.launch {
+            settingsRepository.syncSettings()
+                .onSuccess { message -> _message.value = message }
+                .onFailure { error -> _message.value = error.message ?: "No se pudo sincronizar." }
+        }
     }
 
     fun logout() {

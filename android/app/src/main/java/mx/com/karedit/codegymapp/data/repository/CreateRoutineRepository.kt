@@ -8,12 +8,14 @@ import mx.com.karedit.codegymapp.data.local.mapper.toDomain
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileActionResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
+import mx.com.karedit.codegymapp.data.sync.OfflineActionQueue
 import mx.com.karedit.codegymapp.domain.model.MobilePlatform
 import retrofit2.HttpException
 
 class CreateRoutineRepository(
     private val api: CodeGymApi,
-    private val catalogDao: CachedCatalogDao
+    private val catalogDao: CachedCatalogDao,
+    private val offlineActionQueue: OfflineActionQueue
 ) {
     private val errorAdapter = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -68,6 +70,16 @@ class CreateRoutineRepository(
                 ?.let { body -> errorAdapter.fromJson(body)?.message }
 
             error(apiMessage ?: "No se pudo crear la rutina.")
+        } catch (exception: java.io.IOException) {
+            offlineActionQueue.enqueueRoutineCreate(
+                platformId = platformId,
+                frequencyType = frequencyType,
+                weekDays = weekDays,
+                monthDay = monthDay,
+                startDate = startDate,
+                endDate = endDate
+            )
+            "Rutina guardada para sincronizar."
         }
     }
 }

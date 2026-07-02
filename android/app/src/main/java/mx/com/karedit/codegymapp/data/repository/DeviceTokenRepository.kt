@@ -7,13 +7,17 @@ class DeviceTokenRepository(private val api: CodeGymApi) {
     suspend fun store(
         token: String,
         deviceName: String,
-        appVersion: String
+        appVersion: String,
+        pushEnabled: Boolean,
+        reminderTime: String
     ): Result<String> = runCatching {
         val response = api.storeDeviceToken(
             MobileDeviceTokenRequestDto(
                 token = token,
                 deviceName = deviceName,
-                appVersion = appVersion
+                appVersion = appVersion,
+                pushEnabled = pushEnabled,
+                reminderTime = reminderTime
             )
         )
         if (!response.ok) {

@@ -25,20 +25,30 @@ class OfflineActionQueue(
         languageIds: List<Int>,
         githubLinks: String
     ) {
-        enqueue(
-            ActionTypes.CHALLENGE_SAVE_DETAILS,
-            ChallengeDetailsPayload(
-                id = id,
-                platformId = platformId,
-                title = title,
-                challengeUrl = challengeUrl,
-                difficulty = difficulty,
-                timeSpentMinutes = timeSpentMinutes,
-                notes = notes,
-                languageIds = languageIds,
-                githubLinks = githubLinks
-            )
+        val payload = ChallengeDetailsPayload(
+            id = id,
+            platformId = platformId,
+            title = title,
+            challengeUrl = challengeUrl,
+            difficulty = difficulty,
+            timeSpentMinutes = timeSpentMinutes,
+            notes = notes,
+            languageIds = languageIds,
+            githubLinks = githubLinks
         )
+        val existing = pendingActionDao.findByTypeAndPayloadPattern(
+            type = ActionTypes.CHALLENGE_SAVE_DETAILS,
+            payloadPattern = "%\"id\":$id%"
+        )
+        if (existing != null) {
+            pendingActionDao.updatePayload(
+                id = existing.id,
+                payloadJson = moshi.adapter(ChallengeDetailsPayload::class.java).toJson(payload)
+            )
+            return
+        }
+
+        enqueue(ActionTypes.CHALLENGE_SAVE_DETAILS, payload)
     }
 
     suspend fun enqueueChallengeCreate(localId: Int, platformId: Int, scheduledDate: String) {
@@ -104,6 +114,27 @@ class OfflineActionQueue(
                 notes = notes,
                 languageIds = languageIds,
                 githubLinks = githubLinks
+            )
+        )
+    }
+
+    suspend fun enqueueRoutineCreate(
+        platformId: Int,
+        frequencyType: String,
+        weekDays: List<Int>,
+        monthDay: Int,
+        startDate: String,
+        endDate: String
+    ) {
+        enqueue(
+            ActionTypes.ROUTINE_CREATE,
+            RoutinePayload(
+                platformId = platformId,
+                frequencyType = frequencyType,
+                weekDays = weekDays,
+                monthDay = monthDay,
+                startDate = startDate,
+                endDate = endDate
             )
         )
     }
@@ -178,6 +209,7 @@ object ActionTypes {
     const val NOTIFICATION_DELETE = "notification.delete"
     const val GOAL_CREATE = "goal.create"
     const val GOAL_UPDATE = "goal.update"
+    const val ROUTINE_CREATE = "routine.create"
 }
 
 data class IdPayload(val id: Int)
@@ -215,6 +247,14 @@ data class ManualChallengePayload(
     val githubLinks: String
 )
 data class ReschedulePayload(val id: Int, val scheduledDate: String)
+data class RoutinePayload(
+    val platformId: Int,
+    val frequencyType: String,
+    val weekDays: List<Int>,
+    val monthDay: Int,
+    val startDate: String,
+    val endDate: String
+)
 data class GoalPayload(
     val id: Int,
     val goalType: String,

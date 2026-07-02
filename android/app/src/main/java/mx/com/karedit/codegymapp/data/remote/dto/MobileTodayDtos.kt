@@ -88,7 +88,9 @@ data class MobileDeviceTokenRequestDto(
     val token: String,
     val platform: String = "android",
     @Json(name = "device_name") val deviceName: String,
-    @Json(name = "app_version") val appVersion: String
+    @Json(name = "app_version") val appVersion: String,
+    @Json(name = "push_enabled") val pushEnabled: Boolean = true,
+    @Json(name = "reminder_time") val reminderTime: String = "08:00"
 )
 
 data class MobileChallengeFiltersDto(
@@ -196,6 +198,12 @@ data class MobileGoalUpdateRequestDto(
 
 data class MobileThemeRequestDto(
     val theme: String
+)
+
+data class MobileSettingsRequestDto(
+    val theme: String? = null,
+    @Json(name = "push_enabled") val pushEnabled: Boolean,
+    @Json(name = "reminder_time") val reminderTime: String
 )
 
 data class MobileCreateOptionsResponseDto(

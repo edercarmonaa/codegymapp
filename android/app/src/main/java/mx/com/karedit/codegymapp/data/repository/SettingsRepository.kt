@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.update
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
+import mx.com.karedit.codegymapp.data.remote.dto.MobileSettingsRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileThemeRequestDto
 
 class SettingsRepository(
@@ -32,6 +33,27 @@ class SettingsRepository(
             error(response.message ?: "No se pudo sincronizar el tema.")
         }
         response.message ?: "Tema sincronizado."
+    }
+
+    suspend fun syncSettings(): Result<String> = runCatching {
+        val current = _settings.value
+        val apiTheme = when (current.themePreference) {
+            ThemePreference.Light -> "light"
+            ThemePreference.Dark -> "dark"
+            ThemePreference.System -> null
+        }
+        val response = api.updateSettings(
+            MobileSettingsRequestDto(
+                theme = apiTheme,
+                pushEnabled = current.pushEnabled,
+                reminderTime = current.reminderTime
+            )
+        )
+        if (!response.ok) {
+            error(response.message ?: "No se pudo sincronizar la configuración.")
+        }
+        markSyncedNow()
+        response.message ?: "Configuración sincronizada."
     }
 
     fun updatePushEnabled(enabled: Boolean) {

@@ -7,10 +7,12 @@ import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.BuildConfig
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.DeviceTokenRepository
+import mx.com.karedit.codegymapp.data.repository.SettingsRepository
 
 class FcmTokenRegistrar(
     private val authRepository: AuthRepository,
     private val deviceTokenRepository: DeviceTokenRepository,
+    private val settingsRepository: SettingsRepository,
     private val scope: CoroutineScope
 ) {
     fun registerCurrentToken() {
@@ -32,10 +34,13 @@ class FcmTokenRegistrar(
         }
 
         scope.launch {
+            val settings = settingsRepository.settings.value
             deviceTokenRepository.store(
                 token = token,
                 deviceName = deviceName(),
-                appVersion = BuildConfig.VERSION_NAME
+                appVersion = BuildConfig.VERSION_NAME,
+                pushEnabled = settings.pushEnabled,
+                reminderTime = settings.reminderTime
             )
         }
     }

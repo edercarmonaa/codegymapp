@@ -20,6 +20,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequest
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationsResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobilePlannedResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileSettingsRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileSummaryResponseDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileThemeRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileTodayResponseDto
@@ -103,4 +104,7 @@ interface CodeGymApi {
 
     @POST("api/mobile/settings/theme")
     suspend fun updateTheme(@Body request: MobileThemeRequestDto): MobileActionResponseDto
+
+    @POST("api/mobile/settings")
+    suspend fun updateSettings(@Body request: MobileSettingsRequestDto): MobileActionResponseDto
 }

@@ -32,7 +32,9 @@ final class MobileReminderService
 
         $notificationType = 'mobile_today_reminder';
         $actionUrl = '/calendario';
-        $userIds = \MobileDeviceToken::activeUserIds();
+        $userIds = $force
+            ? \MobileDeviceToken::activeUserIds()
+            : \MobileDeviceToken::activeUserIdsForReminderTime();
         if (!$force && \Notification::existsToday($notificationType, $actionUrl)) {
             return [
                 'ok' => true,
@@ -106,7 +108,9 @@ final class MobileReminderService
 
         $notificationType = 'mobile_expired_review_reminder';
         $actionUrl = '/retos?status=expired';
-        $userIds = \MobileDeviceToken::activeUserIds();
+        $userIds = $force
+            ? \MobileDeviceToken::activeUserIds()
+            : \MobileDeviceToken::activeUserIdsForReminderTime();
         if (!$force && \Notification::existsToday($notificationType, $actionUrl)) {
             return [
                 'ok' => true,

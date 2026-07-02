@@ -318,6 +318,31 @@ final class ApiMobileController
         Response::json(['ok' => true, 'message' => 'Tema actualizado.']);
     }
 
+    public function updateSettings(): void
+    {
+        $user = Auth::user();
+        if (!$user) {
+            http_response_code(401);
+            Response::json(['ok' => false, 'message' => 'Sesión no válida.']);
+            return;
+        }
+
+        $input = $this->jsonInput();
+        if (isset($input['theme'])) {
+            $theme = (string) $input['theme'];
+            if (in_array($theme, ['light', 'dark'], true)) {
+                User::updateTheme((int) $user['id'], $theme);
+            }
+        }
+
+        MobileDeviceToken::updatePreferences((int) $user['id'], [
+            'push_enabled' => $input['push_enabled'] ?? true,
+            'reminder_time' => $input['reminder_time'] ?? '08:00',
+        ]);
+
+        Response::json(['ok' => true, 'message' => 'Configuración sincronizada.']);
+    }
+
     /** @param array<string, mixed> $goal @return array<string, mixed> */
     private function goalResource(array $goal): array
     {
