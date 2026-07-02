@@ -47,8 +47,12 @@ abstract class CodeGymDatabase : RoomDatabase() {
         @Volatile
         private var instance: CodeGymDatabase? = null
 
+        @Volatile
+        private var sqlCipherLoaded = false
+
         fun getInstance(context: Context): CodeGymDatabase =
             instance ?: synchronized(this) {
+                loadSqlCipher()
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     CodeGymDatabase::class.java,
@@ -61,5 +65,11 @@ abstract class CodeGymDatabase : RoomDatabase() {
                     .build()
                     .also { instance = it }
             }
+
+        private fun loadSqlCipher() {
+            if (sqlCipherLoaded) return
+            System.loadLibrary("sqlcipher")
+            sqlCipherLoaded = true
+        }
     }
 }
