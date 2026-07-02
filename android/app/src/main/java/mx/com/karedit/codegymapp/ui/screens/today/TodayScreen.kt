@@ -14,7 +14,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -24,16 +23,15 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import java.time.LocalDate
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.domain.model.hasRequiredCompletionData
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
+import mx.com.karedit.codegymapp.ui.feedback.rememberCodeGymHapticSnackbar
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
@@ -73,14 +71,11 @@ fun TodayScreen(
     val scrollState = rememberScrollState()
     val todayLabel = remember { todayDisplayLabel() }
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    val showHapticSnackbar = rememberCodeGymHapticSnackbar(snackbarHostState)
 
     LaunchedEffect(state.snackbarMessage) {
         val message = state.snackbarMessage ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(
-            message = message,
-            duration = SnackbarDuration.Short
-        )
+        showHapticSnackbar(message)
         viewModel.snackbarShown()
     }
 
@@ -158,7 +153,7 @@ fun TodayScreen(
             isActionLoading = state.isActionLoading,
             onSaved = { message ->
                 selectedChallenge = null
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onComplete = {
@@ -220,7 +215,7 @@ fun TodayScreen(
             viewModel = createChallengeViewModel,
             onCreated = { message ->
                 showCreateSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
                 selectedChallenge = null
             },
@@ -233,7 +228,7 @@ fun TodayScreen(
             viewModel = createRoutineViewModel,
             onCreated = { message ->
                 showRoutineSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
                 selectedChallenge = null
             },
@@ -246,7 +241,7 @@ fun TodayScreen(
             viewModel = registerCompletedChallengeViewModel,
             onCreated = { message ->
                 showRegisterCompletedSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
                 selectedChallenge = null
             },
@@ -259,7 +254,7 @@ fun TodayScreen(
             viewModel = createGoalViewModel,
             onCreated = { message ->
                 showGoalSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
             },
             onDismiss = { showGoalSheet = false }
         )

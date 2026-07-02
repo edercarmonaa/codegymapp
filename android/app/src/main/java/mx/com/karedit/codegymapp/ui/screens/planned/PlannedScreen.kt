@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -20,15 +19,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileChallenge
 import mx.com.karedit.codegymapp.domain.model.hasRequiredCompletionData
 import mx.com.karedit.codegymapp.ui.components.ListSkeleton
 import mx.com.karedit.codegymapp.ui.components.ToDoTaskCard
+import mx.com.karedit.codegymapp.ui.feedback.rememberCodeGymHapticSnackbar
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
@@ -66,14 +64,11 @@ fun PlannedScreen(
     var quickActionChallenge by remember { mutableStateOf<MobileChallenge?>(null) }
     var collapsedDates by remember { mutableStateOf(setOf<String>()) }
     val scrollState = rememberScrollState()
-    val scope = rememberCoroutineScope()
+    val showHapticSnackbar = rememberCodeGymHapticSnackbar(snackbarHostState)
 
     LaunchedEffect(state.snackbarMessage) {
         val message = state.snackbarMessage ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(
-            message = message,
-            duration = SnackbarDuration.Short
-        )
+        showHapticSnackbar(message)
         viewModel.snackbarShown()
     }
 
@@ -159,7 +154,7 @@ fun PlannedScreen(
             viewModel = createChallengeViewModel,
             onCreated = { message ->
                 showCreateSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onDismiss = { showCreateSheet = false }
@@ -171,7 +166,7 @@ fun PlannedScreen(
             viewModel = createRoutineViewModel,
             onCreated = { message ->
                 showRoutineSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onDismiss = { showRoutineSheet = false }
@@ -183,7 +178,7 @@ fun PlannedScreen(
             viewModel = registerCompletedChallengeViewModel,
             onCreated = { message ->
                 showRegisterCompletedSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onDismiss = { showRegisterCompletedSheet = false }
@@ -195,7 +190,7 @@ fun PlannedScreen(
             viewModel = createGoalViewModel,
             onCreated = { message ->
                 showGoalSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
             },
             onDismiss = { showGoalSheet = false }
         )
@@ -208,7 +203,7 @@ fun PlannedScreen(
             isActionLoading = false,
             onSaved = { message ->
                 selectedChallenge = null
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onComplete = {

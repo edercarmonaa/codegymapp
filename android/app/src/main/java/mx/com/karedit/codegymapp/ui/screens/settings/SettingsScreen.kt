@@ -18,7 +18,6 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
@@ -38,6 +37,7 @@ import java.util.Date
 import java.util.Locale
 import mx.com.karedit.codegymapp.data.repository.AppSettings
 import mx.com.karedit.codegymapp.data.repository.ThemePreference
+import mx.com.karedit.codegymapp.ui.feedback.rememberCodeGymHapticSnackbar
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 
@@ -49,11 +49,12 @@ fun SettingsScreen(
     val settings by viewModel.settings.collectAsState()
     val message by viewModel.message.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val showHapticSnackbar = rememberCodeGymHapticSnackbar(snackbarHostState)
     val scrollState = rememberScrollState()
 
     LaunchedEffect(message) {
         val currentMessage = message ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(message = currentMessage, duration = SnackbarDuration.Short)
+        showHapticSnackbar(currentMessage)
         viewModel.messageShown()
     }
 

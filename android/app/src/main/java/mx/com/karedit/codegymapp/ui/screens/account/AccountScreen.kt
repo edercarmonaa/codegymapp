@@ -16,7 +16,6 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import mx.com.karedit.codegymapp.BuildConfig
 import mx.com.karedit.codegymapp.domain.model.User
 import mx.com.karedit.codegymapp.ui.components.ListSkeleton
+import mx.com.karedit.codegymapp.ui.feedback.rememberCodeGymHapticSnackbar
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 
@@ -41,11 +41,12 @@ fun AccountScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val showHapticSnackbar = rememberCodeGymHapticSnackbar(snackbarHostState)
     val scrollState = rememberScrollState()
 
     LaunchedEffect(state.message) {
         val message = state.message ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
+        showHapticSnackbar(message)
     }
 
     CodeGymSectionScaffold(

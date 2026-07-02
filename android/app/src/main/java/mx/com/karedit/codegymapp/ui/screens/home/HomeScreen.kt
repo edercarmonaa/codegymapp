@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -29,9 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.launch
+import mx.com.karedit.codegymapp.ui.feedback.rememberCodeGymHapticSnackbar
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeSheet
 import mx.com.karedit.codegymapp.ui.screens.create.CreateChallengeViewModel
@@ -60,7 +58,7 @@ fun HomeScreen(
     var showRegisterCompletedSheet by remember { mutableStateOf(false) }
     var showQuickActions by remember { mutableStateOf(false) }
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    val showHapticSnackbar = rememberCodeGymHapticSnackbar(snackbarHostState)
 
     LaunchedEffect(Unit) {
         viewModel.load()
@@ -180,7 +178,7 @@ fun HomeScreen(
             viewModel = createChallengeViewModel,
             onCreated = { message ->
                 showCreateSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onDismiss = { showCreateSheet = false }
@@ -192,7 +190,7 @@ fun HomeScreen(
             viewModel = createRoutineViewModel,
             onCreated = { message ->
                 showRoutineSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onDismiss = { showRoutineSheet = false }
@@ -204,7 +202,7 @@ fun HomeScreen(
             viewModel = registerCompletedChallengeViewModel,
             onCreated = { message ->
                 showRegisterCompletedSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onDismiss = { showRegisterCompletedSheet = false }
@@ -216,7 +214,7 @@ fun HomeScreen(
             viewModel = createGoalViewModel,
             onCreated = { message ->
                 showGoalSheet = false
-                scope.launch { snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short) }
+                showHapticSnackbar(message)
             },
             onDismiss = { showGoalSheet = false }
         )

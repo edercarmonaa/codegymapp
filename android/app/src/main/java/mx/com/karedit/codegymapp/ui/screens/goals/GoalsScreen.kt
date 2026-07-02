@@ -14,7 +14,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,14 +22,13 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import kotlinx.coroutines.launch
 import mx.com.karedit.codegymapp.domain.model.MobileGoal
 import mx.com.karedit.codegymapp.ui.components.ListSkeleton
+import mx.com.karedit.codegymapp.ui.feedback.rememberCodeGymHapticSnackbar
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymSectionScaffold
 import mx.com.karedit.codegymapp.ui.screens.create.CreateGoalSheet
@@ -44,14 +42,14 @@ fun GoalsScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val showHapticSnackbar = rememberCodeGymHapticSnackbar(snackbarHostState)
     val scrollState = rememberScrollState()
-    val coroutineScope = rememberCoroutineScope()
     var showCreateGoalSheet by remember { mutableStateOf(false) }
     var selectedGoal by remember { mutableStateOf<MobileGoal?>(null) }
 
     LaunchedEffect(state.snackbarMessage) {
         val message = state.snackbarMessage ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
+        showHapticSnackbar(message)
         viewModel.snackbarShown()
     }
 
@@ -104,9 +102,7 @@ fun GoalsScreen(
             viewModel = createGoalViewModel,
             onCreated = { message ->
                 showCreateGoalSheet = false
-                coroutineScope.launch {
-                    snackbarHostState.showSnackbar(message = message, duration = SnackbarDuration.Short)
-                }
+                showHapticSnackbar(message)
                 viewModel.load()
             },
             onDismiss = { showCreateGoalSheet = false }
