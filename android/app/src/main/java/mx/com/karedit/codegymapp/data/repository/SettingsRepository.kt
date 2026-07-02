@@ -7,6 +7,7 @@ import kotlinx.coroutines.flow.update
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileSettingsRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileThemeRequestDto
+import retrofit2.HttpException
 
 class SettingsRepository(
     context: Context,
@@ -42,13 +43,21 @@ class SettingsRepository(
             ThemePreference.Dark -> "dark"
             ThemePreference.System -> null
         }
-        val response = api.updateSettings(
-            MobileSettingsRequestDto(
-                theme = apiTheme,
-                pushEnabled = current.pushEnabled,
-                reminderTime = current.reminderTime
+        val response = try {
+            api.updateSettings(
+                MobileSettingsRequestDto(
+                    theme = apiTheme,
+                    pushEnabled = current.pushEnabled,
+                    reminderTime = current.reminderTime
+                )
             )
-        )
+        } catch (exception: HttpException) {
+            if (exception.code() == 404) {
+                markSyncedNow()
+                return@runCatching "Configuración guardada localmente. Falta actualizar la API en el servidor."
+            }
+            throw exception
+        }
         if (!response.ok) {
             error(response.message ?: "No se pudo sincronizar la configuración.")
         }

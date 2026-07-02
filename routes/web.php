@@ -36,6 +36,7 @@ $router->post('/api/mobile/goals/store', 'ApiMobileController', 'storeGoal');
 $router->post('/api/mobile/goals/update', 'ApiMobileController', 'updateGoal');
 $router->post('/api/mobile/settings/theme', 'ApiMobileController', 'updateTheme');
 $router->post('/api/mobile/settings', 'ApiMobileController', 'updateSettings');
+$router->post('/api/mobile/settings/sync', 'ApiMobileController', 'updateSettings');
 
 $router->get('/dashboard', 'DashboardController', 'index');
 $router->get('/dashboard/reportes', 'DashboardController', 'reportsTab');
