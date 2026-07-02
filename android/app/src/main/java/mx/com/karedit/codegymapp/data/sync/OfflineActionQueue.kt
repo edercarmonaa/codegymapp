@@ -14,6 +14,33 @@ class OfflineActionQueue(
         enqueue(type, IdPayload(id))
     }
 
+    suspend fun enqueueChallengeDetails(
+        id: Int,
+        platformId: Int,
+        title: String,
+        challengeUrl: String,
+        difficulty: String,
+        timeSpentMinutes: Int?,
+        notes: String,
+        languageIds: List<Int>,
+        githubLinks: String
+    ) {
+        enqueue(
+            ActionTypes.CHALLENGE_SAVE_DETAILS,
+            ChallengeDetailsPayload(
+                id = id,
+                platformId = platformId,
+                title = title,
+                challengeUrl = challengeUrl,
+                difficulty = difficulty,
+                timeSpentMinutes = timeSpentMinutes,
+                notes = notes,
+                languageIds = languageIds,
+                githubLinks = githubLinks
+            )
+        )
+    }
+
     suspend fun enqueueChallengeCreate(localId: Int, platformId: Int, scheduledDate: String) {
         enqueue(
             ActionTypes.CHALLENGE_CREATE,
@@ -142,6 +169,7 @@ class OfflineActionQueue(
 object ActionTypes {
     const val CHALLENGE_CREATE = "challenge.create"
     const val CHALLENGE_MANUAL_CREATE = "challenge.manual_create"
+    const val CHALLENGE_SAVE_DETAILS = "challenge.save_details"
     const val CHALLENGE_COMPLETE = "challenge.complete"
     const val CHALLENGE_MISS = "challenge.miss"
     const val CHALLENGE_CANCEL = "challenge.cancel"
@@ -164,6 +192,17 @@ data class ChallengeCreatePayload(
     val notes: String = "",
     val languageIds: List<Int> = emptyList(),
     val githubLinks: String = ""
+)
+data class ChallengeDetailsPayload(
+    val id: Int,
+    val platformId: Int,
+    val title: String,
+    val challengeUrl: String,
+    val difficulty: String,
+    val timeSpentMinutes: Int?,
+    val notes: String,
+    val languageIds: List<Int>,
+    val githubLinks: String
 )
 data class ManualChallengePayload(
     val platformId: Int,

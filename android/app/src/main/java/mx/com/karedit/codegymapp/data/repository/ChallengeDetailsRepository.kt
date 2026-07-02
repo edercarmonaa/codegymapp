@@ -79,7 +79,29 @@ class ChallengeDetailsRepository(
 
             error(apiMessage ?: "No se pudo actualizar el reto.")
         } catch (exception: java.io.IOException) {
-            error(OFFLINE_ACTION_MESSAGE)
+            saveCachedDetails(
+                id = id,
+                platformId = platformId,
+                title = title,
+                challengeUrl = challengeUrl,
+                difficulty = difficulty,
+                timeSpentMinutes = timeSpentMinutes,
+                notes = notes,
+                languageIds = languageIds,
+                githubLinks = githubLinks
+            )
+            offlineActionQueue.enqueueChallengeDetails(
+                id = id,
+                platformId = platformId,
+                title = title,
+                challengeUrl = challengeUrl,
+                difficulty = difficulty,
+                timeSpentMinutes = timeSpentMinutes,
+                notes = notes,
+                languageIds = languageIds,
+                githubLinks = githubLinks
+            )
+            "Cambios guardados localmente."
         }
     }
 
@@ -87,6 +109,42 @@ class ChallengeDetailsRepository(
         id: Int,
         platformId: Int,
         scheduledDate: String,
+        title: String,
+        challengeUrl: String,
+        difficulty: String,
+        timeSpentMinutes: Int?,
+        notes: String,
+        languageIds: List<Int>,
+        githubLinks: String
+    ) {
+        saveCachedDetails(
+            id = id,
+            platformId = platformId,
+            title = title,
+            challengeUrl = challengeUrl,
+            difficulty = difficulty,
+            timeSpentMinutes = timeSpentMinutes,
+            notes = notes,
+            languageIds = languageIds,
+            githubLinks = githubLinks
+        )
+        offlineActionQueue.updateChallengeCreateDetails(
+            localId = id,
+            platformId = platformId,
+            scheduledDate = scheduledDate,
+            title = title,
+            challengeUrl = challengeUrl,
+            difficulty = difficulty,
+            timeSpentMinutes = timeSpentMinutes,
+            notes = notes,
+            languageIds = languageIds,
+            githubLinks = githubLinks
+        )
+    }
+
+    private suspend fun saveCachedDetails(
+        id: Int,
+        platformId: Int,
         title: String,
         challengeUrl: String,
         difficulty: String,
@@ -112,18 +170,6 @@ class ChallengeDetailsRepository(
             notes = notes,
             languageIds = languageIds.joinToString(","),
             languageNames = languageNames,
-            githubLinks = githubLinks
-        )
-        offlineActionQueue.updateChallengeCreateDetails(
-            localId = id,
-            platformId = platformId,
-            scheduledDate = scheduledDate,
-            title = title,
-            challengeUrl = challengeUrl,
-            difficulty = difficulty,
-            timeSpentMinutes = timeSpentMinutes,
-            notes = notes,
-            languageIds = languageIds,
             githubLinks = githubLinks
         )
     }

@@ -6,6 +6,7 @@ import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
+import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeDetailsRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeRescheduleRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalCreateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
@@ -57,7 +58,7 @@ class SyncManager(
                     true
                 } else {
                     api.saveChallengeDetails(
-                        mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeDetailsRequestDto(
+                        MobileChallengeDetailsRequestDto(
                             id = serverId,
                             platformId = payload.platformId,
                             title = payload.title,
@@ -70,6 +71,22 @@ class SyncManager(
                         )
                     ).ok
                 }
+            }
+            ActionTypes.CHALLENGE_SAVE_DETAILS -> {
+                val payload = moshi.adapter(ChallengeDetailsPayload::class.java).fromJson(payloadJson) ?: return false
+                api.saveChallengeDetails(
+                    MobileChallengeDetailsRequestDto(
+                        id = payload.id,
+                        platformId = payload.platformId,
+                        title = payload.title,
+                        challengeUrl = payload.challengeUrl,
+                        difficulty = payload.difficulty,
+                        timeSpentMinutes = payload.timeSpentMinutes,
+                        notes = payload.notes,
+                        languageIds = payload.languageIds,
+                        githubLinks = payload.githubLinks
+                    )
+                ).ok
             }
             ActionTypes.CHALLENGE_MANUAL_CREATE -> {
                 val payload = moshi.adapter(ManualChallengePayload::class.java).fromJson(payloadJson) ?: return false
