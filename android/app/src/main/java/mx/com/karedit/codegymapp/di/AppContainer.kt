@@ -3,6 +3,7 @@ package mx.com.karedit.codegymapp.di
 import android.content.Context
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import java.time.YearMonth
 import mx.com.karedit.codegymapp.core.network.NetworkMonitor
 import mx.com.karedit.codegymapp.core.network.RetrofitFactory
 import mx.com.karedit.codegymapp.core.notifications.FcmTokenRegistrar
@@ -93,6 +94,9 @@ class AppContainer(context: Context) {
         runCatching { goalsRepository.seedStaticCatalogs() }
         runCatching { createChallengeRepository.options() }
         runCatching { goalsRepository.options() }
+        runCatching { todayRepository.today() }
+        runCatching { plannedRepository.planned() }
+        runCatching { challengesRepository.challenges(YearMonth.now().toString(), "all") }
         runCatching { settingsRepository.syncSettings() }
     }
 }
