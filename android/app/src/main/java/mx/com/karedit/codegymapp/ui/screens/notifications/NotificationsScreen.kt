@@ -36,6 +36,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -130,11 +131,13 @@ private fun NotificationSection(
             Text(emptyText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         } else {
             notifications.forEach { notification ->
-                NotificationCard(
-                    notification = notification,
-                    onMarkRead = { onMarkRead(notification) },
-                    onDelete = { onDelete(notification) }
-                )
+                key(notification.id) {
+                    NotificationCard(
+                        notification = notification,
+                        onMarkRead = { onMarkRead(notification) },
+                        onDelete = { onDelete(notification) }
+                    )
+                }
             }
         }
     }
@@ -161,7 +164,7 @@ private fun NotificationCard(
             onMarkRead = onMarkRead,
             modifier = Modifier
                 .offset { IntOffset(swipeOffset.value.roundToInt(), 0) }
-                .pointerInput(canDelete, cardWidthPx) {
+                .pointerInput(notification.id, canDelete, cardWidthPx) {
                     detectHorizontalDragGestures(
                         onHorizontalDrag = { change, dragAmount ->
                             change.consume()
