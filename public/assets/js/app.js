@@ -271,12 +271,12 @@ document.addEventListener('DOMContentLoaded', () => {
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination, 'languages'));
+        panel.appendChild(renderCatalogPagination(pagination, 'platforms'));
     };
     const renderLanguagesTable = (panel, payload) => {
         clearNode(panel);
         const pagination = payload.pagination || {};
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'languages'));
         const responsive = makeElement('div', 'table-responsive');
         const table = makeElement('table', 'table align-middle');
         const thead = document.createElement('thead');
@@ -313,14 +313,14 @@ document.addEventListener('DOMContentLoaded', () => {
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination, 'goals'));
+        panel.appendChild(renderCatalogPagination(pagination, 'languages'));
     };
     const renderGoalsTable = (panel, payload) => {
         clearNode(panel);
         const pagination = payload.pagination || {};
         const goalTypes = payload.goalTypes || {};
         const periodTypes = payload.periodTypes || {};
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'goals'));
 
         const responsive = makeElement('div', 'table-responsive');
         const table = makeElement('table', 'table align-middle table-hover');
@@ -411,12 +411,12 @@ document.addEventListener('DOMContentLoaded', () => {
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination, 'notifications'));
+        panel.appendChild(renderCatalogPagination(pagination, 'goals'));
     };
     const renderNotificationsTable = (panel, payload) => {
         clearNode(panel);
         const pagination = payload.pagination || {};
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'notifications'));
 
         const responsive = makeElement('div', 'table-responsive');
         const table = makeElement('table', 'table align-middle table-hover');
@@ -489,7 +489,7 @@ document.addEventListener('DOMContentLoaded', () => {
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination, 'challenges'));
+        panel.appendChild(renderCatalogPagination(pagination, 'notifications'));
     };
     const renderChallengeFilters = (payload) => {
         const form = makeElement('form', 'row g-2 align-items-end mb-4');
@@ -563,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
         clearNode(panel);
         const pagination = payload.pagination || {};
         panel.appendChild(renderChallengeFilters(payload));
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'challenges'));
 
         const responsive = makeElement('div', 'table-responsive');
         const table = makeElement('table', 'table align-middle table-hover');
@@ -670,7 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'challenges'));
     };
     const loadCatalogPanel = async (url = null) => {
         if (!tablePanel?.dataset?.catalogPanel) return false;
