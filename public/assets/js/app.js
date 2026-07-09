@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (text !== '') node.textContent = text;
         return node;
     };
+    const cssEscape = (value) => window.CSS?.escape ? window.CSS.escape(String(value)) : String(value).replace(/[^a-zA-Z0-9_-]/g, '\\$&');
     const catalogUrl = (pagination, params) => {
         const query = new URLSearchParams();
         query.set('page', String(params.page || pagination.page || 1));
@@ -53,10 +54,73 @@ document.addEventListener('DOMContentLoaded', () => {
         query.set('dir', String(params.dir || pagination.dir || 'asc'));
         return '?' + query.toString();
     };
-    const renderCatalogPagination = (pagination) => {
+    const bulkSelectAll = (tableName) => {
+        const input = document.createElement('input');
+        input.className = 'form-check-input';
+        input.type = 'checkbox';
+        input.dataset.bulkSelectAll = tableName;
+        return input;
+    };
+    const bulkItem = (tableName, id) => {
+        const input = document.createElement('input');
+        input.className = 'form-check-input';
+        input.type = 'checkbox';
+        input.value = String(id || 0);
+        input.dataset.bulkItem = tableName;
+        return input;
+    };
+    const renderBulkToolbar = (tableName, actions = []) => {
+        const toolbar = makeElement('div', 'd-flex flex-wrap gap-2 align-items-center');
+        const checkWrap = makeElement('div', 'form-check mb-0');
+        const check = bulkSelectAll(tableName);
+        check.id = `bulk_select_${tableName}`;
+        const label = makeElement('label', 'form-check-label small', 'Seleccionar visibles');
+        label.htmlFor = check.id;
+        checkWrap.appendChild(check);
+        checkWrap.appendChild(label);
+        toolbar.appendChild(checkWrap);
+
+        actions.forEach((action) => {
+            const button = makeElement('button', `btn btn-sm ${action.className || 'btn-outline-secondary'}`, action.label);
+            button.type = 'button';
+            button.disabled = true;
+            button.dataset.bulkAction = tableName;
+            button.dataset.bulkUrl = action.url;
+            button.dataset.bulkRefresh = action.refresh || tableName;
+            if (action.confirm) button.dataset.confirm = action.confirm;
+            toolbar.appendChild(button);
+        });
+        return toolbar;
+    };
+    const bulkConfig = {
+        challenges: [
+            { label: 'No cumplido', url: '/api/calendar/miss', refresh: 'challenges', className: 'btn-outline-warning', confirm: '¿Marcar los retos seleccionados como no cumplidos?' },
+            { label: 'Cancelar', url: '/api/calendar/cancel', refresh: 'challenges', className: 'btn-outline-danger', confirm: '¿Cancelar los retos seleccionados?' }
+        ],
+        platforms: [
+            { label: 'Activar', url: '/api/platforms/activate', refresh: 'platforms', className: 'btn-outline-success' },
+            { label: 'Desactivar', url: '/api/platforms/deactivate', refresh: 'platforms', className: 'btn-outline-secondary', confirm: '¿Desactivar las plataformas seleccionadas?' }
+        ],
+        languages: [
+            { label: 'Activar', url: '/api/languages/activate', refresh: 'languages', className: 'btn-outline-success' },
+            { label: 'Desactivar', url: '/api/languages/deactivate', refresh: 'languages', className: 'btn-outline-secondary', confirm: '¿Desactivar los lenguajes seleccionados?' }
+        ],
+        goals: [
+            { label: 'Desactivar', url: '/api/goals/deactivate', refresh: 'goals', className: 'btn-outline-secondary', confirm: '¿Desactivar las metas seleccionadas?' }
+        ],
+        notifications: [
+            { label: 'Marcar leídas', url: '/api/notifications/mark-read', refresh: 'notifications', className: 'btn-outline-primary' },
+            { label: 'Eliminar', url: '/api/notifications/delete', refresh: 'notifications', className: 'btn-outline-danger', confirm: '¿Eliminar las notificaciones seleccionadas?' }
+        ]
+    };
+    const renderCatalogPagination = (pagination, tableName = '') => {
         const wrapper = makeElement('div', 'd-flex flex-wrap gap-2 align-items-center justify-content-between my-3');
-        const total = makeElement('div', 'text-body-secondary small', `${pagination.total || 0} registros`);
-        wrapper.appendChild(total);
+        const left = makeElement('div', 'd-flex flex-wrap gap-3 align-items-center');
+        left.appendChild(makeElement('div', 'text-body-secondary small', `${pagination.total || 0} registros`));
+        if (tableName && bulkConfig[tableName]) {
+            left.appendChild(renderBulkToolbar(tableName, bulkConfig[tableName]));
+        }
+        wrapper.appendChild(left);
 
         const controls = makeElement('div', 'd-flex flex-wrap gap-2 align-items-center');
         controls.appendChild(makeElement('label', 'form-label mb-0 small', 'Por página'));
@@ -156,11 +220,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const renderPlatformsTable = (panel, payload) => {
         clearNode(panel);
         const pagination = payload.pagination || {};
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'platforms'));
         const responsive = makeElement('div', 'table-responsive');
         const table = makeElement('table', 'table align-middle');
         const thead = document.createElement('thead');
         const headRow = document.createElement('tr');
+        const selectHead = makeElement('th', 'text-center');
+        selectHead.appendChild(bulkSelectAll('platforms'));
+        headRow.appendChild(selectHead);
         ['Nombre', 'URL', 'Descripción', 'Estado', 'Acciones'].forEach((label, index) => {
             const th = document.createElement('th');
             if (index === 0) th.appendChild(sortLink(label, 'name', 'asc'));
@@ -175,6 +242,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.createElement('tbody');
         (payload.platforms || []).forEach((platform) => {
             const row = document.createElement('tr');
+            const selectCell = makeElement('td', 'text-center');
+            selectCell.appendChild(bulkItem('platforms', platform.id));
+            row.appendChild(selectCell);
             row.appendChild(makeElement('td', '', platform.name || ''));
             const urlCell = document.createElement('td');
             if (platform.url) {
@@ -198,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'languages'));
     };
     const renderLanguagesTable = (panel, payload) => {
         clearNode(panel);
@@ -208,6 +278,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const table = makeElement('table', 'table align-middle');
         const thead = document.createElement('thead');
         const headRow = document.createElement('tr');
+        const selectHead = makeElement('th', 'text-center');
+        selectHead.appendChild(bulkSelectAll('languages'));
+        headRow.appendChild(selectHead);
         ['Nombre', 'Estado', 'Acciones'].forEach((label, index) => {
             const th = document.createElement('th');
             if (index === 0) th.appendChild(sortLink(label, 'name', 'asc'));
@@ -222,6 +295,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const tbody = document.createElement('tbody');
         (payload.languages || []).forEach((language) => {
             const row = document.createElement('tr');
+            const selectCell = makeElement('td', 'text-center');
+            selectCell.appendChild(bulkItem('languages', language.id));
+            row.appendChild(selectCell);
             row.appendChild(makeElement('td', '', language.name || ''));
             const status = document.createElement('td');
             status.appendChild(statusBadge(Boolean(language.is_active), 'Activo', 'Inactivo'));
@@ -234,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'goals'));
     };
     const renderGoalsTable = (panel, payload) => {
         clearNode(panel);
@@ -247,6 +323,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const table = makeElement('table', 'table align-middle table-hover');
         const thead = document.createElement('thead');
         const headRow = document.createElement('tr');
+        const selectHead = makeElement('th', 'text-center');
+        selectHead.appendChild(bulkSelectAll('goals'));
+        headRow.appendChild(selectHead);
         [
             ['Meta', 'goal_type', 'asc'],
             ['Periodo', 'period_end', 'asc'],
@@ -269,6 +348,9 @@ document.addEventListener('DOMContentLoaded', () => {
         goals.forEach((goal) => {
             const row = document.createElement('tr');
             const unit = goalUnit(goal.goal_type);
+            const selectCell = makeElement('td', 'text-center');
+            selectCell.appendChild(bulkItem('goals', goal.id));
+            row.appendChild(selectCell);
 
             const meta = document.createElement('td');
             appendText(meta, 'div', 'fw-semibold', goalTypes[goal.goal_type] || String(goal.goal_type || 'Meta'));
@@ -319,14 +401,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (goals.length === 0) {
             const row = document.createElement('tr');
             const cell = makeElement('td', 'text-body-secondary', 'No hay metas registradas.');
-            cell.colSpan = 6;
+            cell.colSpan = 7;
             row.appendChild(cell);
             tbody.appendChild(row);
         }
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'notifications'));
     };
     const renderNotificationsTable = (panel, payload) => {
         clearNode(panel);
@@ -337,6 +419,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const table = makeElement('table', 'table align-middle table-hover');
         const thead = document.createElement('thead');
         const headRow = document.createElement('tr');
+        const selectHead = makeElement('th', 'text-center');
+        selectHead.appendChild(bulkSelectAll('notifications'));
+        headRow.appendChild(selectHead);
         [
             ['Notificación', 'title', 'asc'],
             ['Estado', 'is_read', 'asc'],
@@ -356,6 +441,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const notifications = payload.notifications || [];
         notifications.forEach((notification) => {
             const row = document.createElement('tr');
+            const selectCell = makeElement('td', 'text-center');
+            selectCell.appendChild(bulkItem('notifications', notification.id));
+            row.appendChild(selectCell);
             const content = document.createElement('td');
             appendText(content, 'div', 'fw-semibold', notification.title || '');
             appendText(content, 'div', 'text-body-secondary', notification.message || '');
@@ -391,14 +479,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (notifications.length === 0) {
             const row = document.createElement('tr');
             const cell = makeElement('td', 'text-body-secondary', 'No hay notificaciones registradas.');
-            cell.colSpan = 4;
+            cell.colSpan = 5;
             row.appendChild(cell);
             tbody.appendChild(row);
         }
         table.appendChild(tbody);
         responsive.appendChild(table);
         panel.appendChild(responsive);
-        panel.appendChild(renderCatalogPagination(pagination));
+        panel.appendChild(renderCatalogPagination(pagination, 'challenges'));
     };
     const renderChallengeFilters = (payload) => {
         const form = makeElement('form', 'row g-2 align-items-end mb-4');
@@ -478,6 +566,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const table = makeElement('table', 'table align-middle table-hover');
         const thead = document.createElement('thead');
         const headRow = document.createElement('tr');
+        const selectHead = makeElement('th', 'text-center');
+        selectHead.appendChild(bulkSelectAll('challenges'));
+        headRow.appendChild(selectHead);
         [
             ['Fecha programada', 'scheduled_date', 'desc'],
             ['Plataforma', 'platform', 'asc'],
@@ -504,6 +595,9 @@ document.addEventListener('DOMContentLoaded', () => {
         rows.forEach((challenge) => {
             const row = document.createElement('tr');
             const status = String(challenge.status || '');
+            const selectCell = makeElement('td', 'text-center');
+            selectCell.appendChild(bulkItem('challenges', challenge.id));
+            row.appendChild(selectCell);
             const isLate = status === 'completed'
                 && challenge.completed_date
                 && challenge.scheduled_date
@@ -566,7 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (rows.length === 0) {
             const row = document.createElement('tr');
             const cell = makeElement('td', 'text-body-secondary', 'No hay retos con esos filtros.');
-            cell.colSpan = 10;
+            cell.colSpan = 11;
             row.appendChild(cell);
             tbody.appendChild(row);
         }
@@ -665,10 +759,88 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     document.body.addEventListener('change', (event) => {
+        const bulkSelect = event.target.closest('[data-bulk-select-all]');
+        if (bulkSelect) {
+            const tableName = bulkSelect.dataset.bulkSelectAll;
+            const panel = bulkSelect.closest('#tablePanel') || document;
+            panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]`).forEach((item) => {
+                item.checked = bulkSelect.checked;
+            });
+            updateBulkActions(panel, tableName);
+            return;
+        }
+
+        const bulkItemInput = event.target.closest('[data-bulk-item]');
+        if (bulkItemInput) {
+            const tableName = bulkItemInput.dataset.bulkItem;
+            const panel = bulkItemInput.closest('#tablePanel') || document;
+            const items = Array.from(panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]`));
+            const checked = items.filter((item) => item.checked);
+            panel.querySelectorAll(`[data-bulk-select-all="${cssEscape(tableName)}"]`).forEach((selectAll) => {
+                selectAll.checked = items.length > 0 && checked.length === items.length;
+                selectAll.indeterminate = checked.length > 0 && checked.length < items.length;
+            });
+            updateBulkActions(panel, tableName);
+            return;
+        }
+
         const select = event.target.closest('#tablePanel .table-per-page');
         if (!select) return;
         event.preventDefault();
         loadTablePanel(select.value);
+    });
+
+    const updateBulkActions = (panel, tableName) => {
+        const selectedCount = panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:checked`).length;
+        panel.querySelectorAll(`[data-bulk-action="${cssEscape(tableName)}"]`).forEach((button) => {
+            button.disabled = selectedCount === 0;
+        });
+    };
+
+    const runBulkAction = async (button) => {
+        const tableName = button.dataset.bulkAction;
+        const panel = button.closest('#tablePanel') || document;
+        const ids = Array.from(panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:checked`))
+            .map((item) => item.value)
+            .filter(Boolean);
+        if (ids.length === 0) return;
+
+        const confirmed = button.dataset.confirm
+            ? await window.CodeGymConfirm(button.dataset.confirm)
+            : true;
+        if (!confirmed) return;
+
+        button.disabled = true;
+        try {
+            for (const id of ids) {
+                const body = new FormData();
+                body.append('_token', csrfToken());
+                body.append('id', id);
+                const response = await fetch(button.dataset.bulkUrl, {
+                    method: 'POST',
+                    body,
+                    credentials: 'same-origin',
+                    headers: { 'Accept': 'application/json' }
+                });
+                const payload = await response.json().catch(() => ({}));
+                if (!response.ok || payload.ok === false) {
+                    window.alert(payload.message || 'No se pudo aplicar la acción masiva.');
+                    return;
+                }
+            }
+
+            if (panel.id === 'tablePanel' && await loadCatalogPanel()) return;
+            window.location.reload();
+        } finally {
+            button.disabled = false;
+        }
+    };
+
+    document.body.addEventListener('click', (event) => {
+        const bulkButton = event.target.closest('[data-bulk-action]');
+        if (!bulkButton) return;
+        event.preventDefault();
+        runBulkAction(bulkButton);
     });
 
     document.body.addEventListener('submit', (event) => {

@@ -10,8 +10,14 @@ $perPageUrl = static function (int $perPage) use ($baseParams): string {
 };
 ?>
 <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between my-3">
-    <div class="text-body-secondary small">
-        <?= e((string) $pagination['total']) ?> registros
+    <div class="d-flex flex-wrap gap-3 align-items-center">
+        <div class="text-body-secondary small">
+            <?= e((string) $pagination['total']) ?> registros
+        </div>
+        <?php if (!empty($bulkTable ?? '') && !empty($bulkActions ?? [])): ?>
+            <?php require __DIR__ . '/table_bulk_toolbar.php'; ?>
+            <?php unset($bulkTable, $bulkActions); ?>
+        <?php endif; ?>
     </div>
     <div class="d-flex flex-wrap gap-2 align-items-center">
         <label class="form-label mb-0 small">Por página</label>

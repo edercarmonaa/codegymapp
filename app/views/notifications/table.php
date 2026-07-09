@@ -1,9 +1,17 @@
-<?php require __DIR__ . '/../partials/table_pagination.php'; ?>
+<?php
+$bulkTable = 'notifications';
+$bulkActions = [
+    ['label' => 'Marcar leídas', 'url' => '/api/notifications/mark-read', 'refresh' => 'notifications', 'class' => 'btn-outline-primary'],
+    ['label' => 'Eliminar', 'url' => '/api/notifications/delete', 'refresh' => 'notifications', 'class' => 'btn-outline-danger', 'confirm' => '¿Eliminar las notificaciones seleccionadas?'],
+];
+require __DIR__ . '/../partials/table_pagination.php';
+?>
 
 <div class="table-responsive">
     <table class="table align-middle table-hover">
         <thead>
             <tr>
+                <th class="text-center"><input class="form-check-input" type="checkbox" data-bulk-select-all="notifications" aria-label="Seleccionar todas las notificaciones visibles"></th>
                 <th><a href="?sort=title&dir=asc">Notificación</a></th>
                 <th><a href="?sort=is_read&dir=asc">Estado</a></th>
                 <th><a href="?sort=created_at&dir=desc">Fecha</a></th>
@@ -13,6 +21,7 @@
         <tbody>
             <?php foreach ($notifications as $notification): ?>
                 <tr>
+                    <td class="text-center"><input class="form-check-input" type="checkbox" data-bulk-item="notifications" value="<?= e((string) $notification['id']) ?>" aria-label="Seleccionar notificación"></td>
                     <td>
                         <div class="fw-semibold"><?= e($notification['title']) ?></div>
                         <div class="text-body-secondary"><?= e($notification['message']) ?></div>
@@ -49,7 +58,7 @@
                 </tr>
             <?php endforeach; ?>
             <?php if (!$notifications): ?>
-                <tr><td colspan="4" class="text-body-secondary">No hay notificaciones registradas.</td></tr>
+                <tr><td colspan="5" class="text-body-secondary">No hay notificaciones registradas.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

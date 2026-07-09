@@ -25,12 +25,20 @@
     </div>
 </form>
 
-<?php require __DIR__ . '/../partials/table_pagination.php'; ?>
+<?php
+$bulkTable = 'challenges';
+$bulkActions = [
+    ['label' => 'No cumplido', 'url' => '/api/calendar/miss', 'refresh' => 'challenges', 'class' => 'btn-outline-warning', 'confirm' => '¿Marcar los retos seleccionados como no cumplidos?'],
+    ['label' => 'Cancelar', 'url' => '/api/calendar/cancel', 'refresh' => 'challenges', 'class' => 'btn-outline-danger', 'confirm' => '¿Cancelar los retos seleccionados?'],
+];
+require __DIR__ . '/../partials/table_pagination.php';
+?>
 
 <div class="table-responsive">
     <table class="table align-middle table-hover">
         <thead>
             <tr>
+                <th class="text-center"><input class="form-check-input" type="checkbox" data-bulk-select-all="challenges" aria-label="Seleccionar todos los retos visibles"></th>
                 <th><a href="?<?= e(http_build_query(array_merge($_GET, ['sort' => 'scheduled_date', 'dir' => 'desc', 'page' => 1]))) ?>">Fecha programada</a></th>
                 <th><a href="?<?= e(http_build_query(array_merge($_GET, ['sort' => 'platform', 'dir' => 'asc', 'page' => 1]))) ?>">Plataforma</a></th>
                 <th>Nombre del reto</th>
@@ -56,6 +64,7 @@
                 $githubUrls = array_values(array_filter(array_map('safe_url', explode("\n", (string) ($challenge['github_urls'] ?? '')))));
                 ?>
                 <tr>
+                    <td class="text-center"><input class="form-check-input" type="checkbox" data-bulk-item="challenges" value="<?= e((string) $challenge['id']) ?>" aria-label="Seleccionar reto"></td>
                     <td>
                         <?= e($challenge['scheduled_date']) ?>
                         <?php if ((int) $challenge['is_rescheduled'] === 1): ?>
@@ -100,7 +109,7 @@
                 </tr>
             <?php endforeach; ?>
             <?php if (!$challenges): ?>
-                <tr><td colspan="10" class="text-body-secondary">No hay retos con esos filtros.</td></tr>
+                <tr><td colspan="11" class="text-body-secondary">No hay retos con esos filtros.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

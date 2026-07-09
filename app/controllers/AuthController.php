@@ -43,7 +43,7 @@ final class AuthController
     {
         verify_csrf();
         $this->authService->logout(Auth::user());
-        Response::redirect('/login');
+        Response::redirect('/');
     }
 
     private function fail(string $message): never

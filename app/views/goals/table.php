@@ -1,9 +1,16 @@
-<?php require __DIR__ . '/../partials/table_pagination.php'; ?>
+<?php
+$bulkTable = 'goals';
+$bulkActions = [
+    ['label' => 'Desactivar', 'url' => '/api/goals/deactivate', 'refresh' => 'goals', 'class' => 'btn-outline-secondary', 'confirm' => '¿Desactivar las metas seleccionadas?'],
+];
+require __DIR__ . '/../partials/table_pagination.php';
+?>
 
 <div class="table-responsive">
     <table class="table align-middle table-hover">
         <thead>
             <tr>
+                <th class="text-center"><input class="form-check-input" type="checkbox" data-bulk-select-all="goals" aria-label="Seleccionar todas las metas visibles"></th>
                 <th><a href="?sort=goal_type&dir=asc">Meta</a></th>
                 <th><a href="?sort=period_end&dir=asc">Periodo</a></th>
                 <th>Alcance</th>
@@ -20,6 +27,7 @@
                 $unit = $goal['goal_type'] === 'practice_time' ? 'min' : ($goal['goal_type'] === 'streak' ? 'días' : 'retos');
                 ?>
                 <tr>
+                    <td class="text-center"><input class="form-check-input" type="checkbox" data-bulk-item="goals" value="<?= e((string) $goal['id']) ?>" aria-label="Seleccionar meta"></td>
                     <td>
                         <div class="fw-semibold"><?= e($goalTypes[$goal['goal_type']] ?? $goal['goal_type']) ?></div>
                         <div class="text-body-secondary small">Objetivo: <?= e((string) $goal['target_value']) ?> <?= e($unit) ?></div>
@@ -61,7 +69,7 @@
                 </tr>
             <?php endforeach; ?>
             <?php if (!$goals): ?>
-                <tr><td colspan="6" class="text-body-secondary">No hay metas registradas.</td></tr>
+                <tr><td colspan="7" class="text-body-secondary">No hay metas registradas.</td></tr>
             <?php endif; ?>
         </tbody>
     </table>

@@ -1,13 +1,21 @@
-<?php require __DIR__ . '/../partials/table_pagination.php'; ?>
+<?php
+$bulkTable = 'platforms';
+$bulkActions = [
+    ['label' => 'Activar', 'url' => '/api/platforms/activate', 'refresh' => 'platforms', 'class' => 'btn-outline-success'],
+    ['label' => 'Desactivar', 'url' => '/api/platforms/deactivate', 'refresh' => 'platforms', 'class' => 'btn-outline-secondary', 'confirm' => '¿Desactivar las plataformas seleccionadas?'],
+];
+require __DIR__ . '/../partials/table_pagination.php';
+?>
 
 <div class="table-responsive">
     <table class="table align-middle">
         <thead>
-            <tr><th><a href="?sort=name&dir=asc">Nombre</a></th><th>URL</th><th>Descripción</th><th><a href="?sort=is_active&dir=desc">Estado</a></th><th class="text-end">Acciones</th></tr>
+            <tr><th class="text-center"><input class="form-check-input" type="checkbox" data-bulk-select-all="platforms" aria-label="Seleccionar todas las plataformas visibles"></th><th><a href="?sort=name&dir=asc">Nombre</a></th><th>URL</th><th>Descripción</th><th><a href="?sort=is_active&dir=desc">Estado</a></th><th class="text-end">Acciones</th></tr>
         </thead>
         <tbody>
             <?php foreach ($platforms as $platform): ?>
                 <tr>
+                    <td class="text-center"><input class="form-check-input" type="checkbox" data-bulk-item="platforms" value="<?= e((string) $platform['id']) ?>" aria-label="Seleccionar plataforma"></td>
                     <td><?= e($platform['name']) ?></td>
                     <td>
                         <?php $platformUrl = safe_url($platform['url'] ?? null); ?>
