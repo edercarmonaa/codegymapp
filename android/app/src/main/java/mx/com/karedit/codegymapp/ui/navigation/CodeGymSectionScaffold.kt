@@ -48,11 +48,6 @@ fun CodeGymSectionScaffold(
                         Text("‹", style = MaterialTheme.typography.displaySmall)
                     }
                 },
-                actions = {
-                    TextButton(onClick = {}) {
-                        Text("⋮", style = MaterialTheme.typography.headlineMedium)
-                    }
-                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.background
                 )
