@@ -60,3 +60,17 @@ body {
     border-radius: .5rem;
     background: var(--bs-tertiary-bg);
 }
+
+.codegym-bulk-toolbar,
+[data-bulk-select-all],
+[data-bulk-item] {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+[data-bulk-select-all],
+[data-bulk-item] {
+    display: inline-block !important;
+    width: 1rem;
+    height: 1rem;
+}

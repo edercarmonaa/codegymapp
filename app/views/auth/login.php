@@ -17,7 +17,12 @@
         </div>
         <div>
             <label class="form-label" for="password">Contraseña</label>
-            <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required>
+            <div class="input-group">
+                <input class="form-control" id="password" name="password" type="password" autocomplete="current-password" required data-password-field>
+                <button class="btn btn-outline-secondary" type="button" data-password-toggle aria-label="Mostrar contraseña" title="Mostrar contraseña">
+                    <i class="bi bi-eye"></i>
+                </button>
+            </div>
         </div>
         <button class="btn btn-primary w-100">Iniciar sesión</button>
     </form>

@@ -886,8 +886,6 @@ document.addEventListener('DOMContentLoaded', () => {
         loadTablePanel(form.action + (query ? '?' + query : ''));
     });
 
-    loadCatalogPanel();
-
     const dashboardTabHashes = ['#datos-generales', '#graficas', '#reportes'];
     const reportChartIds = [
         'reportComplianceChart',

@@ -12,7 +12,7 @@ $authTheme = current_web_theme(Auth::user());
     <link rel="apple-touch-icon" href="/public/assets/img/site-icon.png">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="/public/assets/css/app.css?v=2" rel="stylesheet">
+    <link href="/public/assets/css/app.css?v=3" rel="stylesheet">
 </head>
 <body class="auth-body">
     <div class="position-fixed top-0 end-0 p-3">
@@ -45,6 +45,24 @@ $authTheme = current_web_theme(Auth::user());
                 sync();
             });
             sync();
+
+            document.querySelectorAll('[data-password-toggle]').forEach((toggle) => {
+                const group = toggle.closest('.input-group');
+                const field = group?.querySelector('[data-password-field]');
+                const icon = toggle.querySelector('i');
+                if (!field) {
+                    return;
+                }
+                toggle.addEventListener('click', () => {
+                    const visible = field.type === 'text';
+                    field.type = visible ? 'password' : 'text';
+                    toggle.setAttribute('aria-label', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+                    toggle.setAttribute('title', visible ? 'Mostrar contraseña' : 'Ocultar contraseña');
+                    if (icon) {
+                        icon.className = visible ? 'bi bi-eye' : 'bi bi-eye-slash';
+                    }
+                });
+            });
         })();
     </script>
 </body>
