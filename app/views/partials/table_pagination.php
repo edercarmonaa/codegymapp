@@ -16,7 +16,6 @@ $perPageUrl = static function (int $perPage) use ($baseParams): string {
         </div>
         <?php if (!empty($bulkTable ?? '') && !empty($bulkActions ?? [])): ?>
             <?php require __DIR__ . '/table_bulk_toolbar.php'; ?>
-            <?php unset($bulkTable, $bulkActions); ?>
         <?php endif; ?>
     </div>
     <div class="d-flex flex-wrap gap-2 align-items-center">

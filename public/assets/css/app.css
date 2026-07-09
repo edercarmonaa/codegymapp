@@ -53,3 +53,10 @@ body {
 #calendar {
     min-height: 680px;
 }
+
+.codegym-bulk-toolbar {
+    padding: .35rem .5rem;
+    border: 1px solid var(--bs-border-color);
+    border-radius: .5rem;
+    background: var(--bs-tertiary-bg);
+}

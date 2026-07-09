@@ -70,15 +70,18 @@ document.addEventListener('DOMContentLoaded', () => {
         return input;
     };
     const renderBulkToolbar = (tableName, actions = []) => {
-        const toolbar = makeElement('div', 'd-flex flex-wrap gap-2 align-items-center');
+        const toolbar = makeElement('div', 'codegym-bulk-toolbar d-flex flex-wrap gap-2 align-items-center');
         const checkWrap = makeElement('div', 'form-check mb-0');
         const check = bulkSelectAll(tableName);
-        check.id = `bulk_select_${tableName}`;
+        check.id = `bulk_select_${tableName}_${Math.random().toString(36).slice(2)}`;
         const label = makeElement('label', 'form-check-label small', 'Seleccionar visibles');
         label.htmlFor = check.id;
         checkWrap.appendChild(check);
         checkWrap.appendChild(label);
         toolbar.appendChild(checkWrap);
+        const counter = makeElement('span', 'badge rounded-pill text-bg-secondary', '0 seleccionados');
+        counter.dataset.bulkCount = tableName;
+        toolbar.appendChild(counter);
 
         actions.forEach((action) => {
             const button = makeElement('button', `btn btn-sm ${action.className || 'btn-outline-secondary'}`, action.label);
@@ -794,6 +797,11 @@ document.addEventListener('DOMContentLoaded', () => {
         const selectedCount = panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:checked`).length;
         panel.querySelectorAll(`[data-bulk-action="${cssEscape(tableName)}"]`).forEach((button) => {
             button.disabled = selectedCount === 0;
+        });
+        panel.querySelectorAll(`[data-bulk-count="${cssEscape(tableName)}"]`).forEach((counter) => {
+            counter.textContent = selectedCount === 1 ? '1 seleccionado' : `${selectedCount} seleccionados`;
+            counter.classList.toggle('text-bg-primary', selectedCount > 0);
+            counter.classList.toggle('text-bg-secondary', selectedCount === 0);
         });
     };
 
