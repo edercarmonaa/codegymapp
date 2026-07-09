@@ -1,6 +1,6 @@
 <?php
 $currentUser = Auth::user();
-$theme = $currentUser['preferred_theme'] ?? 'light';
+$theme = current_web_theme($currentUser);
 $pageTitle = $title ?? 'CodeGymApp';
 ?>
 <!doctype html>

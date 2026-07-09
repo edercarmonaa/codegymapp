@@ -48,6 +48,7 @@ final class UserController
     {
         verify_csrf();
         $theme = (string) ($_POST['theme'] ?? 'light');
+        remember_web_theme($theme);
         $this->userService->changeTheme(Auth::user(), $theme);
         $path = parse_url((string) ($_SERVER['HTTP_REFERER'] ?? ''), PHP_URL_PATH);
         Response::redirect(safe_app_url(is_string($path) ? $path : '', '/dashboard'));

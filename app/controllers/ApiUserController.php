@@ -33,6 +33,7 @@ final class ApiUserController
     {
         verify_csrf();
         $theme = (string) ($_POST['theme'] ?? 'light');
+        remember_web_theme($theme);
         $this->userService->changeTheme(Auth::user(), $theme);
         Response::json(['ok' => true, 'message' => 'Tema actualizado.']);
     }

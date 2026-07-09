@@ -1,10 +1,7 @@
 <?php
 $pageTitle = $title ?? 'CodeGymApp';
 $currentUser = Auth::user();
-$publicTheme = $currentUser['preferred_theme'] ?? ($_COOKIE['codegym_public_theme'] ?? 'light');
-if (!in_array($publicTheme, ['light', 'dark'], true)) {
-    $publicTheme = 'light';
-}
+$publicTheme = current_web_theme($currentUser);
 ?>
 <!doctype html>
 <html lang="es" data-bs-theme="<?= e((string) $publicTheme) ?>">
@@ -43,6 +40,7 @@ if (!in_array($publicTheme, ['light', 'dark'], true)) {
                 const current = document.documentElement.getAttribute('data-bs-theme') || 'light';
                 const next = current === 'dark' ? 'light' : 'dark';
                 document.documentElement.setAttribute('data-bs-theme', next);
+                document.cookie = `codegym_theme=${next}; path=/; max-age=31536000; samesite=lax`;
                 document.cookie = `codegym_public_theme=${next}; path=/; max-age=31536000; samesite=lax`;
                 render();
             });

@@ -1,7 +1,6 @@
 <?php
 $pageTitle = $title ?? 'CodeGymApp';
-$authTheme = $_COOKIE['codegym_public_theme'] ?? 'light';
-$authTheme = in_array($authTheme, ['light', 'dark'], true) ? $authTheme : 'light';
+$authTheme = current_web_theme(Auth::user());
 ?>
 <!doctype html>
 <html lang="es" data-bs-theme="<?= e($authTheme) ?>">
@@ -41,6 +40,7 @@ $authTheme = in_array($authTheme, ['light', 'dark'], true) ? $authTheme : 'light
                 const current = document.documentElement.getAttribute('data-bs-theme') || 'light';
                 const next = current === 'dark' ? 'light' : 'dark';
                 document.documentElement.setAttribute('data-bs-theme', next);
+                document.cookie = `codegym_theme=${next}; path=/; max-age=31536000; samesite=lax`;
                 document.cookie = `codegym_public_theme=${next}; path=/; max-age=31536000; samesite=lax`;
                 sync();
             });

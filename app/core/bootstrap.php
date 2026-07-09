@@ -35,4 +35,6 @@ spl_autoload_register(static function (string $class): void {
     }
 });
 
+require_once dirname(__DIR__) . '/helpers/theme.php';
+
 (new Application(dirname(__DIR__, 2)))->bootstrap();
