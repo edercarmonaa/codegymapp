@@ -71,7 +71,7 @@ final class Auth
         setcookie(self::COOKIE, $token, [
             'expires' => time() + ($minutes * 60),
             'path' => '/',
-            'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+            'secure' => self::isSecureRequest(),
             'httponly' => true,
             'samesite' => 'Strict',
         ]);
@@ -82,7 +82,7 @@ final class Auth
         setcookie(self::COOKIE, '', [
             'expires' => time() - 3600,
             'path' => '/',
-            'secure' => (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off'),
+            'secure' => self::isSecureRequest(),
             'httponly' => true,
             'samesite' => 'Strict',
         ]);
@@ -117,6 +117,15 @@ final class Auth
         }
 
         return '';
+    }
+
+    private static function isSecureRequest(): bool
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+
+        return strtolower((string) parse_url((string) Env::get('APP_URL', ''), PHP_URL_SCHEME)) === 'https';
     }
 }
 

@@ -16,6 +16,8 @@ final class Response
     public static function json(array $payload): void
     {
         header('Content-Type: application/json; charset=utf-8');
+        header('Cache-Control: no-store, max-age=0');
+        header('Pragma: no-cache');
         echo json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR);
     }
 

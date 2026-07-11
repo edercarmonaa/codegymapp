@@ -56,6 +56,9 @@ RedirectMatch 403 ^/tools/(?!create_user\.php$).*
 <IfModule mod_rewrite.c>
     RewriteEngine On
 
+    RewriteCond %{HTTPS} !=on
+    RewriteRule ^ https://codegym.karedit.com.mx%{REQUEST_URI} [R=301,L,NE]
+
     RewriteCond %{HTTP_REFERER} !^$
     RewriteCond %{HTTP_REFERER} !^https?://(www\.)?cactario3d\.karedit\.com\.mx(/.*)?$ [NC]
     RewriteCond %{HTTP_REFERER} !^https?://(www\.)?codegym\.karedit\.com\.mx(/.*)?$ [NC]

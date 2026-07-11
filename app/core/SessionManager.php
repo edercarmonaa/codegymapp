@@ -29,7 +29,11 @@ final class SessionManager
 
     private static function isHttps(): bool
     {
-        return !empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off';
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') {
+            return true;
+        }
+
+        return strtolower((string) parse_url((string) Env::get('APP_URL', ''), PHP_URL_SCHEME)) === 'https';
     }
 }
 
