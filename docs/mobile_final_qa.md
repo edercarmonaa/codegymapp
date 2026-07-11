@@ -2,6 +2,8 @@
 
 Usar esta lista antes de cerrar versión. Cada punto debe validarse online, offline cuando aplique, y después de recuperar conexión.
 
+La especificación técnica vigente está en `docs/mobile_technical_spec.md`. La biometría quedó fuera del alcance de esta versión y el modo offline permite escritura diferida mediante una cola local cifrada.
+
 ## Instalación y sesión
 
 - Instalar APK limpio.
@@ -9,6 +11,7 @@ Usar esta lista antes de cerrar versión. Cada punto debe validarse online, offl
 - Cerrar sesión y confirmar regreso a login.
 - Validar expiración por inactividad de 5 minutos.
 - Confirmar mensaje visible de sesión expirada.
+- Confirmar que, al expirar la sesión, Room y la cola offline se preservan.
 
 ## Offline y sincronización
 
@@ -27,8 +30,10 @@ Usar esta lista antes de cerrar versión. Cada punto debe validarse online, offl
 - Marcar notificación como leída offline.
 - Eliminar notificación offline.
 - Recuperar internet y confirmar que la cola sincroniza.
+- Confirmar que los IDs locales de retos creados offline se reemplazan por los IDs asignados por el servidor antes de ejecutar acciones dependientes.
 - Confirmar que Mi día, Planeado y Retos se refrescan después de sincronizar.
 - Confirmar que no se duplican acciones repetidas.
+- Confirmar que una acción fallida permanece en la cola y no se pierde silenciosamente.
 
 ## Pantallas principales
 
@@ -72,4 +77,4 @@ Usar esta lista antes de cerrar versión. Cada punto debe validarse online, offl
 - Validar compatibilidad 16 KB para librerías nativas.
 - Validar ProGuard/R8 en release.
 - Validar que SQLCipher abre Room cifrado sin crash.
-
+- Confirmar que `assembleRelease` finaliza sin errores de Lint.
