@@ -66,6 +66,14 @@ class CodeGymFirebaseMessagingService : FirebaseMessagingService() {
             .setContentIntent(pendingIntent)
             .setAutoCancel(true)
             .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setVisibility(NotificationCompat.VISIBILITY_PRIVATE)
+            .setPublicVersion(
+                NotificationCompat.Builder(this, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.codegym_icon)
+                    .setContentTitle(getString(R.string.app_name))
+                    .setContentText("Tienes un recordatorio pendiente.")
+                    .build()
+            )
             .build()
 
         NotificationManagerCompat.from(this).notify(notificationId(), notification)

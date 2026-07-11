@@ -41,7 +41,7 @@ class AppContainer(context: Context) {
     val offlineActionQueue = OfflineActionQueue(database.pendingActionDao(), moshi)
     val sessionManager = SessionManager(tokenStorage)
     private val api = RetrofitFactory.createApi(sessionManager)
-    val syncManager = SyncManager(api, database.pendingActionDao(), moshi)
+    val syncManager = SyncManager(api, database.pendingActionDao(), database.cachedChallengeDao(), moshi)
     val authRepository = AuthRepository(api, sessionManager)
     private val deviceTokenRepository = DeviceTokenRepository(api)
     val settingsRepository = SettingsRepository(context.applicationContext, api)

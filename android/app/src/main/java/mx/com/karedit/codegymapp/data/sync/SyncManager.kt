@@ -2,7 +2,9 @@ package mx.com.karedit.codegymapp.data.sync
 
 import com.squareup.moshi.Moshi
 import java.util.concurrent.atomic.AtomicBoolean
+import mx.com.karedit.codegymapp.data.local.dao.CachedChallengeDao
 import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
+import mx.com.karedit.codegymapp.data.local.entity.PendingActionEntity
 import mx.com.karedit.codegymapp.data.remote.api.CodeGymApi
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileChallengeCreateRequestDto
@@ -17,6 +19,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
 class SyncManager(
     private val api: CodeGymApi,
     private val pendingActionDao: PendingActionDao,
+    private val challengeDao: CachedChallengeDao,
     private val moshi: Moshi
 ) {
     private val isSyncing = AtomicBoolean(false)
@@ -55,22 +58,22 @@ class SyncManager(
                 val serverId = response.id
                 if (!response.ok) {
                     false
-                } else if (serverId == null || !payload.hasDetails()) {
-                    true
+                } else if (serverId == null) {
+                    false
                 } else {
-                    api.saveChallengeDetails(
-                        MobileChallengeDetailsRequestDto(
-                            id = serverId,
-                            platformId = payload.platformId,
-                            title = payload.title,
-                            challengeUrl = payload.challengeUrl,
-                            difficulty = payload.difficulty,
-                            timeSpentMinutes = payload.timeSpentMinutes,
-                            notes = payload.notes,
-                            languageIds = payload.languageIds,
-                            githubLinks = payload.githubLinks
-                        )
-                    ).ok
+                    remapChallengeId(payload.localId, serverId)
+                    if (!payload.hasDetails()) {
+                        true
+                    } else {
+                        val details = payload.toDetails(serverId)
+                        val detailsSaved = runCatching {
+                            api.saveChallengeDetails(details.toRequest()).ok
+                        }.getOrDefault(false)
+                        if (!detailsSaved) {
+                            enqueueChallengeDetails(details)
+                        }
+                        true
+                    }
                 }
             }
             ActionTypes.CHALLENGE_SAVE_DETAILS -> {
@@ -170,8 +173,35 @@ class SyncManager(
                     )
                 ).ok
             }
-            else -> true
+            else -> false
         }
+
+    private suspend fun remapChallengeId(localId: Int, serverId: Int) {
+        if (localId >= 0 || localId == serverId) return
+        challengeDao.replaceLocalId(localId, serverId)
+        pendingActionDao.pending().forEach { action ->
+            val updatedPayload = remapPendingChallengePayload(
+                type = action.type,
+                payloadJson = action.payloadJson,
+                localId = localId,
+                serverId = serverId,
+                moshi = moshi
+            )
+            if (updatedPayload != null) {
+                pendingActionDao.updatePayload(action.id, updatedPayload)
+            }
+        }
+    }
+
+    private suspend fun enqueueChallengeDetails(payload: ChallengeDetailsPayload) {
+        pendingActionDao.insert(
+            PendingActionEntity(
+                type = ActionTypes.CHALLENGE_SAVE_DETAILS,
+                payloadJson = moshi.adapter(ChallengeDetailsPayload::class.java).toJson(payload),
+                createdAt = System.currentTimeMillis()
+            )
+        )
+    }
 
     private fun idPayload(payloadJson: String): IdPayload =
         moshi.adapter(IdPayload::class.java).fromJson(payloadJson) ?: error("Acción inválida.")
@@ -188,3 +218,62 @@ private fun ChallengeCreatePayload.hasDetails(): Boolean =
         notes.isNotBlank() ||
         languageIds.isNotEmpty() ||
         githubLinks.isNotBlank()
+
+private fun ChallengeCreatePayload.toDetails(serverId: Int): ChallengeDetailsPayload =
+    ChallengeDetailsPayload(
+        id = serverId,
+        platformId = platformId,
+        title = title,
+        challengeUrl = challengeUrl,
+        difficulty = difficulty,
+        timeSpentMinutes = timeSpentMinutes,
+        notes = notes,
+        languageIds = languageIds,
+        githubLinks = githubLinks
+    )
+
+private fun ChallengeDetailsPayload.toRequest(): MobileChallengeDetailsRequestDto =
+    MobileChallengeDetailsRequestDto(
+        id = id,
+        platformId = platformId,
+        title = title,
+        challengeUrl = challengeUrl,
+        difficulty = difficulty,
+        timeSpentMinutes = timeSpentMinutes,
+        notes = notes,
+        languageIds = languageIds,
+        githubLinks = githubLinks
+    )
+
+internal fun remapPendingChallengePayload(
+    type: String,
+    payloadJson: String,
+    localId: Int,
+    serverId: Int,
+    moshi: Moshi
+): String? = when (type) {
+    ActionTypes.CHALLENGE_SAVE_DETAILS -> {
+        val adapter = moshi.adapter(ChallengeDetailsPayload::class.java)
+        adapter.fromJson(payloadJson)
+            ?.takeIf { it.id == localId }
+            ?.copy(id = serverId)
+            ?.let(adapter::toJson)
+    }
+    ActionTypes.CHALLENGE_COMPLETE,
+    ActionTypes.CHALLENGE_MISS,
+    ActionTypes.CHALLENGE_CANCEL -> {
+        val adapter = moshi.adapter(IdPayload::class.java)
+        adapter.fromJson(payloadJson)
+            ?.takeIf { it.id == localId }
+            ?.copy(id = serverId)
+            ?.let(adapter::toJson)
+    }
+    ActionTypes.CHALLENGE_RESCHEDULE -> {
+        val adapter = moshi.adapter(ReschedulePayload::class.java)
+        adapter.fromJson(payloadJson)
+            ?.takeIf { it.id == localId }
+            ?.copy(id = serverId)
+            ?.let(adapter::toJson)
+    }
+    else -> null
+}

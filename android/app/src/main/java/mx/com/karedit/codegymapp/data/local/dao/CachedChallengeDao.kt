@@ -15,6 +15,12 @@ interface CachedChallengeDao {
     @Query("DELETE FROM cached_challenges WHERE section = :section")
     suspend fun deleteSection(section: String)
 
+    @Query("SELECT * FROM cached_challenges WHERE id = :id")
+    suspend fun getById(id: Int): List<CachedChallengeEntity>
+
+    @Query("DELETE FROM cached_challenges WHERE id = :id")
+    suspend fun deleteById(id: Int)
+
     @Query("UPDATE cached_challenges SET status = :status, completedDate = :completedDate WHERE id = :id")
     suspend fun updateStatus(id: Int, status: String, completedDate: String?)
 
@@ -55,6 +61,15 @@ interface CachedChallengeDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertAll(challenges: List<CachedChallengeEntity>)
+
+    @Transaction
+    suspend fun replaceLocalId(localId: Int, serverId: Int) {
+        if (localId == serverId) return
+        val localCopies = getById(localId)
+        if (localCopies.isEmpty()) return
+        deleteById(localId)
+        insertAll(localCopies.map { it.copy(id = serverId, origin = "api") })
+    }
 
     @Transaction
     suspend fun replaceSection(section: String, challenges: List<CachedChallengeEntity>) {

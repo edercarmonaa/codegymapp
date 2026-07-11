@@ -30,11 +30,9 @@
 -dontwarn com.squareup.moshi.**
 -dontwarn kotlin.reflect.jvm.internal.**
 
-# AndroidX Security Crypto and Biometric use platform/provider classes conditionally.
+# AndroidX Security Crypto uses platform/provider classes conditionally.
 -keep class androidx.security.crypto.** { *; }
--keep class androidx.biometric.** { *; }
 -dontwarn androidx.security.crypto.**
--dontwarn androidx.biometric.**
 
 # Firebase Messaging service entry points are created from the manifest.
 -keep class mx.com.karedit.codegymapp.core.notifications.** { *; }

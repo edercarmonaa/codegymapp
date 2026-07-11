@@ -11,6 +11,12 @@ class OfflineActionQueue(
     val pendingCount = pendingActionDao.pendingCountFlow()
 
     suspend fun enqueueChallengeAction(type: String, id: Int) {
+        if (type in ActionTypes.CHALLENGE_TERMINAL_ACTIONS) {
+            pendingActionDao.deleteByTypesAndPayloadPattern(
+                types = ActionTypes.CHALLENGE_TERMINAL_ACTIONS,
+                payloadPattern = idPattern(id)
+            )
+        }
         enqueue(type, IdPayload(id))
     }
 
@@ -140,10 +146,31 @@ class OfflineActionQueue(
     }
 
     suspend fun enqueueReschedule(id: Int, scheduledDate: String) {
-        enqueue(ActionTypes.CHALLENGE_RESCHEDULE, ReschedulePayload(id, scheduledDate))
+        val payload = ReschedulePayload(id, scheduledDate)
+        val existing = pendingActionDao.findByTypeAndPayloadPattern(
+            type = ActionTypes.CHALLENGE_RESCHEDULE,
+            payloadPattern = idPattern(id)
+        )
+        if (existing != null) {
+            pendingActionDao.updatePayload(
+                existing.id,
+                moshi.adapter(ReschedulePayload::class.java).toJson(payload)
+            )
+        } else {
+            enqueue(ActionTypes.CHALLENGE_RESCHEDULE, payload)
+        }
     }
 
     suspend fun enqueueNotificationAction(type: String, id: Int) {
+        val pattern = idPattern(id)
+        if (type == ActionTypes.NOTIFICATION_DELETE) {
+            pendingActionDao.deleteByTypesAndPayloadPattern(
+                types = listOf(ActionTypes.NOTIFICATION_MARK_READ, ActionTypes.NOTIFICATION_DELETE),
+                payloadPattern = pattern
+            )
+        } else if (pendingActionDao.findByTypeAndPayloadPattern(type, pattern) != null) {
+            return
+        }
         enqueue(type, IdPayload(id))
     }
 
@@ -178,11 +205,22 @@ class OfflineActionQueue(
         languageId: Int,
         autoRenew: Boolean
     ) {
-        enqueue(
-            ActionTypes.GOAL_UPDATE,
-            GoalPayload(id, goalType, periodType, targetValue, platformId, languageId, autoRenew)
+        val payload = GoalPayload(id, goalType, periodType, targetValue, platformId, languageId, autoRenew)
+        val existing = pendingActionDao.findByTypeAndPayloadPattern(
+            type = ActionTypes.GOAL_UPDATE,
+            payloadPattern = idPattern(id)
         )
+        if (existing != null) {
+            pendingActionDao.updatePayload(
+                existing.id,
+                moshi.adapter(GoalPayload::class.java).toJson(payload)
+            )
+        } else {
+            enqueue(ActionTypes.GOAL_UPDATE, payload)
+        }
     }
+
+    private fun idPattern(id: Int): String = "%\"id\":$id%"
 
     private inline fun <reified T> adapter() = moshi.adapter(T::class.java)
 
@@ -210,6 +248,8 @@ object ActionTypes {
     const val GOAL_CREATE = "goal.create"
     const val GOAL_UPDATE = "goal.update"
     const val ROUTINE_CREATE = "routine.create"
+
+    val CHALLENGE_TERMINAL_ACTIONS = listOf(CHALLENGE_COMPLETE, CHALLENGE_MISS, CHALLENGE_CANCEL)
 }
 
 data class IdPayload(val id: Int)

@@ -29,4 +29,7 @@ interface PendingActionDao {
 
     @Query("UPDATE pending_actions SET payloadJson = :payloadJson, lastError = '' WHERE id = :id")
     suspend fun updatePayload(id: Long, payloadJson: String)
+
+    @Query("DELETE FROM pending_actions WHERE type IN (:types) AND payloadJson LIKE :payloadPattern")
+    suspend fun deleteByTypesAndPayloadPattern(types: List<String>, payloadPattern: String)
 }

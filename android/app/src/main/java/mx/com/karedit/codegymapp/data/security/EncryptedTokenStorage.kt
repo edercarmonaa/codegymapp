@@ -20,11 +20,15 @@ class EncryptedTokenStorage(context: Context) : TokenStorage {
     override fun getToken(): String? = preferences.getString(KEY_TOKEN, null)
 
     override fun saveToken(token: String) {
-        preferences.edit().putString(KEY_TOKEN, token).apply()
+        check(preferences.edit().putString(KEY_TOKEN, token).commit()) {
+            "No se pudo guardar la sesión cifrada."
+        }
     }
 
     override fun clearToken() {
-        preferences.edit().remove(KEY_TOKEN).apply()
+        check(preferences.edit().remove(KEY_TOKEN).commit()) {
+            "No se pudo eliminar la sesión cifrada."
+        }
     }
 
     private companion object {

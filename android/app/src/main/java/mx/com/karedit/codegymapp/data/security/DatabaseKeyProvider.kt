@@ -27,9 +27,10 @@ class DatabaseKeyProvider(context: Context) {
 
         val bytes = ByteArray(PASSPHRASE_BYTES)
         SecureRandom().nextBytes(bytes)
-        preferences.edit()
+        check(preferences.edit()
             .putString(KEY_DATABASE_PASSPHRASE, Base64.encodeToString(bytes, Base64.NO_WRAP))
-            .apply()
+            .commit()
+        ) { "No se pudo proteger la clave de la base local." }
         return bytes
     }
 

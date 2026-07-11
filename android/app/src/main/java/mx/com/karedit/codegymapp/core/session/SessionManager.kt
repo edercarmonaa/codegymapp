@@ -17,7 +17,13 @@ class SessionManager(private val tokenStorage: TokenStorage) {
     }
 
     fun clearSession(reason: SessionExpiredReason = SessionExpiredReason.Manual) {
-        tokenStorage.clearToken()
+        val hadActiveSession = !token().isNullOrBlank()
+        if (hadActiveSession) {
+            tokenStorage.clearToken()
+        }
+        if (!hadActiveSession && reason != SessionExpiredReason.Manual) {
+            return
+        }
         _sessionEvents.tryEmit(SessionEvent.SessionExpired(reason))
     }
 

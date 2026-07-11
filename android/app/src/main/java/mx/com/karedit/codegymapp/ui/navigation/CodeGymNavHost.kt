@@ -2,12 +2,16 @@ package mx.com.karedit.codegymapp.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import mx.com.karedit.codegymapp.core.session.SessionEvent
+import mx.com.karedit.codegymapp.core.session.SessionExpiredReason
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.ui.screens.account.AccountScreen
 import mx.com.karedit.codegymapp.ui.screens.account.AccountViewModel
@@ -44,6 +48,7 @@ fun CodeGymNavHost(
     navController: NavHostController = rememberNavController()
 ) {
     val startDestination = if (appContainer.authRepository.hasToken()) AppRoutes.Home else AppRoutes.Login
+    var sessionMessage by remember { mutableStateOf<String?>(null) }
     val navigateTab: (String) -> Unit = { route ->
         navController.navigate(route) {
             popUpTo(AppRoutes.Home) { saveState = true }
@@ -55,8 +60,14 @@ fun CodeGymNavHost(
     LaunchedEffect(appContainer.sessionManager) {
         appContainer.sessionManager.sessionEvents.collect { event ->
             if (event is SessionEvent.SessionExpired) {
+                sessionMessage = when (event.reason) {
+                    SessionExpiredReason.Unauthorized,
+                    SessionExpiredReason.Inactivity -> "Sesión expirada"
+                    SessionExpiredReason.Manual -> null
+                }
                 navController.navigate(AppRoutes.Login) {
                     popUpTo(0)
+                    launchSingleTop = true
                 }
             }
         }
@@ -81,8 +92,9 @@ fun CodeGymNavHost(
             val viewModel = remember { LoginViewModel(appContainer.authRepository) }
             LoginScreen(
                 viewModel = viewModel,
-                sessionMessage = null,
+                sessionMessage = sessionMessage,
                 onLoginSuccess = {
+                    sessionMessage = null
                     appContainer.fcmTokenRegistrar.registerCurrentToken()
                     appContainer.syncNow()
                     navController.navigate(AppRoutes.Home) {
