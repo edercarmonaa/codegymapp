@@ -19,7 +19,7 @@ final class AuthService
 
         if (!empty($user['locked_until']) && strtotime((string) $user['locked_until']) > time()) {
             \SecurityLog::record((int) $user['id'], 'login_blocked', 'failure', 'Intento durante bloqueo temporal.');
-            return ['ok' => false, 'message' => 'Tu usuario está bloqueado temporalmente. Intenta más tarde.'];
+            return ['ok' => false, 'message' => 'Usuario o contraseña incorrectos.'];
         }
 
         if (!password_verify($password, (string) $user['password_hash'])) {

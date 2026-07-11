@@ -137,13 +137,16 @@ Content-Type: application/json
 Para enviar el recordatorio móvil de retos pendientes de hoy desde cron:
 
 ```http
-GET /api/cron/mobile/today-reminder?key=TU_CRON_SECRET
+POST /api/cron/mobile/today-reminder
+X-Cron-Secret: TU_CRON_SECRET
 ```
 
 Para reenviarlo manualmente durante pruebas aunque ya se haya enviado hoy:
 
 ```http
-GET /api/cron/mobile/today-reminder?key=TU_CRON_SECRET&force=1
+POST /api/cron/mobile/today-reminder
+X-Cron-Secret: TU_CRON_SECRET
+X-Cron-Force: 1
 ```
 
 La respuesta incluye diagnóstico de entrega por usuario:
@@ -166,21 +169,28 @@ La respuesta incluye diagnóstico de entrega por usuario:
 Para enviar el recordatorio móvil de retos vencidos pendientes de revisar desde cron:
 
 ```http
-GET /api/cron/mobile/expired-review-reminder?key=TU_CRON_SECRET
+POST /api/cron/mobile/expired-review-reminder
+X-Cron-Secret: TU_CRON_SECRET
 ```
 
 Para reenviarlo manualmente durante pruebas aunque ya se haya enviado hoy:
 
 ```http
-GET /api/cron/mobile/expired-review-reminder?key=TU_CRON_SECRET&force=1
+POST /api/cron/mobile/expired-review-reminder
+X-Cron-Secret: TU_CRON_SECRET
+X-Cron-Force: 1
 ```
 
 En cPanel puedes programarlos una vez al día con `curl`:
 
 ```bash
-curl -fsS "https://tu-subdominio/api/cron/mobile/today-reminder?key=TU_CRON_SECRET"
-curl -fsS "https://tu-subdominio/api/cron/mobile/expired-review-reminder?key=TU_CRON_SECRET"
+curl -fsS -X POST -H "X-Cron-Secret: TU_CRON_SECRET" "https://tu-subdominio/api/cron/mobile/today-reminder"
+curl -fsS -X POST -H "X-Cron-Secret: TU_CRON_SECRET" "https://tu-subdominio/api/cron/mobile/expired-review-reminder"
 ```
+
+No envíes `CRON_SECRET` en la URL. Los query strings quedan registrados en los access logs del hosting. Si el secreto se usó anteriormente como `?key=...`, genera uno nuevo antes de desplegar este cambio.
+
+Programa cada comando una sola vez al día, cerca de la hora configurada para los recordatorios. No es necesario ejecutarlos cada 15 minutos: el backend conserva un candado diario, pero esas ejecuciones generan tráfico y registros innecesarios.
 
 ## API Inicial
 

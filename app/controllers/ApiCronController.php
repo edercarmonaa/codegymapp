@@ -40,12 +40,12 @@ final class ApiCronController
             return false;
         }
 
-        $provided = trim((string) ($_GET['key'] ?? ($_SERVER['HTTP_X_CRON_SECRET'] ?? '')));
+        $provided = trim((string) ($_SERVER['HTTP_X_CRON_SECRET'] ?? ''));
         return $provided !== '' && hash_equals($secret, $provided);
     }
 
     private function forceSend(): bool
     {
-        return filter_var($_GET['force'] ?? false, FILTER_VALIDATE_BOOL);
+        return filter_var($_SERVER['HTTP_X_CRON_FORCE'] ?? false, FILTER_VALIDATE_BOOL);
     }
 }
