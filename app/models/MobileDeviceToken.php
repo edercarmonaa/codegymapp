@@ -23,7 +23,7 @@ final class MobileDeviceToken extends BaseModel
              FROM mobile_device_tokens
              WHERE is_active = 1
                AND push_enabled = 1
-               AND TIME_FORMAT(reminder_time, '%H:%i') = :reminder_time
+               AND TIME_FORMAT(reminder_time, '%H:%i') <= :reminder_time
              ORDER BY user_id ASC"
         );
         $stmt->execute(['reminder_time' => $time]);
