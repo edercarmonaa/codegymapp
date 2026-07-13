@@ -26,6 +26,11 @@ final class Config
             $missing[] = 'JWT_SECRET valido de minimo 32 caracteres';
         }
 
+        $cronSecret = trim((string) Env::get('CRON_SECRET', ''));
+        if ($cronSecret !== '' && strlen($cronSecret) < 32) {
+            $missing[] = 'CRON_SECRET valido de minimo 32 caracteres';
+        }
+
         if ($missing !== []) {
             $message = 'Configuracion incompleta: ' . implode(', ', array_unique($missing)) . '. Revisa el archivo .env.';
             throw new ConfigurationException($message);
