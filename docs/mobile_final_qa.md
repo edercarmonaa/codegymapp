@@ -4,6 +4,19 @@ Usar esta lista antes de cerrar versión. Cada punto debe validarse online, offl
 
 La especificación técnica vigente está en `docs/mobile_technical_spec.md`. La biometría quedó fuera del alcance de esta versión y el modo offline permite escritura diferida mediante una cola local cifrada.
 
+## Evidencia de actualización — 13 de julio de 2026
+
+Dispositivo: Honor `DNY-NX9`, Android conectado por ADB.
+
+- [x] Actualización debug `1.0.0` instalada con `adb install -r`, conservando los datos de la app.
+- [x] Arranque en frío correcto de `MainActivity` en 1.654 segundos.
+- [x] Room cifrado abrió y migró el esquema instalado de v5 a v6 sin crash.
+- [x] La única acción pendiente de la base heredada atravesó la importación idempotente antes de eliminar el origen.
+- [x] Eliminados `codegym_offline.db`, `codegym_offline.db-wal` y `codegym_offline.db-shm` después de la importación.
+- [x] Permanecen únicamente `codegym_offline_encrypted.db` y sus archivos auxiliares.
+- [x] El proceso continuó activo y Logcat no mostró errores de AndroidRuntime, SQLite ni Room.
+- [ ] Pendiente: completar las pruebas funcionales manuales de pantallas y el ciclo online → offline → online.
+
 ## Instalación y sesión
 
 - Instalar APK limpio.
