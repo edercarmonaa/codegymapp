@@ -33,7 +33,7 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
         CachedCatalogOptionEntity::class
     ],
     version = 5,
-    exportSchema = false
+    exportSchema = true
 )
 abstract class CodeGymDatabase : RoomDatabase() {
     abstract fun cachedChallengeDao(): CachedChallengeDao
@@ -61,7 +61,6 @@ abstract class CodeGymDatabase : RoomDatabase() {
                     .openHelperFactory(
                         SupportOpenHelperFactory(DatabaseKeyProvider(context.applicationContext).passphrase())
                     )
-                    .fallbackToDestructiveMigration()
                     .build()
                     .also { instance = it }
             }
