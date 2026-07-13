@@ -10,5 +10,8 @@ data class PendingActionEntity(
     val payloadJson: String,
     val createdAt: Long,
     val attempts: Int = 0,
-    val lastError: String = ""
+    val lastError: String = "",
+    val errorKind: String = "",
+    val lastAttemptAt: Long = 0,
+    val nextAttemptAt: Long = 0
 )

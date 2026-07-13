@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.migration.Migration
+import androidx.sqlite.db.SupportSQLiteDatabase
 import mx.com.karedit.codegymapp.data.local.dao.CachedCatalogDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedChallengeDao
 import mx.com.karedit.codegymapp.data.local.dao.CachedGoalDao
@@ -32,7 +34,7 @@ import net.zetetic.database.sqlcipher.SupportOpenHelperFactory
         CachedLanguageEntity::class,
         CachedCatalogOptionEntity::class
     ],
-    version = 5,
+    version = 6,
     exportSchema = true
 )
 abstract class CodeGymDatabase : RoomDatabase() {
@@ -58,6 +60,7 @@ abstract class CodeGymDatabase : RoomDatabase() {
                     CodeGymDatabase::class.java,
                     DATABASE_NAME
                 )
+                    .addMigrations(MIGRATION_5_6)
                     .openHelperFactory(
                         SupportOpenHelperFactory(DatabaseKeyProvider(context.applicationContext).passphrase())
                     )
@@ -72,5 +75,19 @@ abstract class CodeGymDatabase : RoomDatabase() {
         }
 
         const val DATABASE_NAME = "codegym_offline_encrypted.db"
+
+        private val MIGRATION_5_6 = object : Migration(5, 6) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL(
+                    "ALTER TABLE pending_actions ADD COLUMN errorKind TEXT NOT NULL DEFAULT ''"
+                )
+                database.execSQL(
+                    "ALTER TABLE pending_actions ADD COLUMN lastAttemptAt INTEGER NOT NULL DEFAULT 0"
+                )
+                database.execSQL(
+                    "ALTER TABLE pending_actions ADD COLUMN nextAttemptAt INTEGER NOT NULL DEFAULT 0"
+                )
+            }
+        }
     }
 }

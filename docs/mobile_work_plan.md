@@ -37,10 +37,11 @@ La biometría queda fuera del alcance. El modo offline permite lectura y escritu
 
 ### Estado al 13 de julio de 2026
 
-- Completados: release, expiración de sesión, remapeo de IDs, consolidación básica de cola, endurecimiento cron/HTTPS, privacidad push, exclusión de `google-services.json`, esquema Room v5 y eliminación de migración destructiva.
+- Completados: release, expiración de sesión, remapeo de IDs, consolidación básica de cola, endurecimiento cron/HTTPS, privacidad push, exclusión de `google-services.json`, esquema Room exportado y eliminación de migración destructiva.
 - Completado: recuperación controlada ante clave Keystore no disponible; nunca se regenera la clave si la base cifrada ya existe.
+- Completado: migración Room 5→6 y diagnóstico persistente con clasificación y backoff de sincronización.
 - Completado: CI en `main` y `hosting`; la primera ejecución validó PHP 8.3, pruebas Android y release correctamente.
-- Pendientes prioritarios: clasificación persistente de errores/reintentos de sincronización, pruebas de integración cifradas y ejecución completa del QA manual en el teléfono.
+- Pendientes prioritarios: pruebas de integración cifradas y ejecución completa del QA manual en el teléfono.
 
 ## 4. Fase 0 — Preparación y línea base
 

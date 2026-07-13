@@ -78,8 +78,22 @@ private class FakePendingActionDao : PendingActionDao {
         actions.removeAll { it.id == action.id }
     }
 
-    override suspend fun markFailed(id: Long, message: String) {
-        replace(id) { it.copy(attempts = it.attempts + 1, lastError = message) }
+    override suspend fun markFailed(
+        id: Long,
+        message: String,
+        errorKind: String,
+        attemptedAt: Long,
+        nextAttemptAt: Long
+    ) {
+        replace(id) {
+            it.copy(
+                attempts = it.attempts + 1,
+                lastError = message,
+                errorKind = errorKind,
+                lastAttemptAt = attemptedAt,
+                nextAttemptAt = nextAttemptAt
+            )
+        }
     }
 
     override suspend fun updatePayload(id: Long, payloadJson: String) {

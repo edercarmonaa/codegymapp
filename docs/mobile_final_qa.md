@@ -34,6 +34,9 @@ La especificación técnica vigente está en `docs/mobile_technical_spec.md`. La
 - Confirmar que Mi día, Planeado y Retos se refrescan después de sincronizar.
 - Confirmar que no se duplican acciones repetidas.
 - Confirmar que una acción fallida permanece en la cola y no se pierde silenciosamente.
+- Forzar un error temporal y confirmar que registra intento, clasificación y próximo reintento sin perder la acción.
+- Forzar un error de validación permanente y confirmar que queda diagnosticado sin bloquear otras acciones.
+- Actualizar desde una instalación con Room v5 y confirmar que la migración a v6 conserva caché y cola.
 
 ## Pantallas principales
 

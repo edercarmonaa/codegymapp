@@ -1,6 +1,7 @@
 package mx.com.karedit.codegymapp.data.sync
 
 import com.squareup.moshi.Moshi
+import java.io.IOException
 import java.util.concurrent.atomic.AtomicBoolean
 import mx.com.karedit.codegymapp.data.local.dao.CachedChallengeDao
 import mx.com.karedit.codegymapp.data.local.dao.PendingActionDao
@@ -15,6 +16,7 @@ import mx.com.karedit.codegymapp.data.remote.dto.MobileGoalUpdateRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileManualChallengeRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileNotificationActionRequestDto
 import mx.com.karedit.codegymapp.data.remote.dto.MobileRoutineCreateRequestDto
+import retrofit2.HttpException
 
 class SyncManager(
     private val api: CodeGymApi,
@@ -30,22 +32,52 @@ class SyncManager(
         }
 
         try {
-            pendingActionDao.pending().forEach { action ->
+            for (action in pendingActionDao.pending()) {
+                if (action.errorKind == SyncErrorKinds.VALIDATION) {
+                    continue
+                }
+                val now = System.currentTimeMillis()
+                if (action.nextAttemptAt > now) {
+                    return
+                }
                 try {
                     val ok = execute(action.type, action.payloadJson)
                     if (ok) {
                         pendingActionDao.delete(action)
                     } else {
-                        pendingActionDao.markFailed(action.id, "El servidor no aceptó la acción.")
+                        markFailed(
+                            action = action,
+                            failure = SyncFailure.validation("El servidor no aceptó la acción."),
+                            attemptedAt = now
+                        )
                     }
                 } catch (exception: Exception) {
-                    pendingActionDao.markFailed(action.id, exception.message ?: "No se pudo sincronizar.")
-                    return
+                    val failure = classifySyncFailure(exception)
+                    markFailed(action, failure, now)
+                    if (failure.stopsQueue) return
                 }
             }
         } finally {
             isSyncing.set(false)
         }
+    }
+
+    private suspend fun markFailed(
+        action: PendingActionEntity,
+        failure: SyncFailure,
+        attemptedAt: Long
+    ) {
+        pendingActionDao.markFailed(
+            id = action.id,
+            message = failure.message,
+            errorKind = failure.kind,
+            attemptedAt = attemptedAt,
+            nextAttemptAt = if (failure.retryable) {
+                attemptedAt + retryDelayMillis(action.attempts + 1)
+            } else {
+                0
+            }
+        )
     }
 
     private suspend fun execute(type: String, payloadJson: String): Boolean =
@@ -208,6 +240,69 @@ class SyncManager(
 
     private fun goalPayload(payloadJson: String): GoalPayload =
         moshi.adapter(GoalPayload::class.java).fromJson(payloadJson) ?: error("Meta inválida.")
+}
+
+internal data class SyncFailure(
+    val kind: String,
+    val message: String,
+    val retryable: Boolean,
+    val stopsQueue: Boolean
+) {
+    companion object {
+        fun validation(message: String) = SyncFailure(
+            kind = SyncErrorKinds.VALIDATION,
+            message = message,
+            retryable = false,
+            stopsQueue = false
+        )
+    }
+}
+
+internal object SyncErrorKinds {
+    const val NETWORK = "network"
+    const val SERVER = "server"
+    const val AUTH = "auth"
+    const val VALIDATION = "validation"
+    const val UNKNOWN = "unknown"
+}
+
+internal fun classifySyncFailure(exception: Exception): SyncFailure = when {
+    exception is IOException -> SyncFailure(
+        SyncErrorKinds.NETWORK,
+        "Sin conexión para sincronizar.",
+        retryable = true,
+        stopsQueue = true
+    )
+    exception is HttpException && exception.code() == 401 -> SyncFailure(
+        SyncErrorKinds.AUTH,
+        "La sesión expiró durante la sincronización.",
+        retryable = false,
+        stopsQueue = true
+    )
+    exception is HttpException && exception.code() in 400..499 &&
+        exception.code() !in setOf(408, 429) -> SyncFailure.validation(
+        "La acción requiere revisión antes de sincronizar."
+    )
+    exception is HttpException && (exception.code() >= 500 || exception.code() in setOf(408, 429)) -> SyncFailure(
+        SyncErrorKinds.SERVER,
+        "El servidor no está disponible temporalmente.",
+        retryable = true,
+        stopsQueue = true
+    )
+    exception is IllegalArgumentException || exception is IllegalStateException -> SyncFailure.validation(
+        "Los datos guardados para esta acción no son válidos."
+    )
+    else -> SyncFailure(
+        SyncErrorKinds.UNKNOWN,
+        "No se pudo sincronizar la acción.",
+        retryable = true,
+        stopsQueue = true
+    )
+}
+
+internal fun retryDelayMillis(attempt: Int): Long {
+    val boundedAttempt = attempt.coerceIn(1, 14)
+    return (60_000L shl (boundedAttempt - 1)).coerceAtMost(6 * 60 * 60 * 1_000L)
 }
 
 private fun ChallengeCreatePayload.hasDetails(): Boolean =

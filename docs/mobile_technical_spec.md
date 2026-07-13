@@ -158,6 +158,10 @@ Reglas obligatorias:
 - No eliminar acciones desconocidas o fallidas como si fueran exitosas.
 - Un error permanente debe quedar diagnosticado sin provocar pérdida silenciosa de datos.
 - Un error transitorio no debe descartar la acción.
+- Persistir intentos, clasificación, último error, fecha del intento y próximo reintento.
+- Aplicar espera exponencial de un minuto hasta un máximo de seis horas ante red o servidor temporal.
+- Detener la cola ante errores de red, servidor o autenticación para preservar el orden.
+- Omitir en ejecuciones posteriores una acción con validación permanente y continuar con las demás.
 - Después de sincronizar, refrescar Mi día, Planeado, Retos, metas y demás vistas afectadas.
 - Si hay fallos, mostrar: `No se pudieron sincronizar algunos cambios. Se intentará más tarde.`
 
