@@ -15,6 +15,7 @@ Dispositivo: Honor `DNY-NX9`, Android conectado por ADB.
 - [x] Eliminados `codegym_offline.db`, `codegym_offline.db-wal` y `codegym_offline.db-shm` después de la importación.
 - [x] Permanecen únicamente `codegym_offline_encrypted.db` y sus archivos auxiliares.
 - [x] El proceso continuó activo y Logcat no mostró errores de AndroidRuntime, SQLite ni Room.
+- [x] El usuario confirmó que la aplicación funciona correctamente y que sus datos permanecen visibles después de actualizar.
 - [ ] Pendiente: completar las pruebas funcionales manuales de pantallas y el ciclo online → offline → online.
 
 ## Instalación y sesión
