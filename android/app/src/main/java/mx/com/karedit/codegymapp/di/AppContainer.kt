@@ -9,6 +9,7 @@ import mx.com.karedit.codegymapp.core.network.RetrofitFactory
 import mx.com.karedit.codegymapp.core.notifications.FcmTokenRegistrar
 import mx.com.karedit.codegymapp.core.session.SessionManager
 import mx.com.karedit.codegymapp.data.local.CodeGymDatabase
+import mx.com.karedit.codegymapp.data.local.LegacyPlaintextDatabaseMigrator
 import mx.com.karedit.codegymapp.data.repository.AuthRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengeDetailsRepository
 import mx.com.karedit.codegymapp.data.repository.ChallengesRepository
@@ -27,6 +28,7 @@ import mx.com.karedit.codegymapp.data.sync.SyncManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -38,6 +40,12 @@ class AppContainer(context: Context) {
         .build()
     private val tokenStorage = EncryptedTokenStorage(context.applicationContext)
     private val database = CodeGymDatabase.getInstance(context.applicationContext)
+    private val legacyDatabaseMigration = applicationScope.async {
+        LegacyPlaintextDatabaseMigrator(
+            context.applicationContext,
+            database.pendingActionDao()
+        ).migrate()
+    }
     val offlineActionQueue = OfflineActionQueue(database.pendingActionDao(), moshi)
     val sessionManager = SessionManager(tokenStorage)
     private val api = RetrofitFactory.createApi(sessionManager)
@@ -68,11 +76,13 @@ class AppContainer(context: Context) {
 
     init {
         applicationScope.launch {
+            legacyDatabaseMigration.await()
             goalsRepository.seedStaticCatalogs()
         }
         applicationScope.launch {
             networkMonitor.isOnline.collectLatest { isOnline ->
                 if (isOnline && authRepository.hasToken()) {
+                    legacyDatabaseMigration.await()
                     syncLocalData()
                 }
             }
@@ -85,6 +95,7 @@ class AppContainer(context: Context) {
         }
 
         applicationScope.launch {
+            legacyDatabaseMigration.await()
             syncLocalData()
         }
     }

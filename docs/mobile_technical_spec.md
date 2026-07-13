@@ -81,6 +81,7 @@ El cierre manual también preserva Room, pero no muestra el mensaje de expiraci�
 - Si la clave deja de estar disponible, no generar otra mientras exista la base cifrada.
 - Mostrar una pantalla de recuperación con reintento y restablecimiento local confirmado.
 - Advertir que el restablecimiento elimina caché y cambios offline pendientes, pero no datos ya sincronizados.
+- Al detectar la antigua `codegym_offline.db`, importar sus acciones pendientes sin duplicarlas y eliminarla solo después de confirmar la escritura en Room cifrado.
 - Configurar `android:allowBackup="false"`.
 
 ## 6. Autenticación biométrica

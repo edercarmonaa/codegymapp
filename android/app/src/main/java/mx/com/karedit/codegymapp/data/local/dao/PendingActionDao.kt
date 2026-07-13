@@ -18,6 +18,9 @@ interface PendingActionDao {
     @Query("SELECT * FROM pending_actions WHERE type = :type AND payloadJson LIKE :payloadPattern ORDER BY createdAt ASC LIMIT 1")
     suspend fun findByTypeAndPayloadPattern(type: String, payloadPattern: String): PendingActionEntity?
 
+    @Query("SELECT * FROM pending_actions WHERE type = :type AND payloadJson = :payloadJson LIMIT 1")
+    suspend fun findExact(type: String, payloadJson: String): PendingActionEntity?
+
     @Insert
     suspend fun insert(action: PendingActionEntity)
 

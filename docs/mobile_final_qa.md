@@ -37,6 +37,8 @@ La especificación técnica vigente está en `docs/mobile_technical_spec.md`. La
 - Forzar un error temporal y confirmar que registra intento, clasificación y próximo reintento sin perder la acción.
 - Forzar un error de validación permanente y confirmar que queda diagnosticado sin bloquear otras acciones.
 - Actualizar desde una instalación con Room v5 y confirmar que la migración a v6 conserva caché y cola.
+- Confirmar que las acciones de la antigua base en texto plano se importan una sola vez a Room cifrado.
+- Confirmar que `codegym_offline.db`, `-wal` y `-shm` desaparecen únicamente después de la importación correcta.
 
 ## Pantallas principales
 

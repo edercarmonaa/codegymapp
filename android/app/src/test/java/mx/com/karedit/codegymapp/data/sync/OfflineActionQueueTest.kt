@@ -55,7 +55,7 @@ class OfflineActionQueueTest {
     }
 }
 
-private class FakePendingActionDao : PendingActionDao {
+internal class FakePendingActionDao : PendingActionDao {
     private val actions = mutableListOf<PendingActionEntity>()
     private var nextId = 1L
 
@@ -69,6 +69,9 @@ private class FakePendingActionDao : PendingActionDao {
     ): PendingActionEntity? = actions.firstOrNull {
         it.type == type && matchesId(it.payloadJson, payloadPattern)
     }
+
+    override suspend fun findExact(type: String, payloadJson: String): PendingActionEntity? =
+        actions.firstOrNull { it.type == type && it.payloadJson == payloadJson }
 
     override suspend fun insert(action: PendingActionEntity) {
         actions += action.copy(id = nextId++)
