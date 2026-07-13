@@ -181,7 +181,7 @@ X-Cron-Secret: TU_CRON_SECRET
 X-Cron-Force: 1
 ```
 
-En cPanel puedes programarlos una vez al día con `curl`:
+En cPanel puedes programarlos cada 5 minutos con `curl`. El backend espera hasta la hora configurada por el usuario y conserva un candado de un envío diario:
 
 ```bash
 curl -fsS -X POST -H "X-Cron-Secret: TU_CRON_SECRET" "https://tu-subdominio/api/cron/mobile/today-reminder"
@@ -190,7 +190,7 @@ curl -fsS -X POST -H "X-Cron-Secret: TU_CRON_SECRET" "https://tu-subdominio/api/
 
 No envíes `CRON_SECRET` en la URL. Los query strings quedan registrados en los access logs del hosting. Si el secreto se usó anteriormente como `?key=...`, genera uno nuevo antes de desplegar este cambio.
 
-Programa cada comando una sola vez al día, cerca de la hora configurada para los recordatorios. No es necesario ejecutarlos cada 15 minutos: el backend conserva un candado diario, pero esas ejecuciones generan tráfico y registros innecesarios.
+Usa la expresión cron `*/5 * * * *` para ambos comandos. Esto permite cambiar la hora desde la app sin editar cPanel; el recordatorio se enviará en el primer ciclo posterior a la hora elegida, con un retraso máximo aproximado de cinco minutos.
 
 ## API Inicial
 

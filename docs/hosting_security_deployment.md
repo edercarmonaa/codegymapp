@@ -28,7 +28,7 @@ Aplicar el cambio de autenticación de tareas cron sin dejar secretos en URLs ni
    curl -fsS -X POST -H "X-Cron-Secret: NUEVO_SECRETO" "https://codegym.karedit.com.mx/api/cron/mobile/expired-review-reminder"
    ```
 
-6. Programar cada tarea una sola vez al día.
+6. Programar ambas tareas con `*/5 * * * *`. El backend comprueba la hora configurada por el usuario y mantiene un candado diario.
 7. Ejecutar manualmente una vez y confirmar HTTP 200.
 8. Confirmar que el access log contiene la ruta, pero no el secreto.
 9. Confirmar que una petición sin `X-Cron-Secret` recibe HTTP 403.
@@ -54,4 +54,3 @@ Si el despliegue falla:
 2. Revertir el código desde cPanel.
 3. No restaurar el secreto expuesto.
 4. Corregir el despliegue y conservar el nuevo secreto para el siguiente intento.
-
