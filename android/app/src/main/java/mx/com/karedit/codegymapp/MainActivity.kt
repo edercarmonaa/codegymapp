@@ -16,11 +16,17 @@ import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Surface
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
@@ -29,29 +35,37 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.delay
 import mx.com.karedit.codegymapp.di.AppContainer
 import mx.com.karedit.codegymapp.data.repository.ThemePreference
+import mx.com.karedit.codegymapp.data.security.SecureLocalDataRecovery
+import mx.com.karedit.codegymapp.data.security.SecureStorageUnavailableException
 import mx.com.karedit.codegymapp.ui.navigation.AppRoutes
 import mx.com.karedit.codegymapp.ui.navigation.CodeGymNavHost
 import mx.com.karedit.codegymapp.ui.theme.CodeGymTheme
 
 class MainActivity : ComponentActivity() {
-    private lateinit var appContainer: AppContainer
     private var pendingNotificationRoute by mutableStateOf<String?>(null)
+    private var processLifecycleObserver: DefaultLifecycleObserver? = null
     private val notificationPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestPermission()) { }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        appContainer = AppContainer(applicationContext)
-        ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
+        val appContainer = try {
+            AppContainer(applicationContext)
+        } catch (_: SecureStorageUnavailableException) {
+            showSecureStorageRecovery()
+            return
+        }
+        processLifecycleObserver = object : DefaultLifecycleObserver {
             override fun onStart(owner: LifecycleOwner) {
                 appContainer.syncNow()
             }
-        })
+        }.also(ProcessLifecycleOwner.get().lifecycle::addObserver)
         pendingNotificationRoute = routeFromNotification(intent)
         requestNotificationPermissionIfNeeded()
         appContainer.fcmTokenRegistrar.registerCurrentToken()
@@ -99,10 +113,31 @@ class MainActivity : ComponentActivity() {
         }
     }
 
+    private fun showSecureStorageRecovery() {
+        setContent {
+            CodeGymTheme(darkTheme = isSystemInDarkTheme()) {
+                SecureStorageRecoveryScreen(
+                    onRetry = { recreate() },
+                    onReset = {
+                        SecureLocalDataRecovery.reset(applicationContext).isSuccess.also { success ->
+                            if (success) recreate()
+                        }
+                    }
+                )
+            }
+        }
+    }
+
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
         pendingNotificationRoute = routeFromNotification(intent)
+    }
+
+    override fun onDestroy() {
+        processLifecycleObserver?.let(ProcessLifecycleOwner.get().lifecycle::removeObserver)
+        processLifecycleObserver = null
+        super.onDestroy()
     }
 
     private fun requestNotificationPermissionIfNeeded() {
@@ -135,6 +170,77 @@ class MainActivity : ComponentActivity() {
     private companion object {
         const val EXTRA_NOTIFICATION_TYPE = "notification_type"
         const val EXTRA_NOTIFICATION_SCREEN = "notification_screen"
+    }
+}
+
+@androidx.compose.runtime.Composable
+private fun SecureStorageRecoveryScreen(
+    onRetry: () -> Unit,
+    onReset: () -> Boolean
+) {
+    var showConfirmation by remember { mutableStateOf(false) }
+    var resetFailed by remember { mutableStateOf(false) }
+
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = "No se pueden abrir los datos locales cifrados",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "La clave segura de Android cambió o dejó de estar disponible. Tus datos del servidor no están afectados.",
+                modifier = Modifier.padding(top = 12.dp, bottom = 20.dp),
+                style = MaterialTheme.typography.bodyLarge
+            )
+            if (resetFailed) {
+                Text(
+                    text = "No fue posible restablecer los datos locales. Reinicia el teléfono e inténtalo otra vez.",
+                    modifier = Modifier.padding(bottom = 16.dp),
+                    color = MaterialTheme.colorScheme.error
+                )
+            }
+            Button(onClick = onRetry) {
+                Text("Reintentar")
+            }
+            TextButton(onClick = { showConfirmation = true }) {
+                Text("Restablecer datos locales")
+            }
+        }
+    }
+
+    if (showConfirmation) {
+        AlertDialog(
+            onDismissRequest = { showConfirmation = false },
+            title = { Text("¿Restablecer datos locales?") },
+            text = {
+                Text(
+                    "Se eliminarán la caché y los cambios offline pendientes de este teléfono. " +
+                        "Los datos ya sincronizados en el servidor permanecerán intactos."
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showConfirmation = false
+                        resetFailed = !onReset()
+                    }
+                ) {
+                    Text("Restablecer")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showConfirmation = false }) {
+                    Text("Cancelar")
+                }
+            }
+        )
     }
 }
 

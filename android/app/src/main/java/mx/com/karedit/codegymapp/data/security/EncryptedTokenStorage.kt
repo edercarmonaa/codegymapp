@@ -1,21 +1,45 @@
 package mx.com.karedit.codegymapp.data.security
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 
 class EncryptedTokenStorage(context: Context) : TokenStorage {
-    private val masterKey = MasterKey.Builder(context)
-        .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
-        .build()
+    private val preferences = createPreferencesWithSessionRecovery(context)
 
-    private val preferences = EncryptedSharedPreferences.create(
-        context,
-        "codegym_secure_session",
-        masterKey,
-        EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
-        EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
-    )
+    private fun createPreferencesWithSessionRecovery(context: Context): SharedPreferences = try {
+        createPreferences(context)
+    } catch (firstError: Exception) {
+        try {
+            check(
+                context.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+                    .edit()
+                    .clear()
+                    .commit()
+            ) { "No se pudo limpiar la sesión cifrada dañada." }
+            createPreferences(context)
+        } catch (retryError: Exception) {
+            retryError.addSuppressed(firstError)
+            throw SecureStorageUnavailableException(
+                "Android no pudo acceder a la sesión cifrada.",
+                retryError
+            )
+        }
+    }
+
+    private fun createPreferences(context: Context): SharedPreferences {
+        val masterKey = MasterKey.Builder(context)
+            .setKeyScheme(MasterKey.KeyScheme.AES256_GCM)
+            .build()
+        return EncryptedSharedPreferences.create(
+            context,
+            PREFERENCES_NAME,
+            masterKey,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
+    }
 
     override fun getToken(): String? = preferences.getString(KEY_TOKEN, null)
 
@@ -31,7 +55,8 @@ class EncryptedTokenStorage(context: Context) : TokenStorage {
         }
     }
 
-    private companion object {
+    companion object {
+        const val PREFERENCES_NAME = "codegym_secure_session"
         const val KEY_TOKEN = "jwt"
     }
 }

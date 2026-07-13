@@ -19,7 +19,9 @@ import mx.com.karedit.codegymapp.di.AppContainer
 
 class CodeGymFirebaseMessagingService : FirebaseMessagingService() {
     override fun onNewToken(token: String) {
-        AppContainer(applicationContext).fcmTokenRegistrar.registerToken(token)
+        runCatching {
+            AppContainer(applicationContext).fcmTokenRegistrar.registerToken(token)
+        }
     }
 
     override fun onMessageReceived(message: RemoteMessage) {

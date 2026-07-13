@@ -35,6 +35,13 @@ La biometría queda fuera del alcance. El modo offline permite lectura y escritu
 | P2 | UI/UX | Accesibilidad, skeletons y microinteracciones verificadas |
 | P3 | Automatización | CI de compilación, pruebas y controles de seguridad |
 
+### Estado al 13 de julio de 2026
+
+- Completados: release, expiración de sesión, remapeo de IDs, consolidación básica de cola, endurecimiento cron/HTTPS, privacidad push, exclusión de `google-services.json`, esquema Room v5 y eliminación de migración destructiva.
+- Completado: recuperación controlada ante clave Keystore no disponible; nunca se regenera la clave si la base cifrada ya existe.
+- Completado: CI en `main` y `hosting`; la primera ejecución validó PHP 8.3, pruebas Android y release correctamente.
+- Pendientes prioritarios: clasificación persistente de errores/reintentos de sincronización, pruebas de integración cifradas y ejecución completa del QA manual en el teléfono.
+
 ## 4. Fase 0 — Preparación y línea base
 
 ### Tareas
@@ -416,4 +423,3 @@ CodeGymApp Mobile se considera lista para cerrar versión cuando:
 - Funciona correctamente detrás de Cloudflare.
 - Supera pruebas automatizadas y QA manual.
 - No contiene pendientes P0 o P1.
-

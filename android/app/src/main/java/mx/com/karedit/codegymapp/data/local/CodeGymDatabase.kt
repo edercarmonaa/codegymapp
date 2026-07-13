@@ -56,7 +56,7 @@ abstract class CodeGymDatabase : RoomDatabase() {
                 instance ?: Room.databaseBuilder(
                     context.applicationContext,
                     CodeGymDatabase::class.java,
-                    "codegym_offline_encrypted.db"
+                    DATABASE_NAME
                 )
                     .openHelperFactory(
                         SupportOpenHelperFactory(DatabaseKeyProvider(context.applicationContext).passphrase())
@@ -70,5 +70,7 @@ abstract class CodeGymDatabase : RoomDatabase() {
             System.loadLibrary("sqlcipher")
             sqlCipherLoaded = true
         }
+
+        const val DATABASE_NAME = "codegym_offline_encrypted.db"
     }
 }

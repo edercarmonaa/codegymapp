@@ -77,4 +77,8 @@ La especificación técnica vigente está en `docs/mobile_technical_spec.md`. La
 - Validar compatibilidad 16 KB para librerías nativas.
 - Validar ProGuard/R8 en release.
 - Validar que SQLCipher abre Room cifrado sin crash.
+- Simular ausencia o corrupción de la clave local y confirmar que la app muestra recuperación en lugar de cerrarse.
+- Confirmar que “Reintentar” no elimina Room ni la cola offline.
+- Confirmar que “Restablecer datos locales” exige confirmación y advierte sobre cambios offline pendientes.
+- Después de confirmar el restablecimiento, comprobar que la app vuelve a login y puede crear una base cifrada nueva.
 - Confirmar que `assembleRelease` finaliza sin errores de Lint.

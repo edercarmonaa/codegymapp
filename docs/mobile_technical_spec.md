@@ -78,6 +78,9 @@ El cierre manual también preserva Room, pero no muestra el mensaje de expiraci�
 - Guardar la frase de cifrado protegida mediante Android Keystore.
 - Cargar SQLCipher antes de abrir Room.
 - No borrar Room al cerrar sesión.
+- Si la clave deja de estar disponible, no generar otra mientras exista la base cifrada.
+- Mostrar una pantalla de recuperación con reintento y restablecimiento local confirmado.
+- Advertir que el restablecimiento elimina caché y cambios offline pendientes, pero no datos ya sincronizados.
 - Configurar `android:allowBackup="false"`.
 
 ## 6. Autenticación biométrica
@@ -283,4 +286,3 @@ La versión solo puede cerrarse cuando:
 - Muestra el cierre de sesión expirado.
 - Genera un release con R8 sin errores.
 - Se validan manualmente login, offline, reconexión, push y Room cifrado en dispositivo.
-
