@@ -9,7 +9,6 @@
                 <div class="modal-body">
                     <?= csrf_field() ?>
                     <input type="hidden" name="id" id="challengeId">
-                    <input type="hidden" name="scheduled_date" id="challengeScheduledDate">
                     <div id="challengeAlert" class="alert alert-danger d-none"></div>
 
                     <ul class="nav nav-tabs" role="tablist">
@@ -33,8 +32,8 @@
                                     </select>
                                 </div>
                                 <div class="col-12 col-md-6">
-                                    <label class="form-label">Fecha programada</label>
-                                    <input class="form-control" id="challengeScheduledDateLabel" disabled>
+                                    <label class="form-label" for="challengeScheduledDate">Fecha programada</label>
+                                    <input class="form-control" name="scheduled_date" id="challengeScheduledDate" type="date" required>
                                 </div>
                                 <div class="col-12 edit-only">
                                     <label class="form-label" for="challengeTitle">Nombre del reto</label>

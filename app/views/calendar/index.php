@@ -46,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelButton = document.getElementById('challengeCancelButton');
     const challengeId = document.getElementById('challengeId');
     const scheduledDate = document.getElementById('challengeScheduledDate');
-    const scheduledDateLabel = document.getElementById('challengeScheduledDateLabel');
     const platform = document.getElementById('challengePlatform');
     const title = document.getElementById('challengeTitle');
     const difficulty = document.getElementById('challengeDifficulty');
@@ -62,6 +61,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const editActions = Array.from(document.querySelectorAll('.edit-actions'));
     const csrfToken = el.dataset.csrfToken || '';
     let currentMode = 'create';
+    let originalScheduledDate = '';
 
     const showMessage = (message, type = 'success') => {
         const wrapper = document.createElement('div');
@@ -262,12 +262,16 @@ document.addEventListener('DOMContentLoaded', () => {
         setInactivePlatformOptions(true);
         if (modalTitle) modalTitle.textContent = 'Crear reto';
         if (challengeId) challengeId.value = '';
+        originalScheduledDate = date;
         if (submitButton) {
             submitButton.classList.remove('d-none');
             submitButton.textContent = 'Guardar reto';
         }
-        if (scheduledDate) scheduledDate.value = date;
-        if (scheduledDateLabel) scheduledDateLabel.value = date;
+        if (scheduledDate) {
+            scheduledDate.value = date;
+            scheduledDate.disabled = false;
+            scheduledDate.removeAttribute('min');
+        }
         if (platform) platform.disabled = false;
     };
 
@@ -279,8 +283,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setEditVisible(true);
         if (modalTitle) modalTitle.textContent = challenge.platform_name + (challenge.title ? ' - ' + challenge.title : '');
         if (challengeId) challengeId.value = challenge.id || '';
+        originalScheduledDate = challenge.scheduled_date || '';
         if (scheduledDate) scheduledDate.value = challenge.scheduled_date || '';
-        if (scheduledDateLabel) scheduledDateLabel.value = challenge.scheduled_date || '';
         if (platform) {
             setInactivePlatformOptions(false);
             platform.value = challenge.platform_id || '';
@@ -299,7 +303,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isClosed = ['missed', 'cancelled'].includes(challenge.status);
         const isCompleted = challenge.status === 'completed';
+        const today = new Date().toISOString().substring(0, 10);
+        const canReschedule = challenge.status === 'pending' && String(challenge.scheduled_date || '') >= today;
         setFormLocked(isClosed, isCompleted);
+        if (scheduledDate) {
+            scheduledDate.disabled = !canReschedule;
+            scheduledDate.min = today;
+        }
         if (submitButton) {
             submitButton.classList.toggle('d-none', isClosed);
             submitButton.textContent = isCompleted ? 'Guardar correcciones' : 'Guardar datos';
@@ -326,6 +336,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(url, {
             method: 'POST',
             body: new FormData(form)
+        });
+        const payload = await response.json();
+        if (!response.ok || !payload.ok) {
+            throw new Error(payload.message || 'No se pudo guardar.');
+        }
+        return payload;
+    };
+
+    const postJson = async (url, data) => {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': csrfToken
+            },
+            body: JSON.stringify(data)
         });
         const payload = await response.json();
         if (!response.ok || !payload.ok) {
@@ -406,6 +432,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             const payload = await postForm(currentMode === 'create' ? '/api/calendar/store' : '/api/calendar/save-details');
+            const nextScheduledDate = scheduledDate?.value || '';
+            if (currentMode === 'edit' && nextScheduledDate && nextScheduledDate !== originalScheduledDate) {
+                await postJson('/api/calendar/update-date', {
+                    id: challengeId?.value || '',
+                    scheduled_date: nextScheduledDate
+                });
+            }
             modal?.hide();
             showMessage(payload.message || 'Reto guardado.');
             calendar.refetchEvents();
