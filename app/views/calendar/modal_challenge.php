@@ -61,6 +61,7 @@
                                 </div>
                                 <div class="col-12 edit-only">
                                     <span class="badge text-bg-secondary" id="challengeStatusBadge">Pendiente</span>
+                                    <span class="badge text-bg-info d-none" id="challengeRescheduledBadge">Reprogramado</span>
                                 </div>
                             </div>
                         </div>

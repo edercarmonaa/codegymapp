@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const notes = document.getElementById('challengeNotes');
     const githubLinks = document.getElementById('challengeGithubLinks');
     const statusBadge = document.getElementById('challengeStatusBadge');
+    const rescheduledBadge = document.getElementById('challengeRescheduledBadge');
     const dataTab = document.getElementById('challengeDataTab');
     const languageChecks = Array.from(document.querySelectorAll('.challenge-language'));
     const editableFields = Array.from(document.querySelectorAll('#challengeForm input, #challengeForm select, #challengeForm textarea'));
@@ -265,6 +266,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setEditVisible(false);
         setFormLocked(false);
         setInactivePlatformOptions(true);
+        rescheduledBadge?.classList.add('d-none');
         if (modalTitle) modalTitle.textContent = 'Crear reto';
         if (challengeId) challengeId.value = '';
         originalScheduledDate = date;
@@ -305,6 +307,7 @@ document.addEventListener('DOMContentLoaded', () => {
             check.checked = (challenge.language_ids || []).map(Number).includes(Number(check.value));
         });
         setStatusBadge(challenge.status);
+        rescheduledBadge?.classList.toggle('d-none', Number(challenge.is_rescheduled || 0) !== 1);
 
         const isClosed = ['missed', 'cancelled'].includes(challenge.status);
         const isCompleted = challenge.status === 'completed';

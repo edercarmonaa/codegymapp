@@ -17,6 +17,8 @@ final class Challenge extends BaseModel
         'missed' => '#dc3545',
         'cancelled' => '#dc3545',
     ];
+    private const RESCHEDULED_COLOR = '#0dcaf0';
+    private const RESCHEDULED_BORDER_COLOR = '#0aa2c0';
 
     public static function expirePending(): void
     {
@@ -44,8 +46,9 @@ final class Challenge extends BaseModel
             if (!empty($challenge['title'])) {
                 $title .= ' - ' . $challenge['title'];
             }
-            if ((int) $challenge['is_rescheduled'] === 1 && $status === 'pending') {
-                $title .= ' ↻';
+            $isRescheduled = (int) $challenge['is_rescheduled'] === 1;
+            if ($isRescheduled) {
+                $title = 'Reprogramado - ' . $title;
             }
 
             return [
@@ -54,12 +57,13 @@ final class Challenge extends BaseModel
                 'start' => $challenge['scheduled_date'],
                 'allDay' => true,
                 'editable' => self::canDrag($challenge),
-                'backgroundColor' => self::STATUS_COLORS[$status] ?? '#6c757d',
-                'borderColor' => self::STATUS_COLORS[$status] ?? '#6c757d',
+                'backgroundColor' => $isRescheduled ? self::RESCHEDULED_COLOR : (self::STATUS_COLORS[$status] ?? '#6c757d'),
+                'borderColor' => $isRescheduled ? self::RESCHEDULED_BORDER_COLOR : (self::STATUS_COLORS[$status] ?? '#6c757d'),
+                'textColor' => $isRescheduled ? '#000000' : '#ffffff',
                 'extendedProps' => [
                     'status' => $status,
                     'platform' => $challenge['platform_name'],
-                    'isRescheduled' => (bool) $challenge['is_rescheduled'],
+                    'isRescheduled' => $isRescheduled,
                 ],
             ];
         }, $stmt->fetchAll());
