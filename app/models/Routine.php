@@ -34,8 +34,7 @@ final class Routine extends BaseModel
         $stmt->execute(['id' => $id]);
 
         $stmt = self::db()->prepare(
-            "UPDATE challenges
-             SET status = 'cancelled', is_locked = 1, updated_at = NOW()
+            "DELETE FROM challenges
              WHERE routine_id = :id
                AND status = 'pending'
                AND is_rescheduled = 0"
@@ -174,7 +173,7 @@ final class Routine extends BaseModel
     /** @param array<string, mixed> $routine */
     private static function createChallengeIfMissing(array $routine, string $date): void
     {
-        $exists = self::db()->prepare("SELECT COUNT(*) FROM challenges WHERE routine_id = :routine_id AND scheduled_date = :scheduled_date AND status <> 'cancelled'");
+        $exists = self::db()->prepare('SELECT COUNT(*) FROM challenges WHERE routine_id = :routine_id AND scheduled_date = :scheduled_date');
         $exists->execute(['routine_id' => $routine['id'], 'scheduled_date' => $date]);
         if ((int) $exists->fetchColumn() > 0) {
             return;
@@ -240,14 +239,10 @@ final class Routine extends BaseModel
                 continue;
             }
 
-            if (self::restoreCancelledGeneratedChallenge($id, $date)) {
-                continue;
-            }
-
             self::createChallengeIfMissing($routine, $date);
         }
 
-        self::cancelUnusedGeneratedChallenges($available, $usedIds);
+        self::deleteUnusedGeneratedChallenges($available, $usedIds);
     }
 
     /** @return array<string, mixed>|null */
@@ -282,7 +277,7 @@ final class Routine extends BaseModel
 
     private static function activeChallengeExists(int $routineId, string $date): bool
     {
-        $stmt = self::db()->prepare("SELECT COUNT(*) FROM challenges WHERE routine_id = :routine_id AND scheduled_date = :scheduled_date AND status <> 'cancelled'");
+        $stmt = self::db()->prepare('SELECT COUNT(*) FROM challenges WHERE routine_id = :routine_id AND scheduled_date = :scheduled_date');
         $stmt->execute(['routine_id' => $routineId, 'scheduled_date' => $date]);
         return (int) $stmt->fetchColumn() > 0;
     }
@@ -335,31 +330,8 @@ final class Routine extends BaseModel
         ]);
     }
 
-    private static function restoreCancelledGeneratedChallenge(int $routineId, string $date): bool
-    {
-        $stmt = self::db()->prepare(
-            "SELECT id
-             FROM challenges
-             WHERE routine_id = :routine_id
-               AND scheduled_date = :scheduled_date
-               AND status = 'cancelled'
-               AND is_rescheduled = 0
-             ORDER BY id DESC
-             LIMIT 1"
-        );
-        $stmt->execute(['routine_id' => $routineId, 'scheduled_date' => $date]);
-        $challengeId = (int) $stmt->fetchColumn();
-        if ($challengeId <= 0) {
-            return false;
-        }
-
-        $update = self::db()->prepare("UPDATE challenges SET status = 'pending', is_locked = 0, updated_at = NOW() WHERE id = :id");
-        $update->execute(['id' => $challengeId]);
-        return true;
-    }
-
     /** @param array<int, array<string, mixed>> $available @param array<int, int> $usedIds */
-    private static function cancelUnusedGeneratedChallenges(array $available, array $usedIds): void
+    private static function deleteUnusedGeneratedChallenges(array $available, array $usedIds): void
     {
         $unusedIds = [];
         foreach ($available as $challenge) {
@@ -375,8 +347,7 @@ final class Routine extends BaseModel
 
         $placeholders = implode(',', array_fill(0, count($unusedIds), '?'));
         $stmt = self::db()->prepare(
-            "UPDATE challenges
-             SET status = 'cancelled', is_locked = 1, updated_at = NOW()
+            "DELETE FROM challenges
              WHERE id IN ({$placeholders})
                AND status = 'pending'
                AND is_rescheduled = 0"

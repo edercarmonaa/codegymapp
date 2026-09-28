@@ -171,7 +171,8 @@ final class Challenge extends BaseModel
     public static function saveDetails(int $id, array $data): bool
     {
         $challenge = self::find($id);
-        if (!$challenge || ((int) $challenge['is_locked'] === 1 && (string) $challenge['status'] !== 'completed')) {
+        $status = (string) ($challenge['status'] ?? '');
+        if (!$challenge || in_array($status, ['missed', 'cancelled'], true) || ((int) $challenge['is_locked'] === 1 && $status !== 'completed')) {
             return false;
         }
 
