@@ -74,7 +74,7 @@ CREATE TABLE challenges (
     routine_id BIGINT UNSIGNED NULL,
     title VARCHAR(180) NULL,
     challenge_url VARCHAR(255) NULL,
-    difficulty VARCHAR(120) NULL,
+    difficulty ENUM('Facil', 'Medio', 'Dificil') NULL,
     scheduled_date DATE NOT NULL,
     original_scheduled_date DATE NULL,
     completed_date DATE NULL,
