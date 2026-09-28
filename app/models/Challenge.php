@@ -30,6 +30,7 @@ final class Challenge extends BaseModel
             FROM challenges c
             JOIN platforms p ON p.id = c.platform_id
             WHERE c.scheduled_date BETWEEN :start AND :end
+              AND " . self::deduplicatedRoutineRowCondition('c') . "
             ORDER BY c.scheduled_date ASC, c.id ASC";
         $stmt = self::db()->prepare($sql);
         $stmt->execute([
@@ -499,13 +500,13 @@ final class Challenge extends BaseModel
     /** @return array<int, array<string, mixed>> */
     public static function todayPending(): array
     {
-        return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.status = 'pending' AND c.scheduled_date = CURDATE() ORDER BY c.id DESC")->fetchAll();
+        return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.status = 'pending' AND c.scheduled_date = CURDATE() AND " . self::deduplicatedRoutineRowCondition('c') . " ORDER BY c.id DESC")->fetchAll();
     }
 
     /** @return array<int, array<string, mixed>> */
     public static function plannedUpcoming(): array
     {
-        return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.status = 'pending' AND c.scheduled_date > CURDATE() ORDER BY c.scheduled_date ASC, c.id ASC")->fetchAll();
+        return self::db()->query("SELECT c.*, p.name AS platform_name FROM challenges c JOIN platforms p ON p.id = c.platform_id WHERE c.status = 'pending' AND c.scheduled_date > CURDATE() AND " . self::deduplicatedRoutineRowCondition('c') . " ORDER BY c.scheduled_date ASC, c.id ASC")->fetchAll();
     }
 
     /** @return array<int, array<string, mixed>> */
@@ -515,8 +516,9 @@ final class Challenge extends BaseModel
             "SELECT c.*, p.name AS platform_name
              FROM challenges c
              JOIN platforms p ON p.id = c.platform_id
-             WHERE c.status = 'expired'
-                OR (c.status = 'pending' AND c.scheduled_date >= CURDATE())
+             WHERE (c.status = 'expired'
+                OR (c.status = 'pending' AND c.scheduled_date >= CURDATE()))
+               AND " . self::deduplicatedRoutineRowCondition('c') . "
              ORDER BY c.scheduled_date ASC, c.id ASC"
         )->fetchAll();
     }
@@ -533,7 +535,7 @@ final class Challenge extends BaseModel
             : 'pending';
         $start = $month . '-01';
         $end = date('Y-m-t', strtotime($start));
-        $where = ['c.scheduled_date BETWEEN :start AND :end'];
+        $where = ['c.scheduled_date BETWEEN :start AND :end', self::deduplicatedRoutineRowCondition('c')];
         $params = ['start' => $start, 'end' => $end];
 
         if ($status !== 'all') {
@@ -563,6 +565,7 @@ final class Challenge extends BaseModel
     public static function allForList(array $filters = [], array $state = []): array
     {
         [$where, $params] = self::listFilterParts($filters);
+        $where[] = self::deduplicatedRoutineRowCondition('c');
         $columns = [
             'scheduled_date' => 'c.scheduled_date',
             'platform' => 'p.name',
@@ -614,6 +617,7 @@ final class Challenge extends BaseModel
     public static function countForList(array $filters = []): int
     {
         [$where, $params] = self::listFilterParts($filters);
+        $where[] = self::deduplicatedRoutineRowCondition('c');
         $sql = 'SELECT COUNT(*) FROM challenges c JOIN platforms p ON p.id = c.platform_id';
         if ($where) {
             $sql .= ' WHERE ' . implode(' AND ', $where);
@@ -750,6 +754,30 @@ final class Challenge extends BaseModel
         }
 
         return [$where, $params];
+    }
+
+    private static function deduplicatedRoutineRowCondition(string $alias): string
+    {
+        $priority = static fn (string $rowAlias): string => "CASE {$rowAlias}.status
+            WHEN 'completed' THEN 1
+            WHEN 'missed' THEN 2
+            WHEN 'cancelled' THEN 3
+            WHEN 'expired' THEN 4
+            WHEN 'pending' THEN 5
+            ELSE 6
+        END";
+
+        return "({$alias}.routine_id IS NULL OR NOT EXISTS (
+            SELECT 1
+            FROM challenges duplicate_guard
+            WHERE duplicate_guard.routine_id = {$alias}.routine_id
+              AND duplicate_guard.scheduled_date = {$alias}.scheduled_date
+              AND duplicate_guard.is_rescheduled = {$alias}.is_rescheduled
+              AND (
+                  " . $priority('duplicate_guard') . " < " . $priority($alias) . "
+                  OR (" . $priority('duplicate_guard') . " = " . $priority($alias) . " AND duplicate_guard.id < {$alias}.id)
+              )
+        ))";
     }
 
     /** @return array{0: array<int, string>, 1: array<string, mixed>} */

@@ -518,6 +518,7 @@ Ejecuta esta lista después de cambios grandes o refactors:
 - Confirmar último commit en `origin/hosting`.
 - En cPanel, confirmar rama activa `hosting`.
 - Actualizar desde remoto.
+- Ejecutar `database/fix_duplicate_routine_challenges.sql` una vez si existen retos de rutina duplicados en calendario o `/retos`.
 - Desplegar commit HEAD.
 - Recargar navegador con cache limpio si hubo cambios en `public/assets`.
 - Revisar `/login`, `/calendario`, `/dashboard`, `/retos`, `/metas`, `/notificaciones` y `/seguridad`.
