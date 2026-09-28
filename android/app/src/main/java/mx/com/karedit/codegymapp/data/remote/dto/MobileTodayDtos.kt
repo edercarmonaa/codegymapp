@@ -37,6 +37,7 @@ data class MobileSummaryDto(
     @Json(name = "best_streak") val bestStreak: Int = 0,
     @Json(name = "month_streak") val monthStreak: Int = 0,
     @Json(name = "expired_review") val expiredReview: Int = 0,
+    @Json(name = "rescheduled_month") val rescheduledMonth: Int = 0,
     @Json(name = "pending_today") val pendingToday: Int = 0,
     @Json(name = "pending_week") val pendingWeek: Int = 0,
     @Json(name = "days_without_practice") val daysWithoutPractice: Int = 0,
@@ -51,7 +52,8 @@ data class MobileSummaryDistributionDto(
     val completed: Int = 0,
     val missed: Int = 0,
     val expired: Int = 0,
-    val cancelled: Int = 0
+    val cancelled: Int = 0,
+    val rescheduled: Int = 0
 )
 
 data class MobileSummarySeriesDto(

@@ -140,7 +140,10 @@ private fun TaskCardContent(
                 onClick = if (!isCompleted) onCompleteClick else null
             )
             Spacer(modifier = Modifier.width(18.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
+            ) {
                 Text(
                     text = challenge.platformName,
                     style = MaterialTheme.typography.titleLarge,
@@ -151,6 +154,13 @@ private fun TaskCardContent(
                     },
                     textDecoration = if (isCompleted) TextDecoration.LineThrough else TextDecoration.None
                 )
+                if (challenge.isRescheduled) {
+                    Text(
+                        text = "Reprogramado",
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
             }
         }
     }

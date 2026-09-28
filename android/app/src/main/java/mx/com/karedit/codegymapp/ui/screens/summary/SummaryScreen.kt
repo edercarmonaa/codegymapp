@@ -111,8 +111,11 @@ private fun MonthSelector(
 private fun SummaryContent(summary: MobileSummary) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         MetricRow(label = "Retos cumplidos del mes", value = summary.completedMonth.toString())
+        MetricRow(label = "Retos reprogramados del mes", value = summary.rescheduledMonth.toString())
         MetricRow(label = "Tiempo practicado del mes", value = "${summary.timeMonth} min")
         MetricRow(label = "Racha actual", value = summary.currentStreak.asDays())
+        MetricRow(label = "Cancelados", value = summary.distribution.cancelled.toString())
+        MetricRow(label = "Reprogramados", value = summary.distribution.rescheduled.toString())
     }
 }
 

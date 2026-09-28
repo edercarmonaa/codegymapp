@@ -132,6 +132,7 @@ fun MobileSummary.toCacheEntity(month: String, moshi: Moshi, cachedAt: Long = Sy
         bestStreak = bestStreak,
         monthStreak = monthStreak,
         expiredReview = expiredReview,
+        rescheduledMonth = rescheduledMonth,
         pendingToday = pendingToday,
         pendingWeek = pendingWeek,
         daysWithoutPractice = daysWithoutPractice,
@@ -140,6 +141,7 @@ fun MobileSummary.toCacheEntity(month: String, moshi: Moshi, cachedAt: Long = Sy
         distributionMissed = distribution.missed,
         distributionExpired = distribution.expired,
         distributionCancelled = distribution.cancelled,
+        distributionRescheduled = distribution.rescheduled,
         weeklyComplianceJson = seriesJsonAdapter.toJson(weeklyCompliance),
         topPlatformsJson = seriesJsonAdapter.toJson(topPlatforms),
         topLanguagesJson = seriesJsonAdapter.toJson(topLanguages),
@@ -161,6 +163,7 @@ fun CachedSummaryEntity.toDomain(moshi: Moshi): MobileSummary {
         bestStreak = bestStreak,
         monthStreak = monthStreak,
         expiredReview = expiredReview,
+        rescheduledMonth = rescheduledMonth,
         pendingToday = pendingToday,
         pendingWeek = pendingWeek,
         daysWithoutPractice = daysWithoutPractice,
@@ -169,7 +172,8 @@ fun CachedSummaryEntity.toDomain(moshi: Moshi): MobileSummary {
             completed = distributionCompleted,
             missed = distributionMissed,
             expired = distributionExpired,
-            cancelled = distributionCancelled
+            cancelled = distributionCancelled,
+            rescheduled = distributionRescheduled
         ),
         weeklyCompliance = seriesJsonAdapter.fromJson(weeklyComplianceJson).orEmpty(),
         topPlatforms = seriesJsonAdapter.fromJson(topPlatformsJson).orEmpty(),

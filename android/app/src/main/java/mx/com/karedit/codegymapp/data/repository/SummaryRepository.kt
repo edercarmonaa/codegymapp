@@ -47,6 +47,7 @@ private fun MobileSummaryDto.toDomain(): MobileSummary =
         bestStreak = bestStreak,
         monthStreak = monthStreak,
         expiredReview = expiredReview,
+        rescheduledMonth = rescheduledMonth,
         pendingToday = pendingToday,
         pendingWeek = pendingWeek,
         daysWithoutPractice = daysWithoutPractice,
@@ -62,7 +63,8 @@ private fun MobileSummaryDistributionDto.toDomain(): MobileSummaryDistribution =
         completed = completed,
         missed = missed,
         expired = expired,
-        cancelled = cancelled
+        cancelled = cancelled,
+        rescheduled = rescheduled
     )
 
 private fun MobileSummarySeriesDto.toDomain(): MobileSummarySeries =

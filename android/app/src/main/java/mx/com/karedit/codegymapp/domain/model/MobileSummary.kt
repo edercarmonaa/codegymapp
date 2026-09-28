@@ -9,6 +9,7 @@ data class MobileSummary(
     val bestStreak: Int,
     val monthStreak: Int,
     val expiredReview: Int,
+    val rescheduledMonth: Int,
     val pendingToday: Int,
     val pendingWeek: Int,
     val daysWithoutPractice: Int,
@@ -23,7 +24,8 @@ data class MobileSummaryDistribution(
     val completed: Int,
     val missed: Int,
     val expired: Int,
-    val cancelled: Int
+    val cancelled: Int,
+    val rescheduled: Int
 )
 
 data class MobileSummarySeries(
