@@ -150,7 +150,7 @@ final class Challenge extends BaseModel
     public static function updateScheduledDate(int $id, string $scheduledDate): bool
     {
         $challenge = self::find($id);
-        if (!$challenge || !self::canDrag($challenge)) {
+        if (!$challenge || !self::canReschedule($challenge)) {
             return false;
         }
 
@@ -158,6 +158,7 @@ final class Challenge extends BaseModel
             'UPDATE challenges
              SET scheduled_date = :scheduled_date,
                  original_scheduled_date = COALESCE(original_scheduled_date, scheduled_date),
+                 status = :status,
                  is_rescheduled = 1,
                  reschedule_count = reschedule_count + 1,
                  last_rescheduled_date = CURDATE(),
@@ -165,7 +166,11 @@ final class Challenge extends BaseModel
              WHERE id = :id'
         );
 
-        return $stmt->execute(['id' => $id, 'scheduled_date' => $scheduledDate]);
+        return $stmt->execute([
+            'id' => $id,
+            'scheduled_date' => $scheduledDate,
+            'status' => 'pending',
+        ]);
     }
 
     /** @param array<string, mixed> $data */
@@ -283,8 +288,13 @@ final class Challenge extends BaseModel
     /** @param array<string, mixed> $challenge */
     public static function canDrag(array $challenge): bool
     {
-        return (string) $challenge['status'] === 'pending'
-            && strtotime((string) $challenge['scheduled_date']) >= strtotime(date('Y-m-d'));
+        return self::canReschedule($challenge);
+    }
+
+    /** @param array<string, mixed> $challenge */
+    public static function canReschedule(array $challenge): bool
+    {
+        return in_array((string) $challenge['status'], ['pending', 'expired'], true);
     }
 
     /** @return array<string, mixed> */
@@ -295,6 +305,7 @@ final class Challenge extends BaseModel
             "SELECT
                 SUM(CASE WHEN status = 'completed' AND completed_date BETWEEN :start_completed AND :end_completed THEN 1 ELSE 0 END) AS completed_month,
                 SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) AS expired_review,
+                SUM(CASE WHEN is_rescheduled = 1 AND scheduled_date BETWEEN :start_rescheduled AND :end_rescheduled THEN 1 ELSE 0 END) AS rescheduled_month,
                 COALESCE(SUM(CASE WHEN status = 'completed' AND completed_date BETWEEN :start_time AND :end_time THEN time_spent_minutes ELSE 0 END), 0) AS time_month,
                 SUM(CASE
                     WHEN origin IN ('calendar','routine') AND status <> 'cancelled' AND scheduled_date BETWEEN :start_scheduled AND :end_scheduled THEN 1
@@ -307,6 +318,8 @@ final class Challenge extends BaseModel
         $stmt->execute([
             'start_completed' => $start,
             'end_completed' => $end,
+            'start_rescheduled' => $start,
+            'end_rescheduled' => $end,
             'start_time' => $start,
             'end_time' => $end,
             'start_scheduled' => $start,
@@ -321,6 +334,7 @@ final class Challenge extends BaseModel
         return [
             'completed_month' => (int) ($stats['completed_month'] ?? 0),
             'expired_review' => (int) ($stats['expired_review'] ?? 0),
+            'rescheduled_month' => (int) ($stats['rescheduled_month'] ?? 0),
             'time_month' => (int) ($stats['time_month'] ?? 0),
             'scheduled_month' => (int) ($stats['scheduled_month'] ?? 0),
             'on_time_month' => (int) ($stats['on_time_month'] ?? 0),
@@ -336,7 +350,8 @@ final class Challenge extends BaseModel
                 SUM(CASE WHEN status = 'completed' AND completed_date BETWEEN :start_completed AND :end_completed THEN 1 ELSE 0 END) AS completed,
                 SUM(CASE WHEN status = 'missed' AND scheduled_date BETWEEN :start_missed AND :end_missed THEN 1 ELSE 0 END) AS missed,
                 SUM(CASE WHEN status = 'expired' AND scheduled_date BETWEEN :start_expired AND :end_expired THEN 1 ELSE 0 END) AS expired,
-                SUM(CASE WHEN status = 'cancelled' AND scheduled_date BETWEEN :start_cancelled AND :end_cancelled THEN 1 ELSE 0 END) AS cancelled
+                SUM(CASE WHEN status = 'cancelled' AND scheduled_date BETWEEN :start_cancelled AND :end_cancelled THEN 1 ELSE 0 END) AS cancelled,
+                SUM(CASE WHEN is_rescheduled = 1 AND scheduled_date BETWEEN :start_rescheduled AND :end_rescheduled THEN 1 ELSE 0 END) AS rescheduled
              FROM challenges"
         );
         $stmt->execute([
@@ -348,6 +363,8 @@ final class Challenge extends BaseModel
             'end_expired' => $end,
             'start_cancelled' => $start,
             'end_cancelled' => $end,
+            'start_rescheduled' => $start,
+            'end_rescheduled' => $end,
         ]);
         $distribution = $stmt->fetch() ?: [];
 
@@ -356,6 +373,7 @@ final class Challenge extends BaseModel
             'missed' => (int) ($distribution['missed'] ?? 0),
             'expired' => (int) ($distribution['expired'] ?? 0),
             'cancelled' => (int) ($distribution['cancelled'] ?? 0),
+            'rescheduled' => (int) ($distribution['rescheduled'] ?? 0),
         ];
     }
 
@@ -936,6 +954,7 @@ final class Challenge extends BaseModel
             'missed' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'missed'"])), $params),
             'expired' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'expired'"])), $params),
             'cancelled' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'cancelled'"])), $params),
+            'rescheduled' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ['c.is_rescheduled = 1'])), $params),
             'pending' => self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', array_merge($where, ["c.status = 'pending'"])), $params),
         ];
     }

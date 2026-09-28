@@ -90,6 +90,9 @@ final class CalendarService
         if ($id <= 0 || !$this->dateValidator->isDate($scheduledDate)) {
             return $this->response(422, ['ok' => false, 'message' => 'No se pudo reprogramar el reto.']);
         }
+        if ($scheduledDate < date('Y-m-d')) {
+            return $this->response(422, ['ok' => false, 'message' => 'Selecciona una fecha actual o futura para reprogramar.']);
+        }
 
         if (!\Challenge::updateScheduledDate($id, $scheduledDate)) {
             return $this->response(409, ['ok' => false, 'message' => 'Este reto no se puede mover.']);

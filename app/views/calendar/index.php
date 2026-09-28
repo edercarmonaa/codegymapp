@@ -62,6 +62,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const csrfToken = el.dataset.csrfToken || '';
     let currentMode = 'create';
     let originalScheduledDate = '';
+    const localToday = () => {
+        const today = new Date();
+        today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+        return today.toISOString().substring(0, 10);
+    };
 
     const showMessage = (message, type = 'success') => {
         const wrapper = document.createElement('div');
@@ -303,8 +308,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const isClosed = ['missed', 'cancelled'].includes(challenge.status);
         const isCompleted = challenge.status === 'completed';
-        const today = new Date().toISOString().substring(0, 10);
-        const canReschedule = challenge.status === 'pending' && String(challenge.scheduled_date || '') >= today;
+        const today = localToday();
+        const canReschedule = ['pending', 'expired'].includes(challenge.status);
         setFormLocked(isClosed, isCompleted);
         if (scheduledDate) {
             scheduledDate.disabled = !canReschedule;
@@ -394,7 +399,7 @@ document.addEventListener('DOMContentLoaded', () => {
             showEventDetails(info.event);
         },
         eventAllow(dropInfo, draggedEvent) {
-            return draggedEvent.extendedProps.status === 'pending' && dropInfo.start >= new Date(new Date().toDateString());
+            return ['pending', 'expired'].includes(draggedEvent.extendedProps.status) && dropInfo.start >= new Date(new Date().toDateString());
         },
         async eventDrop(info) {
             try {

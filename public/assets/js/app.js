@@ -999,7 +999,8 @@ document.addEventListener('DOMContentLoaded', () => {
             current_streak: `${Number(streaks.current || 0)} días`,
             best_streak: `${Number(streaks.best || 0)} días`,
             month_streak: `${Number(streaks.month || 0)} días`,
-            expired_review: String(stats.expired_review || 0)
+            expired_review: String(stats.expired_review || 0),
+            rescheduled_month: String(stats.rescheduled_month || 0)
         };
 
         Object.entries(values).forEach(([key, value]) => {
@@ -1306,16 +1307,17 @@ document.addEventListener('DOMContentLoaded', () => {
             createChart(history, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Cumplidos', 'No cumplidos', 'Vencidos', 'Cancelados', 'Pendientes'],
+                    labels: ['Cumplidos', 'No cumplidos', 'Vencidos', 'Cancelados', 'Reprogramados', 'Pendientes'],
                     datasets: [{
                         data: [
                             Number(reports.history?.completed || 0),
                             Number(reports.history?.missed || 0),
                             Number(reports.history?.expired || 0),
                             Number(reports.history?.cancelled || 0),
+                            Number(reports.history?.rescheduled || 0),
                             Number(reports.history?.pending || 0)
                         ],
-                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#dc3545', '#0d6efd']
+                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#dc3545', '#0dcaf0', '#0d6efd']
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
@@ -1361,15 +1363,16 @@ document.addEventListener('DOMContentLoaded', () => {
             createChart(dashboardChart, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Cumplidos', 'No cumplidos', 'Vencidos', 'Cancelados'],
+                    labels: ['Cumplidos', 'No cumplidos', 'Vencidos', 'Cancelados', 'Reprogramados'],
                     datasets: [{
                         data: [
                             Number(dashboardChart.dataset.completed || 0),
                             Number(dashboardChart.dataset.missed || 0),
                             Number(dashboardChart.dataset.expired || 0),
-                            Number(dashboardChart.dataset.cancelled || 0)
+                            Number(dashboardChart.dataset.cancelled || 0),
+                            Number(dashboardChart.dataset.rescheduled || 0)
                         ],
-                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#dc3545']
+                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#dc3545', '#0dcaf0']
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
@@ -1391,6 +1394,7 @@ document.addEventListener('DOMContentLoaded', () => {
             dashboardChart.dataset.missed = String(distribution.missed || 0);
             dashboardChart.dataset.expired = String(distribution.expired || 0);
             dashboardChart.dataset.cancelled = String(distribution.cancelled || 0);
+            dashboardChart.dataset.rescheduled = String(distribution.rescheduled || 0);
         }
         initializeDashboardCharts();
         window.setTimeout(resizeDashboardCharts, 80);

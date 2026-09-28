@@ -8,6 +8,7 @@ $dashboardMetrics = [
     ['best_streak', 'Mejor racha', $streaks['best'] . ' días'],
     ['month_streak', 'Racha del mes', $streaks['month'] . ' días'],
     ['expired_review', 'Retos vencidos', $stats['expired_review']],
+    ['rescheduled_month', 'Retos reprogramados', $stats['rescheduled_month']],
 ];
 ?>
 
@@ -220,6 +221,7 @@ $dashboardMetrics = [
                             data-missed="<?= e((string) $distribution['missed']) ?>"
                             data-expired="<?= e((string) $distribution['expired']) ?>"
                             data-cancelled="<?= e((string) $distribution['cancelled']) ?>"
+                            data-rescheduled="<?= e((string) $distribution['rescheduled']) ?>"
                         ></canvas>
                     </div>
                 </section>
