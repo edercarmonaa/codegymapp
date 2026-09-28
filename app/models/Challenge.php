@@ -15,7 +15,7 @@ final class Challenge extends BaseModel
         'completed' => '#198754',
         'expired' => '#6c757d',
         'missed' => '#dc3545',
-        'cancelled' => '#842029',
+        'cancelled' => '#dc3545',
     ];
 
     public static function expirePending(): void
@@ -30,11 +30,6 @@ final class Challenge extends BaseModel
             FROM challenges c
             JOIN platforms p ON p.id = c.platform_id
             WHERE c.scheduled_date BETWEEN :start AND :end
-              AND NOT (
-                  c.status = 'cancelled'
-                  AND c.routine_id IS NOT NULL
-                  AND c.is_rescheduled = 0
-              )
             ORDER BY c.scheduled_date ASC, c.id ASC";
         $stmt = self::db()->prepare($sql);
         $stmt->execute([
@@ -270,13 +265,16 @@ final class Challenge extends BaseModel
 
     public static function cancel(int $id): bool
     {
-        $challenge = self::find($id);
-        if (!$challenge || !in_array((string) $challenge['status'], ['pending', 'expired'], true)) {
-            return false;
-        }
-
-        $stmt = self::db()->prepare("UPDATE challenges SET status = 'cancelled', is_locked = 1, updated_at = NOW() WHERE id = :id");
-        return $stmt->execute(['id' => $id]);
+        $stmt = self::db()->prepare(
+            "UPDATE challenges
+             SET status = 'cancelled',
+                 is_locked = 1,
+                 updated_at = NOW()
+             WHERE id = :id
+               AND status IN ('pending', 'expired')"
+        );
+        $stmt->execute(['id' => $id]);
+        return $stmt->rowCount() === 1;
     }
 
     /** @param array<string, mixed> $challenge */
@@ -296,7 +294,7 @@ final class Challenge extends BaseModel
                 SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) AS expired_review,
                 COALESCE(SUM(CASE WHEN status = 'completed' AND completed_date BETWEEN :start_time AND :end_time THEN time_spent_minutes ELSE 0 END), 0) AS time_month,
                 SUM(CASE
-                    WHEN origin IN ('calendar','routine') AND scheduled_date BETWEEN :start_scheduled AND :end_scheduled THEN 1
+                    WHEN origin IN ('calendar','routine') AND status <> 'cancelled' AND scheduled_date BETWEEN :start_scheduled AND :end_scheduled THEN 1
                     WHEN origin = 'manual' AND status = 'completed' AND completed_date BETWEEN :start_manual AND :end_manual THEN 1
                     ELSE 0
                 END) AS scheduled_month,
@@ -366,6 +364,7 @@ final class Challenge extends BaseModel
             "SELECT scheduled_date AS date_value, COUNT(*) AS total
              FROM challenges
              WHERE origin IN ('calendar', 'routine')
+               AND status <> 'cancelled'
                AND scheduled_date BETWEEN '{$start}' AND '{$end}'
              GROUP BY scheduled_date"
         );
@@ -471,7 +470,9 @@ final class Challenge extends BaseModel
         $scheduledDates = self::dateSet(
             "SELECT DISTINCT scheduled_date AS date_value
              FROM challenges
-             WHERE origin IN ('calendar', 'routine') AND scheduled_date <= CURDATE()"
+             WHERE origin IN ('calendar', 'routine')
+               AND status <> 'cancelled'
+               AND scheduled_date <= CURDATE()"
         );
         $completedDates = self::dateSet(
             "SELECT DISTINCT completed_date AS date_value
@@ -698,7 +699,7 @@ final class Challenge extends BaseModel
             'completed' => 'text-bg-success',
             'expired' => 'text-bg-secondary',
             'missed' => 'text-bg-danger',
-            'cancelled' => 'text-bg-dark',
+            'cancelled' => 'text-bg-danger',
         ];
     }
 
@@ -804,7 +805,7 @@ final class Challenge extends BaseModel
     {
         [$joins, $where, $params] = self::reportFilterParts($filters, 'scheduled_date', false);
         $scheduledWhere = $where;
-        $scheduledWhere[] = "(c.origin IN ('calendar', 'routine') OR (c.origin = 'manual' AND c.status = 'completed'))";
+        $scheduledWhere[] = "((c.origin IN ('calendar', 'routine') AND c.status <> 'cancelled') OR (c.origin = 'manual' AND c.status = 'completed'))";
         $scheduled = self::reportCount('SELECT COUNT(DISTINCT c.id) FROM challenges c' . $joins . ' WHERE ' . implode(' AND ', $scheduledWhere), $params);
 
         [$joins, $where, $params] = self::reportFilterParts($filters, 'completed_date', true);

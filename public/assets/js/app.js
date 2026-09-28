@@ -766,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (bulkSelect) {
             const tableName = bulkSelect.dataset.bulkSelectAll;
             const panel = bulkSelect.closest('#tablePanel') || document;
-            panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]`).forEach((item) => {
+            panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:not(:disabled)`).forEach((item) => {
                 item.checked = bulkSelect.checked;
             });
             updateBulkActions(panel, tableName);
@@ -777,7 +777,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (bulkItemInput) {
             const tableName = bulkItemInput.dataset.bulkItem;
             const panel = bulkItemInput.closest('#tablePanel') || document;
-            const items = Array.from(panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]`));
+            const items = Array.from(panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:not(:disabled)`));
             const checked = items.filter((item) => item.checked);
             panel.querySelectorAll(`[data-bulk-select-all="${cssEscape(tableName)}"]`).forEach((selectAll) => {
                 selectAll.checked = items.length > 0 && checked.length === items.length;
@@ -794,7 +794,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const updateBulkActions = (panel, tableName) => {
-        const selectedCount = panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:checked`).length;
+        const selectedCount = panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:not(:disabled):checked`).length;
         panel.querySelectorAll(`[data-bulk-action="${cssEscape(tableName)}"]`).forEach((button) => {
             button.disabled = selectedCount === 0;
         });
@@ -808,7 +808,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const runBulkAction = async (button) => {
         const tableName = button.dataset.bulkAction;
         const panel = button.closest('#tablePanel') || document;
-        const ids = Array.from(panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:checked`))
+        const ids = Array.from(panel.querySelectorAll(`[data-bulk-item="${cssEscape(tableName)}"]:not(:disabled):checked`))
             .map((item) => item.value)
             .filter(Boolean);
         if (ids.length === 0) return;
@@ -1315,7 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             Number(reports.history?.cancelled || 0),
                             Number(reports.history?.pending || 0)
                         ],
-                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#842029', '#0d6efd']
+                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#dc3545', '#0d6efd']
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }
@@ -1369,7 +1369,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             Number(dashboardChart.dataset.expired || 0),
                             Number(dashboardChart.dataset.cancelled || 0)
                         ],
-                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#842029']
+                        backgroundColor: ['#198754', '#dc3545', '#6c757d', '#dc3545']
                     }]
                 },
                 options: { responsive: true, maintainAspectRatio: false }

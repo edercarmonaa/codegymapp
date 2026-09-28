@@ -238,7 +238,7 @@ document.addEventListener('DOMContentLoaded', () => {
             completed: 'text-bg-success',
             expired: 'text-bg-secondary',
             missed: 'text-bg-danger',
-            cancelled: 'text-bg-dark'
+            cancelled: 'text-bg-danger'
         };
         if (!statusBadge) return;
         statusBadge.className = `badge ${classes[status] || 'text-bg-secondary'}`;

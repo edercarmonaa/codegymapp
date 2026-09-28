@@ -57,6 +57,7 @@ require __DIR__ . '/../partials/table_pagination.php';
                 $status = (string) $challenge['status'];
                 $statusLabel = $statusLabels[$status] ?? $status;
                 $badgeClass = $statusBadgeClasses[$status] ?? 'text-bg-secondary';
+                $canClose = in_array($status, ['pending', 'expired'], true);
                 $isLate = $status === 'completed'
                     && !empty($challenge['completed_date'])
                     && !empty($challenge['scheduled_date'])
@@ -64,7 +65,16 @@ require __DIR__ . '/../partials/table_pagination.php';
                 $githubUrls = array_values(array_filter(array_map('safe_url', explode("\n", (string) ($challenge['github_urls'] ?? '')))));
                 ?>
                 <tr>
-                    <td class="text-center"><input class="form-check-input" type="checkbox" data-bulk-item="challenges" value="<?= e((string) $challenge['id']) ?>" aria-label="Seleccionar reto"></td>
+                    <td class="text-center">
+                        <input
+                            class="form-check-input"
+                            type="checkbox"
+                            data-bulk-item="challenges"
+                            value="<?= e((string) $challenge['id']) ?>"
+                            aria-label="Seleccionar reto"
+                            <?= $canClose ? '' : 'disabled' ?>
+                        >
+                    </td>
                     <td>
                         <?= e($challenge['scheduled_date']) ?>
                         <?php if ((int) $challenge['is_rescheduled'] === 1): ?>
