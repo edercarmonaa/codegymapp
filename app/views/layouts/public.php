@@ -18,7 +18,7 @@ $publicTheme = current_web_theme($currentUser);
 <body>
     <?= $content ?>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="/public/assets/js/app.js?v=5"></script>
+    <script src="/public/assets/js/app.js?v=6"></script>
     <script>
         (() => {
             const button = document.querySelector('[data-public-theme-toggle]');
