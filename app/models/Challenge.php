@@ -4,6 +4,12 @@ declare(strict_types=1);
 
 final class Challenge extends BaseModel
 {
+    private const DIFFICULTY_OPTIONS = [
+        'facil' => 'Facil',
+        'medio' => 'Medio',
+        'dificil' => 'Dificil',
+    ];
+
     private const STATUS_COLORS = [
         'pending' => '#0d6efd',
         'completed' => '#198754',
@@ -128,7 +134,7 @@ final class Challenge extends BaseModel
                 'platform_id' => (int) $data['platform_id'],
                 'title' => self::blankToNull((string) ($data['title'] ?? '')),
                 'challenge_url' => safe_url((string) ($data['challenge_url'] ?? '')),
-                'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
+                'difficulty' => self::normalizeDifficulty((string) ($data['difficulty'] ?? '')),
                 'time_spent_minutes' => self::positiveIntOrNull($data['time_spent_minutes'] ?? null),
                 'notes' => self::blankToNull((string) ($data['notes'] ?? '')),
             ]);
@@ -193,7 +199,7 @@ final class Challenge extends BaseModel
                 'platform_id' => self::validPlatformId($data['platform_id'] ?? 0, (int) $challenge['platform_id']),
                 'title' => self::blankToNull((string) ($data['title'] ?? '')),
                 'challenge_url' => safe_url((string) ($data['challenge_url'] ?? '')),
-                'difficulty' => self::blankToNull((string) ($data['difficulty'] ?? '')),
+                'difficulty' => self::normalizeDifficulty((string) ($data['difficulty'] ?? '')),
                 'time_spent_minutes' => self::positiveIntOrNull($data['time_spent_minutes'] ?? null),
                 'notes' => self::blankToNull((string) ($data['notes'] ?? '')),
             ]);
@@ -220,7 +226,7 @@ final class Challenge extends BaseModel
         if (trim((string) ($detail['title'] ?? '')) === '') {
             $errors[] = 'Captura el nombre del reto.';
         }
-        if (trim((string) ($detail['difficulty'] ?? '')) === '') {
+        if (self::normalizeDifficulty((string) ($detail['difficulty'] ?? '')) === null) {
             $errors[] = 'Captura la dificultad.';
         }
         if ((int) ($detail['time_spent_minutes'] ?? 0) <= 0) {
@@ -696,6 +702,34 @@ final class Challenge extends BaseModel
         ];
     }
 
+    /** @return array<string, string> */
+    public static function difficultyOptions(): array
+    {
+        return self::DIFFICULTY_OPTIONS;
+    }
+
+    public static function normalizeDifficulty(string $difficulty): ?string
+    {
+        $key = self::difficultyKey($difficulty);
+        return self::DIFFICULTY_OPTIONS[$key] ?? null;
+    }
+
+    /** @return array<int, string> */
+    public static function difficultyFilterValues(string $difficulty): array
+    {
+        $label = self::DIFFICULTY_OPTIONS[self::difficultyKey($difficulty)] ?? null;
+        if ($label === null) {
+            return [];
+        }
+
+        return match ($label) {
+            'Facil' => ['Facil', 'Fácil', 'facil', 'fácil'],
+            'Medio' => ['Medio', 'medio'],
+            'Dificil' => ['Dificil', 'Difícil', 'dificil', 'difícil'],
+            default => [$label],
+        };
+    }
+
     /** @return array{0: array<int, string>, 1: array<string, mixed>} */
     private static function listFilterParts(array $filters): array
     {
@@ -737,12 +771,7 @@ final class Challenge extends BaseModel
         }
 
         if (!empty($filters['difficulty'])) {
-            $difficulties = [
-                'facil' => ['Facil', 'Fácil'],
-                'medio' => ['Medio'],
-                'dificil' => ['Dificil', 'Difícil'],
-            ];
-            $options = $difficulties[(string) $filters['difficulty']] ?? [];
+            $options = self::difficultyFilterValues((string) $filters['difficulty']);
             if ($options) {
                 $placeholders = [];
                 foreach ($options as $index => $difficulty) {
@@ -953,6 +982,15 @@ final class Challenge extends BaseModel
     {
         $value = trim($value);
         return $value === '' ? null : $value;
+    }
+
+    private static function difficultyKey(string $difficulty): string
+    {
+        $value = strtolower(trim($difficulty));
+        $value = str_replace(['á', 'Á', 'Ã¡', 'Ã'], 'a', $value);
+        $value = str_replace(['í', 'Í', 'Ã­', 'Ã'], 'i', $value);
+
+        return $value;
     }
 
     private static function positiveIntOrNull(mixed $value): ?int

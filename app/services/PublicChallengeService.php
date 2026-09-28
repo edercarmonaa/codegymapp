@@ -25,11 +25,7 @@ final class PublicChallengeService
             'pagination' => \TableState::pagination($state, \Challenge::countPublicCompleted($filters)),
             'platforms' => \Platform::active(),
             'languages' => \Language::active(),
-            'difficultyOptions' => [
-                'facil' => 'Fácil',
-                'medio' => 'Medio',
-                'dificil' => 'Difícil',
-            ],
+            'difficultyOptions' => \Challenge::difficultyOptions(),
             'filters' => $filters,
             'sort' => (string) $state['sort'],
             'dir' => (string) $state['dir'],
@@ -43,7 +39,7 @@ final class PublicChallengeService
     private function filtersFromQuery(array $query): array
     {
         $difficulty = strtolower(substr((string) ($query['difficulty'] ?? ''), 0, 20));
-        if (!in_array($difficulty, ['facil', 'medio', 'dificil'], true)) {
+        if (!array_key_exists($difficulty, \Challenge::difficultyOptions())) {
             $difficulty = '';
         }
 

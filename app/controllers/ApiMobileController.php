@@ -198,6 +198,7 @@ final class ApiMobileController
             'ok' => true,
             'platforms' => array_map([$this, 'platformResource'], Platform::active()),
             'languages' => array_map([$this, 'languageResource'], Language::active()),
+            'difficulty_options' => Challenge::difficultyOptions(),
         ]);
     }
 

@@ -32,6 +32,7 @@ final class ChallengeService
             'platforms' => \Platform::all(),
             'activePlatforms' => \Platform::active(),
             'activeLanguages' => \Language::active(),
+            'difficultyOptions' => \Challenge::difficultyOptions(),
             'statusLabels' => \Challenge::statusLabels(),
             'statusBadgeClasses' => \Challenge::statusBadgeClasses(),
             'filters' => $filters,

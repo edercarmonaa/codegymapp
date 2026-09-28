@@ -114,6 +114,11 @@ final class CalendarService
             return $this->response(422, ['ok' => false, 'message' => $urlError]);
         }
 
+        $difficulty = trim((string) ($input['difficulty'] ?? ''));
+        if ($difficulty !== '' && \Challenge::normalizeDifficulty($difficulty) === null) {
+            return $this->response(422, ['ok' => false, 'message' => 'Selecciona una dificultad valida.']);
+        }
+
         $saved = \Challenge::saveDetails($id, [
             'platform_id' => $input['platform_id'] ?? 0,
             'title' => $input['title'] ?? '',

@@ -13,7 +13,7 @@ final class ManualChallengeRequestValidator
     public function validate(array $input): array
     {
         $title = trim((string) ($input['title'] ?? ''));
-        $difficulty = trim((string) ($input['difficulty'] ?? ''));
+        $difficulty = \Challenge::normalizeDifficulty((string) ($input['difficulty'] ?? ''));
         $timeSpent = (int) ($input['time_spent_minutes'] ?? 0);
         $platformId = (int) ($input['platform_id'] ?? 0);
         $languageIds = $input['language_ids'] ?? [];
@@ -25,7 +25,7 @@ final class ManualChallengeRequestValidator
         if ($title === '') {
             $errors[] = 'Captura el nombre del reto.';
         }
-        if ($difficulty === '') {
+        if ($difficulty === null) {
             $errors[] = 'Captura la dificultad.';
         }
         if ($timeSpent <= 0) {
@@ -42,7 +42,7 @@ final class ManualChallengeRequestValidator
                 'platform_id' => $platformId,
                 'title' => $title,
                 'challenge_url' => (string) ($input['challenge_url'] ?? ''),
-                'difficulty' => $difficulty,
+                'difficulty' => $difficulty ?? '',
                 'time_spent_minutes' => $timeSpent,
                 'notes' => (string) ($input['notes'] ?? ''),
                 'language_ids' => is_array($languageIds) ? $languageIds : [],

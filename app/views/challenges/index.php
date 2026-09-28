@@ -28,7 +28,12 @@
             </div>
             <div class="col-12 col-md-4">
                 <label class="form-label" for="manual_difficulty">Dificultad</label>
-                <input class="form-control" id="manual_difficulty" name="difficulty" maxlength="120" required>
+                <select class="form-select" id="manual_difficulty" name="difficulty" required>
+                    <option value="">Selecciona una dificultad</option>
+                    <?php foreach ($difficultyOptions as $value => $label): ?>
+                        <option value="<?= e((string) $value) ?>"><?= e((string) $label) ?></option>
+                    <?php endforeach; ?>
+                </select>
             </div>
             <div class="col-12 col-md-4">
                 <label class="form-label" for="manual_time">Tiempo invertido</label>

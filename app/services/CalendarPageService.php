@@ -19,6 +19,7 @@ final class CalendarPageService
             'title' => 'Calendario',
             'platforms' => \Platform::all(),
             'languages' => \Language::all(),
+            'difficultyOptions' => \Challenge::difficultyOptions(),
             'routines' => \Routine::allForList(),
         ];
     }

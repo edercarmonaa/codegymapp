@@ -245,6 +245,13 @@ document.addEventListener('DOMContentLoaded', () => {
         statusBadge.textContent = labels[status] || status;
     };
 
+    const difficultyValue = (value) => {
+        const key = String(value || '').trim().toLowerCase()
+            .replaceAll('á', 'a')
+            .replaceAll('í', 'i');
+        return ['facil', 'medio', 'dificil'].includes(key) ? key : '';
+    };
+
     const resetCreateForm = (date) => {
         currentMode = 'create';
         form?.reset();
@@ -280,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
             platform.disabled = true;
         }
         if (title) title.value = challenge.title || '';
-        if (difficulty) difficulty.value = challenge.difficulty || '';
+        if (difficulty) difficulty.value = difficultyValue(challenge.difficulty);
         if (timeSpent) timeSpent.value = challenge.time_spent_minutes || '';
         if (challengeUrl) challengeUrl.value = challenge.challenge_url || '';
         if (notes) notes.value = challenge.notes || '';
