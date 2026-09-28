@@ -41,8 +41,7 @@ Cuando actualices el hosting desde cPanel, usa siempre la rama `hosting`. La ram
 4. Usa **Actualizar desde remoto**.
 5. Usa **Desplegar commit HEAD**.
 6. Para este cambio de niveles de retos, ejecuta una vez `database/standardize_challenge_difficulties.sql` en phpMyAdmin.
-7. Para corregir cancelaciones antiguas generadas por rutinas, ejecuta una vez `database/remove_auto_cancelled_routine_challenges.sql` en phpMyAdmin.
-8. Si cambiaron CSS/JS, recarga el navegador con cache limpio.
+7. Si cambiaron CSS/JS, recarga el navegador con cache limpio.
 
 Después del despliegue confirma que el commit mostrado en cPanel coincide con el último commit de `origin/hosting`.
 

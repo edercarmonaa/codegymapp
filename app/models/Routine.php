@@ -34,9 +34,12 @@ final class Routine extends BaseModel
         $stmt->execute(['id' => $id]);
 
         $stmt = self::db()->prepare(
-            "DELETE FROM challenges
+            "UPDATE challenges
+             SET status = 'cancelled',
+                 is_locked = 1,
+                 updated_at = NOW()
              WHERE routine_id = :id
-               AND status = 'pending'
+               AND status IN ('pending', 'expired')
                AND is_rescheduled = 0"
         );
         $stmt->execute(['id' => $id]);

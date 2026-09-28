@@ -272,7 +272,8 @@ final class Challenge extends BaseModel
                  is_locked = 1,
                  updated_at = NOW()
              WHERE id = :id
-               AND status IN ('pending', 'expired')"
+               AND status IN ('pending', 'expired')
+               AND is_rescheduled = 0"
         );
         $stmt->execute(['id' => $id]);
         return $stmt->rowCount() === 1;
