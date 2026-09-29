@@ -1,66 +1,164 @@
 # CodeGymApp
 
-Aplicación web privada en PHP 8.3 para controlar retos de programación, calendario, rutinas, metas, reportes, notificaciones internas y bitácora de seguridad.
+Sistema personal para planear, registrar y revisar retos de programación desde una web privada y una app Android conectada al mismo backend.
 
-El proyecto está pensado para un hosting tradicional con cPanel, Apache, `.htaccess`, PHP 8.3 y MySQL. No usa frameworks. `composer.json` existe para describir el autoload PSR-4, pero la app puede ejecutarse sin instalar dependencias Composer.
+## El problema
 
-## Ramas Del Repositorio
+Practicar programación de forma constante suele terminar repartido entre calendarios, notas, hojas de cálculo, plataformas como LeetCode o HackerRank y enlaces sueltos a soluciones. Con el tiempo es fácil perder de vista qué reto tocaba hoy, cuáles quedaron vencidos, cuánto se practicó, qué lenguajes se usaron y si las metas semanales o mensuales realmente avanzan.
 
-- `main`: aplicación móvil Android nativa en Kotlin.
-- `hosting`: API PHP y frontend web que deben desplegarse en cPanel.
+CodeGymApp está pensado para una persona que estudia o entrena programación de manera disciplinada y necesita un registro centralizado. Sin una herramienta así, el seguimiento depende de memoria y registros manuales dispersos, lo que dificulta mantener rachas, revisar pendientes y medir progreso real.
 
-Cuando actualices el hosting desde cPanel, usa siempre la rama `hosting`. La rama `main` queda reservada para el proyecto móvil Android.
+## La solución
+
+CodeGymApp centraliza el seguimiento de práctica en una aplicación privada:
+
+1. El usuario crea un calendario de retos o rutinas repetitivas.
+2. El sistema genera y muestra los retos pendientes, vencidos, cumplidos, no cumplidos o cancelados.
+3. Al completar un reto, el usuario registra plataforma, título, dificultad, tiempo invertido, lenguajes, notas y enlaces de GitHub.
+4. El dashboard y los reportes calculan métricas, rachas, distribución por estado, plataformas y lenguajes.
+5. La app Android permite consultar y actualizar el progreso desde el móvil, incluso con cola local para trabajo offline.
+6. Las notificaciones internas y push ayudan a recordar retos pendientes de hoy o vencidos por revisar.
+
+## Funcionalidades principales
+
+- Login privado con JWT, cookie `HttpOnly` para web y `Authorization: Bearer` para Android.
+- Creación de un único usuario inicial mediante `tools/create_user.php`.
+- Calendario de retos con FullCalendar.
+- Rutinas diarias, semanales y mensuales.
+- Registro manual de retos ya realizados.
+- Estados de retos: pendiente, completado, vencido, no cumplido y cancelado.
+- Detalles de reto: plataforma, título, URL, dificultad, tiempo, notas, lenguajes y enlaces de GitHub.
+- Catálogos de plataformas y lenguajes activables/desactivables.
+- Metas semanales, mensuales y anuales por cantidad de retos, tiempo de práctica o racha.
+- Dashboard con métricas, rachas, datos de atención y gráficas.
+- Reportes filtrables por fechas, plataforma, lenguaje, estado y tipo de cumplimiento.
+- Notificaciones internas con marcado como leído y eliminación.
+- Bitácora de seguridad.
+- Modo claro/oscuro.
+- API JSON para la app Android.
+- App Android nativa con Kotlin, Jetpack Compose, Room cifrado, sincronización offline y Firebase Cloud Messaging.
+- Integración opcional con Azure Notification Hubs para push.
+- Endpoints de cron para recordatorios móviles.
+
+## ¿Qué mejora este proyecto?
+
+- Reduce la dependencia de notas o calendarios separados para saber qué practicar.
+- Permite distinguir retos pendientes, vencidos y completados sin revisar varias plataformas.
+- Conserva historial de práctica por fecha, plataforma y lenguaje.
+- Ayuda a medir constancia mediante rachas, metas y reportes.
+- Facilita registrar soluciones y enlaces de GitHub junto al reto correspondiente.
+- Permite continuar usando la app Android cuando no hay conexión y sincronizar después.
+- Mantiene un registro de eventos de seguridad e intentos de acceso.
+
+## ¿Para quién está pensado?
+
+El proyecto está pensado principalmente para uso personal: estudiantes, desarrolladores o personas que practican algoritmos, entrevistas técnicas o programación competitiva y quieren controlar su progreso de forma privada.
+
+El esquema actual fuerza un solo usuario principal mediante una clave única en la tabla `users`; no está diseñado como plataforma multiusuario pública.
+
+## Capturas
+
+El repositorio no incluye capturas verificadas dentro de `docs/images` u otra carpeta equivalente. Cuando se agreguen, una estructura sugerida sería:
+
+```markdown
+## Capturas
+
+### Dashboard
+
+![Dashboard](docs/images/dashboard.png)
+
+### Calendario
+
+![Calendario](docs/images/calendario.png)
+
+### App Android
+
+![App Android](docs/images/android-home.png)
+```
+
+## Tecnologías utilizadas
+
+- PHP 8.3: backend web, API, controladores, servicios y modelos.
+- MySQL 8 o MariaDB reciente: persistencia principal.
+- Apache con `.htaccess`: reescritura de rutas y bloqueo de archivos internos.
+- HTML, CSS y JavaScript: interfaz web.
+- FullCalendar: calendario visual de retos.
+- Chart.js: gráficas del dashboard y reportes.
+- HTMX: actualización parcial de tablas y vistas.
+- Kotlin: app Android nativa.
+- Jetpack Compose y Material 3: interfaz móvil.
+- Retrofit, OkHttp y Moshi: consumo de API en Android.
+- Room, SQLCipher y Android Keystore: caché local cifrada y almacenamiento seguro en Android.
+- Firebase Cloud Messaging: token push en Android.
+- Azure Notification Hubs: entrega opcional de notificaciones push desde el backend.
 
 ## Requisitos
 
+### Backend web
+
 - Apache con `mod_rewrite` y soporte para `.htaccess`.
-- PHP 8.3 con PDO MySQL habilitado.
-- MySQL 8 o MariaDB reciente con InnoDB.
-- Subdominio o carpeta pública donde `index.php` quede en la raíz.
-- HTTPS recomendado para que la cookie JWT use `Secure`.
+- PHP `^8.3`, según `composer.json`.
+- Extensión PDO MySQL habilitada.
+- MySQL 8 o MariaDB reciente con InnoDB y `utf8mb4`.
+- HTTPS recomendado para cookies seguras y para la app Android.
 
-## Instalación En cPanel
+Composer no es obligatorio para producción en cPanel porque el proyecto incluye su propio autoload en `app/core/bootstrap.php`. `composer.json` documenta el mapeo PSR-4 para herramientas modernas.
 
-1. Clona o sube el repositorio a la carpeta del subdominio.
-2. Verifica que `index.php`, `.htaccess`, `app`, `database`, `public`, `routes`, `storage` y `tools` queden en la misma raíz.
-3. Crea una base de datos MySQL desde cPanel.
-4. Crea un usuario MySQL y asígnalo a la base de datos con todos los permisos necesarios.
-5. Importa `database/install.sql` desde phpMyAdmin sobre una base de datos vacía.
+### Android
+
+- Android Studio compatible con Android Gradle Plugin 8.5.2.
+- JDK 17.
+- `compileSdk` 35, `targetSdk` 35 y `minSdk` 23.
+- Gradle Wrapper incluido en `android/`.
+- `google-services.json` solo si se va a usar Firebase Cloud Messaging.
+
+## Instalación
+
+### Backend en cPanel o hosting Apache
+
+1. Clona o sube el repositorio a la carpeta pública del subdominio.
+2. Verifica que `index.php`, `.htaccess`, `app/`, `config/`, `database/`, `public/`, `routes/`, `storage/` y `tools/` queden en la misma raíz.
+3. Crea una base de datos MySQL vacía.
+4. Crea un usuario MySQL y asígnalo a la base de datos.
+5. Importa `database/install.sql` desde phpMyAdmin.
 6. Copia `.env.example` como `.env`.
-7. Edita `.env` con `APP_URL`, `DB_HOST`, `DB_NAME`, `DB_USER`, `DB_PASS` y `JWT_SECRET`.
+7. Configura las variables de entorno.
 8. Abre `https://tu-subdominio/tools/create_user.php` y crea el usuario inicial.
-9. Confirma que `tools/create_user.php` se borre automáticamente. Si no se borra, elimínalo manualmente.
+9. Confirma que `tools/create_user.php` se borre automáticamente. Si no ocurre, elimínalo manualmente.
 10. Entra a `/login`.
-11. Revisa `/calendario`, `/dashboard`, `/retos`, `/notificaciones` y `/seguridad`.
 
-## Despliegue En cPanel Desde Git
+### Backend en entorno local
 
-1. Entra a **Git Version Control**.
-2. Abre el repositorio de `codegymapp`.
-3. Confirma que la rama activa sea `hosting`.
-4. Usa **Actualizar desde remoto**.
-5. Usa **Desplegar commit HEAD**.
-6. Si cambiaron CSS/JS, recarga el navegador con cache limpio.
-
-Después del despliegue confirma que el commit mostrado en cPanel coincide con el último commit de `origin/hosting`.
-
-## JWT_SECRET
-
-Usa una clave larga y aleatoria. Ejemplo con terminal:
+Para una prueba local básica con el servidor embebido de PHP:
 
 ```bash
-openssl rand -hex 32
+cp .env.example .env
+php -S localhost:8000 index.php
 ```
 
-Colócala en `.env`:
+También debes tener una base MySQL accesible, importar `database/install.sql` y completar `.env` antes de iniciar sesión.
 
-```env
-JWT_SECRET=pega_aqui_la_clave_generada
+### Android
+
+```bash
+cd android
+./gradlew test
+./gradlew assembleDebug
 ```
 
-## Archivo .env
+En Windows puedes usar:
 
-Ejemplo:
+```bash
+cd android
+gradlew.bat test
+gradlew.bat assembleDebug
+```
+
+Luego abre la carpeta `android/` en Android Studio para ejecutar la app en un emulador o dispositivo físico.
+
+## Configuración
+
+Las variables se toman de `.env`. No subas este archivo al repositorio.
 
 ```env
 APP_NAME="CodeGymApp"
@@ -74,7 +172,7 @@ DB_USER=usuario_bd
 DB_PASS=password_bd
 DB_CHARSET=utf8mb4
 
-JWT_SECRET=clave_secreta_larga
+JWT_SECRET=pega_aqui_una_clave_hexadecimal_de_64_caracteres
 JWT_EXPIRES_MINUTES=30
 
 LOGIN_MAX_ATTEMPTS=3
@@ -92,16 +190,142 @@ NOTIFICATION_HUB_PLATFORM=fcmv1
 NOTIFICATION_HUB_SEND_FORMAT=fcmv1
 ```
 
-Nunca subas `.env` a GitHub.
+Variables importantes:
 
-## Azure Notification Hubs
+- `APP_URL`: dominio público donde vive la app.
+- `APP_DEBUG`: debe ser `false` en producción.
+- `DB_*`: conexión a MySQL o MariaDB.
+- `JWT_SECRET`: clave privada para firmar tokens. Genera una nueva con `openssl rand -hex 32`.
+- `JWT_EXPIRES_MINUTES`: duración del JWT.
+- `LOGIN_MAX_ATTEMPTS` y `LOGIN_BLOCK_MINUTES`: bloqueo por intentos fallidos.
+- `RATE_LIMIT_*`: límite ligero por IP antes de consultar MySQL.
+- `CRON_SECRET`: secreto requerido por endpoints de cron.
+- `NOTIFICATION_HUB_*`: configuración opcional de Azure Notification Hubs.
 
-La app móvil registra el token FCM del dispositivo en el backend. Si Azure Notification Hubs está habilitado, el backend también registra/actualiza la instalación en el hub usando tags:
+## Base de datos
 
-- `user:{id}`
-- `platform:android`
+El motor principal es MySQL o MariaDB con tablas InnoDB. El instalador está en:
 
-Configura estas variables en `.env`:
+```text
+database/install.sql
+```
+
+Ese script crea tablas para:
+
+- usuario único;
+- plataformas;
+- lenguajes;
+- rutinas;
+- retos;
+- lenguajes por reto;
+- enlaces de GitHub por reto;
+- metas;
+- notificaciones;
+- tokens de dispositivos móviles;
+- bitácora de seguridad.
+
+También inserta plataformas y lenguajes base. No crea el usuario de la aplicación; ese paso se realiza con `tools/create_user.php`.
+
+Scripts adicionales:
+
+- `database/mobile_device_tokens.sql`: agrega la tabla de tokens móviles si la base existía antes.
+- `database/mobile_push_preferences.sql`: agrega preferencias móviles si la base existía antes.
+- `database/cleanup_test_data.sql`: elimina datos de prueba sin borrar usuario ni catálogos base.
+
+Antes de ejecutar scripts de limpieza o cambios manuales, exporta un respaldo desde phpMyAdmin.
+
+## Ejecutar el proyecto
+
+En hosting Apache, la entrada pública es:
+
+```text
+index.php
+```
+
+Con `.htaccess` activo, las rutas funcionan como `/login`, `/calendario`, `/dashboard` y `/api/...`.
+
+En local:
+
+```bash
+php -S localhost:8000 index.php
+```
+
+URL local típica:
+
+```text
+http://localhost:8000/login
+```
+
+## Uso
+
+1. Instala la base de datos e importa `database/install.sql`.
+2. Configura `.env`.
+3. Crea el usuario inicial desde `/tools/create_user.php`.
+4. Inicia sesión en `/login`.
+5. Configura plataformas y lenguajes si necesitas catálogos adicionales.
+6. Crea retos desde `/calendario` o registra retos ya realizados desde `/retos`.
+7. Crea rutinas para generar práctica repetitiva.
+8. Completa, reprograma, cancela o marca retos como no cumplidos.
+9. Registra detalles del reto completado: tiempo, dificultad, lenguajes, notas y GitHub.
+10. Define metas desde `/metas`.
+11. Consulta progreso en `/dashboard`, reportes y notificaciones.
+12. Revisa eventos de acceso en `/seguridad`.
+
+En Android, el flujo inicia con `POST /api/auth/login`. La app guarda el JWT en almacenamiento cifrado, consulta los endpoints móviles y sincroniza cambios offline cuando recupera conexión.
+
+## API principal
+
+La API vive en el mismo dominio con rutas `/api/...`.
+
+Autenticación:
+
+- `POST /api/auth/login`
+- `GET /api/me`
+
+Calendario y retos web:
+
+- `GET /api/calendar/bootstrap`
+- `GET /api/calendar/events`
+- `POST /api/calendar/store`
+- `POST /api/calendar/save-details`
+- `POST /api/calendar/complete`
+- `POST /api/calendar/miss`
+- `POST /api/calendar/cancel`
+- `POST /api/calendar/update-date`
+- `GET /api/challenges/list`
+- `POST /api/challenges/manual`
+
+Endpoints móviles:
+
+- `GET /api/mobile/today`
+- `GET /api/mobile/planned`
+- `GET /api/mobile/challenges`
+- `GET /api/mobile/summary`
+- `GET /api/mobile/notifications`
+- `POST /api/mobile/challenges/store`
+- `POST /api/mobile/challenges/manual`
+- `POST /api/mobile/challenges/save-details`
+- `POST /api/mobile/challenges/complete`
+- `POST /api/mobile/challenges/miss`
+- `POST /api/mobile/challenges/reschedule`
+- `POST /api/mobile/challenges/cancel`
+- `POST /api/mobile/routines/store`
+- `GET /api/mobile/goals`
+- `POST /api/mobile/goals/store`
+- `POST /api/mobile/goals/update`
+- `POST /api/mobile/device-token`
+- `POST /api/mobile/settings`
+
+Cron móvil:
+
+- `POST /api/cron/mobile/today-reminder`
+- `POST /api/cron/mobile/expired-review-reminder`
+
+Los endpoints protegidos aceptan JWT por `Authorization: Bearer <TOKEN>` o por cookie web activa, según el cliente.
+
+## Recordatorios push
+
+Para activar Azure Notification Hubs:
 
 ```env
 NOTIFICATION_HUB_ENABLED=true
@@ -111,420 +335,145 @@ NOTIFICATION_HUB_PLATFORM=fcmv1
 NOTIFICATION_HUB_SEND_FORMAT=fcmv1
 ```
 
-Antes de habilitarlo, crea la tabla con `database/mobile_device_tokens.sql` si tu base ya existía antes de esta funcionalidad.
-
-Si ya habías creado la tabla con una versión anterior, ajusta el tamaño del token:
-
-```sql
-ALTER TABLE mobile_device_tokens MODIFY token VARCHAR(512) NOT NULL;
-```
-
-Para validar el envío desde Postman, inicia sesión con `/api/auth/login`, copia el token y envía:
-
-```http
-POST /api/mobile/notifications/test
-Authorization: Bearer TU_TOKEN
-Content-Type: application/json
-```
-
-```json
-{
-  "title": "CodeGymApp",
-  "message": "Prueba de notificación push"
-}
-```
-
-Para enviar el recordatorio móvil de retos pendientes de hoy desde cron:
-
-```http
-POST /api/cron/mobile/today-reminder
-X-Cron-Secret: TU_CRON_SECRET
-```
-
-Para reenviarlo manualmente durante pruebas aunque ya se haya enviado hoy:
-
-```http
-POST /api/cron/mobile/today-reminder
-X-Cron-Secret: TU_CRON_SECRET
-X-Cron-Force: 1
-```
-
-La respuesta incluye diagnóstico de entrega por usuario:
-
-```json
-{
-  "pending": 2,
-  "users": 1,
-  "sent": 1,
-  "recipients": [
-    {
-      "user_id": 1,
-      "azure_accepted": true,
-      "detail": null
-    }
-  ]
-}
-```
-
-Para enviar el recordatorio móvil de retos vencidos pendientes de revisar desde cron:
-
-```http
-POST /api/cron/mobile/expired-review-reminder
-X-Cron-Secret: TU_CRON_SECRET
-```
-
-Para reenviarlo manualmente durante pruebas aunque ya se haya enviado hoy:
-
-```http
-POST /api/cron/mobile/expired-review-reminder
-X-Cron-Secret: TU_CRON_SECRET
-X-Cron-Force: 1
-```
-
-En cPanel puedes programarlos cada 5 minutos con `curl`. El backend espera hasta la hora configurada por el usuario y conserva un candado de un envío diario:
+Ejemplo de cron en cPanel:
 
 ```bash
 curl -fsS -X POST -H "X-Cron-Secret: TU_CRON_SECRET" "https://tu-subdominio/api/cron/mobile/today-reminder"
 curl -fsS -X POST -H "X-Cron-Secret: TU_CRON_SECRET" "https://tu-subdominio/api/cron/mobile/expired-review-reminder"
 ```
 
-No envíes `CRON_SECRET` en la URL. Los query strings quedan registrados en los access logs del hosting. Si el secreto se usó anteriormente como `?key=...`, genera uno nuevo antes de desplegar este cambio.
+No envíes `CRON_SECRET` en la URL porque los query strings suelen quedar registrados en logs del servidor.
 
-Usa la expresión cron `*/5 * * * *` para ambos comandos. Esto permite cambiar la hora desde la app sin editar cPanel; el recordatorio se enviará en el primer ciclo posterior a la hora elegida, con un retraso máximo aproximado de cinco minutos.
-
-## API Inicial
-
-La API vive en el mismo dominio de la web usando rutas `/api/...`.
-
-### Autenticación
-
-La web conserva el login tradicional:
-
-- `GET /login`: muestra formulario web.
-- `POST /login`: valida credenciales, crea cookie JWT `HttpOnly`, `Secure`, `SameSite=Strict` y redirige a `/calendario`.
-
-Android usa un endpoint JSON:
-
-- `POST /api/auth/login`
-
-Acepta JSON:
-
-```json
-{
-  "username": "usuario",
-  "password": "password"
-}
-```
-
-También acepta `application/x-www-form-urlencoded` con los mismos campos.
-
-Respuesta correcta:
-
-```json
-{
-  "ok": true,
-  "token": "JWT",
-  "expires_in": 1800,
-  "user": {
-    "id": 1,
-    "username": "usuario",
-    "name": "Nombre",
-    "email": "correo@dominio.com"
-  }
-}
-```
-
-Respuesta incorrecta:
-
-```json
-{
-  "ok": false,
-  "message": "Usuario o contraseña incorrectos."
-}
-```
-
-### Validación Del Token
-
-El backend valida un único JWT de 30 minutos de dos formas:
-
-1. Primero busca `Authorization: Bearer <TOKEN>` para Android.
-2. Si no existe, busca la cookie `codegymapp_token` para la web.
-
-En Apache/cPanel, `.htaccess` preserva el header `Authorization` para que PHP pueda leerlo.
-
-### Endpoints De Lectura
-
-Todos estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` o cookie web activa:
-
-- `GET /api/me`: usuario autenticado.
-- `GET /api/catalogs/platforms/list`: plataformas paginadas para la tabla web.
-- `GET /api/catalogs/platforms`: plataformas registradas.
-- `GET /api/catalogs/platforms/active`: plataformas activas.
-- `GET /api/catalogs/languages/list`: lenguajes paginados para la tabla web.
-- `GET /api/catalogs/languages`: lenguajes registrados.
-- `GET /api/catalogs/languages/active`: lenguajes activos.
-- `GET /api/dashboard/summary`: resumen, métricas, rachas, atención, metas y datos de gráficas.
-- `GET /api/mobile/today`: datos optimizados para la pantalla móvil Mi día, con retos pendientes de hoy y vencidos por revisar.
-- `GET /api/mobile/planned`: retos pendientes futuros para la pantalla móvil Planeado.
-- `GET /api/mobile/challenges`: retos del mes para la pantalla móvil Retos. Acepta `month=YYYY-MM` y `status=pending|completed|expired|missed|cancelled|all`.
-- `GET /api/mobile/challenges/create-options`: plataformas activas para crear retos desde móvil.
-- `GET /api/mobile/goals`: metas activas para la pantalla móvil Metas.
-- `GET /api/calendar/bootstrap`: datos base del calendario, plataformas, lenguajes y rutinas.
-- `GET /api/calendar/routines`: rutinas registradas.
-- `GET /api/calendar/events`: eventos en formato FullCalendar.
-- `GET /api/challenges/list`: retos paginados con filtros de estado y plataforma.
-- `GET /api/goals/list`: metas paginadas para la tabla web.
-- `GET /api/notifications/list`: notificaciones paginadas para la tabla web.
-- `GET /api/reports`: reportes con filtros opcionales.
-
-### Endpoints Móviles De Escritura
-
-Estos endpoints requieren JWT por `Authorization: Bearer <TOKEN>` y reciben JSON:
-
-- `POST /api/mobile/challenges/store`: crea un reto desde móvil. Requiere `{"platform_id": 1, "scheduled_date": "YYYY-MM-DD"}`.
-- `POST /api/mobile/challenges/manual`: registra un reto ya realizado desde móvil. Requiere plataforma, título, dificultad, tiempo y al menos un lenguaje.
-- `POST /api/mobile/challenges/complete`: marca un reto como cumplido. Requiere `{"id": 1}` y conserva las validaciones de datos completos del sistema web.
-- `POST /api/mobile/challenges/miss`: marca un reto como no realizado. Requiere `{"id": 1}`.
-- `GET /api/mobile/goals/options`: catálogos para crear metas desde móvil.
-- `POST /api/mobile/goals/store`: crea una meta desde móvil. Requiere `goal_type`, `period_type` y `target_value`.
-
-Filtros aceptados por `/api/reports`:
-
-- `date_from`
-- `date_to`
-- `platform_id`
-- `language_id`
-- `status`
-- `completion_type`
-
-## Usuario Inicial
-
-El sistema permite un solo usuario. El usuario inicial se crea con:
+## Estructura
 
 ```text
-/tools/create_user.php
+app/
+  controllers/   Controladores web y API.
+  core/          Bootstrap, router, configuración, JWT, respuesta, sesión y errores.
+  helpers/       Funciones auxiliares y estado de tablas.
+  models/        Consultas SQL y persistencia.
+  services/      Lógica de aplicación y validaciones.
+  views/         Vistas PHP, layouts y parciales.
+android/         App Android nativa.
+config/          Configuración PHP.
+database/        SQL de instalación y mantenimiento.
+docs/            Documentación técnica móvil y despliegue.
+public/          CSS, JavaScript e imágenes públicas.
+routes/          Definición de rutas.
+tools/           Herramientas de instalación, incluido creador de usuario inicial.
 ```
-
-El script:
-
-- lee la conexión desde `.env`;
-- valida la política de contraseña;
-- crea el hash con `password_hash()`;
-- impide crear más de un usuario;
-- se borra automáticamente al terminar correctamente.
-
-La contraseña debe tener mínimo 10 caracteres, mayúscula, minúscula, número y símbolo.
-
-## Módulos
-
-- Login/logout con JWT en cookie `HttpOnly`.
-- Bloqueo por intentos fallidos.
-- Bitácora de seguridad.
-- Modo claro/oscuro.
-- Dashboard con pestañas de datos generales, gráficas y reportes.
-- Calendario con FullCalendar.
-- Rutinas repetitivas diarias, semanales y mensuales.
-- Registro y edición de retos calendarizados.
-- Registro manual de retos ya realizados.
-- Plataformas y lenguajes.
-- Metas semanales, mensuales y anuales.
-- Reportes con filtros y Chart.js integrados dentro de Dashboard.
-- Notificaciones internas.
-- Tablas con filtros, ordenamiento, paginación y actualización parcial con HTMX.
-
-## Arquitectura PHP
-
-El arranque en `app/core/bootstrap.php` usa un autoload compatible con PSR-4:
-
-- `CodeGymApp\Core\` apunta a `app/core/`
-- `CodeGymApp\Controllers\` apunta a `app/controllers/`
-- `CodeGymApp\Models\` apunta a `app/models/`
-- `CodeGymApp\Helpers\` apunta a `app/helpers/`
-- `CodeGymApp\Services\` apunta a `app/services/`
-
-El autoload mantiene compatibilidad con clases sin namespace para no romper despliegues en cPanel. Las clases nuevas deben crearse con namespace siguiendo esas rutas. `composer.json` declara el mismo mapeo para herramientas modernas.
-
-### Capas Principales
-
-- `index.php`: punto de entrada HTTP.
-- `app/core/Application.php`: inicializa entorno, errores, rate limit, configuración y sesión.
-- `app/core/Router.php`: resuelve ruta, método y controlador.
-- `app/core/View.php`: renderiza vistas, layouts y partials.
-- `app/controllers/`: reciben request, validan CSRF cuando aplica, delegan a servicios y responden.
-- `app/services/`: concentran lógica de aplicación, validación y armado de payloads.
-- `app/models/`: encapsulan consultas SQL y operaciones de persistencia.
-- `app/views/`: HTML/PHP de presentación.
-
-### Servicios Actuales
-
-- `AuthService`: login, logout, bloqueo e intentos fallidos.
-- `DashboardService`: métricas, rachas, listas y gráficas del dashboard.
-- `ReportService`: filtros y payload de reportes.
-- `CalendarService`: eventos, retos, rutinas y acciones del calendario.
-- `CalendarPageService`: payload de la vista del calendario.
-- `ChallengeService`: tabla de retos y registro manual.
-- `GoalService`: metas, progreso y acciones.
-- `PlatformService` / `LanguageService`: catálogos.
-- `NotificationService`: generación, listado y acciones de notificaciones.
-- `UserService`: perfil, contraseña y tema.
-- `SecurityLogService`: bitácora de seguridad.
-
-### Convenciones
-
-- Archivos PHP con `declare(strict_types=1);`.
-- Clases nuevas con namespace `CodeGymApp\...`.
-- Controladores del router actual se mantienen sin namespace para compatibilidad.
-- Validaciones de formularios en servicios/validadores, no en vistas.
-- SQL en modelos; no agregar SQL directo en controladores.
-- Redirecciones y flashes se manejan en controladores.
-- Respuestas JSON de API se mantienen con `Response::json()`.
-
-## Versión Android
-
-La versión móvil Android se trabaja desde la rama `main`. La rama `hosting` se mantiene enfocada en API PHP y frontend web.
-
-La primera etapa móvil debe consumir el API del mismo dominio mediante `Authorization: Bearer <TOKEN>`. El login móvil inicia con `POST /api/auth/login`.
-
-Para trabajar Android:
-
-1. Cambia a la rama `main`.
-2. Abre la carpeta Android en Android Studio.
-2. Deja que Android Studio sincronice Gradle.
-3. Ejecuta `app` en un emulador o dispositivo físico.
-
-La app Android no debe usar tráfico HTTP claro y debe guardar el JWT en almacenamiento seguro del dispositivo.
-
-### Firebase Cloud Messaging
-
-Para que Android genere el token FCM usado por Azure Notification Hub:
-
-1. En Firebase Console crea o usa una app Android con package `mx.com.karedit.codegymapp`.
-2. Descarga `google-services.json`.
-3. Coloca el archivo en `android/app/google-services.json`.
-4. Sincroniza Gradle en Android Studio y vuelve a compilar.
-
-El archivo `android/app/google-services.json` está ignorado por Git. El plugin de Google Services se aplica solo cuando ese archivo existe, así que la app sigue compilando sin exponer configuración sensible en el repositorio.
 
 ## Seguridad
 
-`.htaccess` bloquea acceso directo a:
+- No guardes contraseñas, tokens ni claves reales en el código.
+- Usa `.env` para secretos y conserva `.env.example` solo con valores de ejemplo.
+- No subas `.env`, `google-services.json` ni credenciales privadas.
+- Genera `JWT_SECRET` y `CRON_SECRET` con valores largos y aleatorios.
+- Usa HTTPS en producción.
+- El archivo `.htaccess` debe impedir acceso directo a carpetas internas como `app/`, `database/`, `routes/` y `storage/`.
+- Después de crear el usuario inicial, elimina `tools/create_user.php` si el script no se borró automáticamente.
+- Reporta vulnerabilidades de forma responsable al mantenedor del repositorio.
 
-- `.env`
-- logs
-- `/app`
-- `/routes`
-- `/database`
-- `/storage`
-- archivos internos de `/tools`, excepto `create_user.php` durante la instalación
+La app Android declara `usesCleartextTraffic="false"` y usa almacenamiento cifrado para JWT y datos locales.
 
-Después de crear el usuario inicial, `tools/create_user.php` debe desaparecer.
+## Pruebas
 
-### Mitigación De Ráfagas
+El repositorio incluye pruebas unitarias Android en `android/app/src/test`.
 
-La app incluye un límite ligero por IP antes de consultar MySQL. Por defecto permite `120` peticiones por `60` segundos y responde `429 Too Many Requests` cuando se supera.
+Ejecutar pruebas Android:
 
-Puedes ajustarlo en `.env`:
-
-```env
-RATE_LIMIT_ENABLED=true
-RATE_LIMIT_REQUESTS=120
-RATE_LIMIT_WINDOW_SECONDS=60
+```bash
+cd android
+./gradlew test
 ```
 
-Para ataques volumétricos, usa también una capa externa como Cloudflare/WAF, ModSecurity de cPanel o reglas del firewall del hosting. El límite interno ayuda, pero no sustituye una protección antes de Apache/PHP.
+En Windows:
 
-## Reinstalación O Respaldo
+```bash
+cd android
+gradlew.bat test
+```
 
-Para reinstalar desde cero:
+No se encontró una suite automatizada equivalente para el backend PHP. Para cambios en PHP, usa al menos el checklist manual de regresión de este README.
 
-1. Respalda el código y la base de datos actual.
-2. Crea una base de datos vacía.
-3. Importa `database/install.sql`.
-4. Crea `.env` desde `.env.example`.
-5. Ejecuta `tools/create_user.php`.
-6. Verifica login y módulos principales.
-
-Para respaldo de producción:
-
-- Exporta la base de datos desde phpMyAdmin.
-- Respalda `.env` fuera del repositorio.
-- Respalda el repositorio/carpeta del subdominio.
-
-## Limpieza De Datos De Prueba
-
-Si necesitas dejar la instalación lista para uso real sin borrar el usuario ni los catálogos base, ejecuta `database/cleanup_test_data.sql` desde phpMyAdmin.
-
-El script conserva:
-
-- `users`
-- `platforms`
-- `languages`
-
-El script borra:
-
-- retos y sus lenguajes/enlaces de GitHub;
-- rutinas repetitivas;
-- metas;
-- notificaciones;
-- bitácora de seguridad.
-
-Antes de ejecutarlo, exporta un respaldo completo de la base de datos.
-
-## Checklist Post-Instalación
-
-- `/login` carga correctamente.
-- El usuario inicial fue creado.
-- `tools/create_user.php` ya no existe.
-- Después de login se abre `/calendario`.
-- `/dashboard` carga pestañas de datos generales, gráficas y reportes.
-- `/calendario` muestra eventos y permite rutinas.
-- `/retos` pagina y filtra.
-- La pestaña Reportes muestra gráficas y filtros.
-- `/notificaciones` muestra historial.
-- `/seguridad` registra eventos.
-- `.env` no es accesible desde navegador.
-- `/app`, `/database`, `/routes` y `/storage` devuelven acceso denegado.
-
-## Checklist De Regresión Antes De Producción
-
-Ejecuta esta lista después de cambios grandes o refactors:
+## Checklist de regresión manual
 
 - Login correcto redirige a `/calendario`.
 - Login incorrecto muestra error y registra evento en `/seguridad`.
 - Logout regresa a `/login`.
-- Dashboard abre las tres pestañas.
-- Reportes filtra sin perder gráficas.
+- Dashboard carga métricas, gráficas y reportes.
 - Calendario carga eventos del mes.
 - Crear reto desde calendario.
 - Editar detalle de reto.
-- Marcar reto como cumplido, no cumplido y cancelado.
+- Completar, reprogramar, cancelar y marcar reto como no cumplido.
 - Crear rutina diaria, semanal y mensual.
-- Editar rutina reduciendo días y confirmar que el calendario cambia.
-- Desactivar rutina y confirmar que sus retos pendientes se cancelan.
+- Editar o desactivar rutina y confirmar que cambia el calendario.
 - `/retos` filtra, ordena y pagina.
 - Registro manual de reto valida campos obligatorios.
 - Crear meta y desactivar meta.
 - Crear, editar, activar y desactivar plataforma.
 - Crear, editar, activar y desactivar lenguaje.
-- Notificaciones: marcar leída y eliminar leída.
-- Usuario: actualizar perfil, cambiar tema y cambiar contraseña.
-- Seguridad: revisar que la bitácora liste eventos recientes.
+- Notificaciones permiten marcar como leída y eliminar.
+- Usuario permite actualizar perfil, tema y contraseña.
+- Seguridad muestra eventos recientes.
+- `.env` no es accesible desde navegador.
 
-## Checklist De Deploy
+## Estado del proyecto
 
-- Confirmar que estás en la rama local `hosting`.
-- Confirmar que `git status` está limpio.
-- Confirmar último commit en `origin/hosting`.
-- En cPanel, confirmar rama activa `hosting`.
-- Actualizar desde remoto.
-- Desplegar commit HEAD.
-- Recargar navegador con cache limpio si hubo cambios en `public/assets`.
-- Revisar `/login`, `/calendario`, `/dashboard`, `/retos`, `/metas`, `/notificaciones` y `/seguridad`.
+El proyecto parece una versión funcional en desarrollo activo. Cuenta con backend web, API, app Android, documentación técnica móvil y scripts de instalación, pero conserva limitaciones claras como usuario único y ausencia de pruebas automatizadas para PHP.
 
-## Solución De Problemas
+## Limitaciones actuales
 
-- Error de conexión: revisa `DB_HOST`, `DB_NAME`, `DB_USER` y `DB_PASS` en `.env`.
-- Pantalla en blanco: activa temporalmente `APP_DEBUG=true` y vuelve a cargar.
-- Login expira rápido: revisa `JWT_EXPIRES_MINUTES`.
-- CSS/JS no cargan: confirma que `/public/assets` sea accesible.
-- Rutas no funcionan: confirma que `.htaccess` esté activo y que Apache permita `AllowOverride`.
+- El sistema está diseñado para un solo usuario principal, no para múltiples cuentas independientes.
+- No se encontró recuperación de contraseña por correo.
+- El backend PHP no incluye suite automatizada de pruebas en el repositorio.
+- No se encontraron migraciones versionadas; la instalación depende de scripts SQL.
+- La integración push requiere servicios externos configurados fuera del repositorio: Firebase y Azure Notification Hubs.
+- Las capturas de pantalla no están incluidas.
+- La URL base Android está definida en `android/app/build.gradle`; para otro entorno debe ajustarse antes de compilar.
+
+## Próximas mejoras
+
+- Agregar migraciones versionadas para cambios de base de datos.
+- Incorporar pruebas automatizadas para servicios y controladores PHP.
+- Documentar un flujo de cambio de contraseña o recuperación si se implementa.
+- Agregar capturas reales de web y Android en `docs/images`.
+- Externalizar la URL base Android por variante de build o configuración segura.
+- Añadir exportación de reportes si se requiere análisis externo.
+- Preparar soporte multiusuario solo si el modelo del producto cambia.
+
+## Despliegue desde Git en cPanel
+
+1. Entra a Git Version Control.
+2. Abre el repositorio de `codegymapp`.
+3. Confirma que la rama activa sea la que contiene el backend PHP para hosting.
+4. Usa Actualizar desde remoto.
+5. Usa Desplegar commit HEAD.
+6. Si cambiaron CSS o JavaScript, recarga el navegador con caché limpio.
+
+Después del despliegue revisa `/login`, `/calendario`, `/dashboard`, `/retos`, `/metas`, `/notificaciones` y `/seguridad`.
+
+## Contribuciones
+
+1. Haz un fork del repositorio.
+2. Crea una rama para tu cambio:
+
+```bash
+git checkout -b feature/nueva-funcionalidad
+```
+
+3. Realiza cambios pequeños y enfocados.
+4. Actualiza documentación si cambia el comportamiento.
+5. Ejecuta las pruebas disponibles:
+
+```bash
+cd android
+./gradlew test
+```
+
+6. Revisa manualmente las rutas afectadas del backend.
+7. Abre un Pull Request explicando el problema resuelto, el enfoque y las pruebas realizadas.
+
+## Licencia
+
+Este proyecto está publicado bajo licencia MIT. Consulta `LICENSE` para el texto completo.
