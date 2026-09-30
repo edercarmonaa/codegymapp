@@ -65,11 +65,11 @@ El repositorio no incluye capturas verificadas dentro de `docs/images` u otra ca
 
 ### Dashboard
 
-![Dashboard](docs/images/dashboard.png)
+![Dashboard](docs/dashboard.png)
 
 ### Calendario
 
-![Calendario](docs/images/calendario.png)
+![Calendario](docs/calendario.png)
 
 ### App Android
 
