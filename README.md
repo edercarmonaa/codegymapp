@@ -429,7 +429,6 @@ El proyecto parece una versión funcional en desarrollo activo. Cuenta con backe
 - El backend PHP no incluye suite automatizada de pruebas en el repositorio.
 - No se encontraron migraciones versionadas; la instalación depende de scripts SQL.
 - La integración push requiere servicios externos configurados fuera del repositorio: Firebase y Azure Notification Hubs.
-- Las capturas de pantalla no están incluidas.
 - La URL base Android está definida en `android/app/build.gradle`; para otro entorno debe ajustarse antes de compilar.
 
 ## Próximas mejoras
