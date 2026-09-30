@@ -58,11 +58,6 @@ El esquema actual fuerza un solo usuario principal mediante una clave única en 
 
 ## Capturas
 
-El repositorio no incluye capturas verificadas dentro de `docs/images` u otra carpeta equivalente. Cuando se agreguen, una estructura sugerida sería:
-
-
-## Capturas
-
 ### Dashboard
 
 ![Dashboard](docs/dashboard.png)
