@@ -60,7 +60,7 @@ El esquema actual fuerza un solo usuario principal mediante una clave única en 
 
 El repositorio no incluye capturas verificadas dentro de `docs/images` u otra carpeta equivalente. Cuando se agreguen, una estructura sugerida sería:
 
-```markdown
+
 ## Capturas
 
 ### Dashboard
@@ -74,7 +74,7 @@ El repositorio no incluye capturas verificadas dentro de `docs/images` u otra ca
 ### App Android
 
 ![App Android](docs/images/android-home.png)
-```
+
 
 ## Tecnologías utilizadas
 
