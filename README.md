@@ -73,7 +73,7 @@ El repositorio no incluye capturas verificadas dentro de `docs/images` u otra ca
 
 ### App Android
 
-![App Android](docs/images/android-home.png)
+![App Android](docs/android-home.png)
 
 
 ## Tecnologías utilizadas
