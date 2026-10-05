@@ -68,7 +68,10 @@ El esquema actual fuerza un solo usuario principal mediante una clave única en 
 
 ### App Android
 
-<img src="docs/android-home.png" width="350" alt="App Android">
+<div align="center">
+  <img src="docs/android-home.png" width="350" alt="App Android">
+</div>
+
 
 
 ## Tecnologías utilizadas
