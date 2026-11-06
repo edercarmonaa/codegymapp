@@ -145,7 +145,7 @@ private fun TaskCardContent(
                 verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(4.dp)
             ) {
                 Text(
-                    text = challenge.platformName,
+                    text = if (challenge.isRescheduled) "${challenge.platformName} · Reprogramado" else challenge.platformName,
                     style = MaterialTheme.typography.titleLarge,
                     color = if (isCompleted) {
                         MaterialTheme.colorScheme.onSurfaceVariant

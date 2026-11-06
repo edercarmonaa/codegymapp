@@ -138,7 +138,9 @@ fun CodeGymNavHost(
             val viewModel = remember {
                 SettingsViewModel(
                     settingsRepository = appContainer.settingsRepository,
-                    authRepository = appContainer.authRepository
+                    authRepository = appContainer.authRepository,
+                    reviewRepository = appContainer.pendingActionReviewRepository,
+                    syncActions = appContainer::syncNow
                 )
             }
             SettingsScreen(

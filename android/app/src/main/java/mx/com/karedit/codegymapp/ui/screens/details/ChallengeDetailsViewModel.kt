@@ -28,7 +28,7 @@ class ChallengeDetailsViewModel(
             status = challenge.status,
             title = challenge.title,
             challengeUrl = challenge.challengeUrl.orEmpty(),
-            difficulty = challenge.difficulty,
+            difficulty = mx.com.karedit.codegymapp.domain.model.difficultyKey(challenge.difficulty),
             timeSpentMinutes = if (challenge.timeSpentMinutes > 0) challenge.timeSpentMinutes.toString() else "",
             notes = challenge.notes,
             selectedLanguageIds = challenge.languageIds.toSet(),
@@ -45,6 +45,7 @@ class ChallengeDetailsViewModel(
                         it.copy(
                             platforms = options.platforms,
                             languages = options.languages,
+                            difficulties = options.difficulties,
                             platformId = it.platformId.takeIf { platformId -> platformId > 0 }
                                 ?: options.platforms.firstOrNull()?.id
                                 ?: 0
@@ -101,6 +102,11 @@ class ChallengeDetailsViewModel(
 
     fun save(onSaved: (String) -> Unit) {
         val current = _state.value
+        if (current.status in setOf("missed", "cancelled")) return
+        if (current.difficulty.isNotBlank() && current.difficulties.none { it.value == current.difficulty }) {
+            _state.update { it.copy(message = "Selecciona una dificultad válida.") }
+            return
+        }
         validateUrls(current)?.let { message ->
             _state.update { it.copy(message = message) }
             return
@@ -157,6 +163,7 @@ data class ChallengeDetailsUiState(
     val title: String = "",
     val challengeUrl: String = "",
     val difficulty: String = "",
+    val difficulties: List<mx.com.karedit.codegymapp.domain.model.ChallengeDifficulty> = emptyList(),
     val timeSpentMinutes: String = "",
     val notes: String = "",
     val selectedLanguageIds: Set<Int> = emptySet(),

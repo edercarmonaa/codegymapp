@@ -56,6 +56,9 @@ class OfflineActionQueueTest {
 }
 
 internal class FakePendingActionDao : PendingActionDao {
+    override fun reviewActionsFlow(): Flow<List<PendingActionEntity>> =
+        flowOf(actions.filter { it.errorKind == "validation" })
+
     private val actions = mutableListOf<PendingActionEntity>()
     private var nextId = 1L
 
@@ -100,7 +103,7 @@ internal class FakePendingActionDao : PendingActionDao {
     }
 
     override suspend fun updatePayload(id: Long, payloadJson: String) {
-        replace(id) { it.copy(payloadJson = payloadJson, lastError = "") }
+        replace(id) { it.copy(payloadJson = payloadJson, lastError = "", errorKind = "", attempts = 0, lastAttemptAt = 0, nextAttemptAt = 0) }
     }
 
     override suspend fun deleteByTypesAndPayloadPattern(types: List<String>, payloadPattern: String) {

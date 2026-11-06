@@ -93,7 +93,10 @@ class ChallengesRepository(
                 offlineActionQueue.enqueueChallengeAction(ActionTypes.CHALLENGE_CANCEL, id)
                 challengeDao.updateStatus(id, "cancelled", null)
             }
-        ) { api.cancelChallenge(MobileChallengeActionRequestDto(id)) }
+        ) {
+            challengeDao.validateCancellation(id)
+            api.cancelChallenge(MobileChallengeActionRequestDto(id))
+        }
 
     suspend fun rescheduleChallenge(id: Int, scheduledDate: String): Result<String> =
         challengeAction(
@@ -101,7 +104,10 @@ class ChallengesRepository(
                 offlineActionQueue.enqueueReschedule(id, scheduledDate)
                 challengeDao.updateScheduledDate(id, scheduledDate)
             }
-        ) { api.rescheduleChallenge(MobileChallengeRescheduleRequestDto(id, scheduledDate)) }
+        ) {
+            validateRescheduleDate(scheduledDate)
+            api.rescheduleChallenge(MobileChallengeRescheduleRequestDto(id, scheduledDate))
+        }
 
     private suspend fun challengeAction(
         offline: suspend () -> Unit,

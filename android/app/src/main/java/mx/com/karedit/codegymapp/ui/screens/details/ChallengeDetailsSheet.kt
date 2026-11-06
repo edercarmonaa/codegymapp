@@ -50,6 +50,7 @@ fun ChallengeDetailsSheet(
     val state by viewModel.state.collectAsState()
     val uriHandler = LocalUriHandler.current
     val canClose = challenge.id > 0 && (challenge.status == "pending" || challenge.status == "expired")
+    val canEdit = challenge.status !in setOf("missed", "cancelled")
     var platformMenuExpanded by remember { mutableStateOf(false) }
     val selectedPlatform = state.platforms.firstOrNull { it.id == state.platformId }
 
@@ -76,13 +77,13 @@ fun ChallengeDetailsSheet(
 
             ExposedDropdownMenuBox(
                 expanded = platformMenuExpanded,
-                onExpandedChange = { platformMenuExpanded = !platformMenuExpanded }
+                onExpandedChange = { if (canEdit) platformMenuExpanded = !platformMenuExpanded }
             ) {
                 OutlinedTextField(
                     modifier = Modifier
                         .menuAnchor(
                             type = MenuAnchorType.PrimaryNotEditable,
-                            enabled = !state.isSaving
+                            enabled = canEdit && !state.isSaving
                         )
                         .fillMaxWidth(),
                     value = selectedPlatform?.name ?: state.platformName,
@@ -90,7 +91,7 @@ fun ChallengeDetailsSheet(
                     readOnly = true,
                     label = { Text("Plataforma") },
                     trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = platformMenuExpanded) },
-                    enabled = !state.isSaving
+                    enabled = canEdit && !state.isSaving
                 )
                 ExposedDropdownMenu(
                     expanded = platformMenuExpanded,
@@ -113,7 +114,7 @@ fun ChallengeDetailsSheet(
                 onValueChange = viewModel::updateTitle,
                 label = { Text("Título") },
                 singleLine = true,
-                enabled = !state.isSaving
+                enabled = canEdit && !state.isSaving
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -121,15 +122,13 @@ fun ChallengeDetailsSheet(
                 onValueChange = viewModel::updateChallengeUrl,
                 label = { Text("URL del reto") },
                 singleLine = true,
-                enabled = !state.isSaving
+                enabled = canEdit && !state.isSaving
             )
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+            mx.com.karedit.codegymapp.ui.components.DifficultyPicker(
                 value = state.difficulty,
-                onValueChange = viewModel::updateDifficulty,
-                label = { Text("Dificultad") },
-                singleLine = true,
-                enabled = !state.isSaving
+                options = state.difficulties,
+                enabled = canEdit && !state.isSaving,
+                onSelected = viewModel::updateDifficulty
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -137,7 +136,7 @@ fun ChallengeDetailsSheet(
                 onValueChange = viewModel::updateTimeSpentMinutes,
                 label = { Text("Tiempo practicado (min)") },
                 singleLine = true,
-                enabled = !state.isSaving,
+                enabled = canEdit && !state.isSaving,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
             )
             OutlinedTextField(
@@ -146,7 +145,7 @@ fun ChallengeDetailsSheet(
                 onValueChange = viewModel::updateNotes,
                 label = { Text("Notas") },
                 minLines = 3,
-                enabled = !state.isSaving
+                enabled = canEdit && !state.isSaving
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),
@@ -155,7 +154,7 @@ fun ChallengeDetailsSheet(
                 label = { Text("GitHub") },
                 placeholder = { Text("Un enlace por línea") },
                 minLines = 3,
-                enabled = !state.isSaving
+                enabled = canEdit && !state.isSaving
             )
 
             if (state.languages.isNotEmpty()) {
@@ -169,7 +168,7 @@ fun ChallengeDetailsSheet(
                             Checkbox(
                                 checked = state.selectedLanguageIds.contains(language.id),
                                 onCheckedChange = { viewModel.toggleLanguage(language.id) },
-                                enabled = !state.isSaving
+                                enabled = canEdit && !state.isSaving
                             )
                             Text(language.name, style = MaterialTheme.typography.bodyLarge)
                         }
@@ -189,7 +188,7 @@ fun ChallengeDetailsSheet(
 
             Button(
                 modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isSaving,
+                enabled = canEdit && !state.isSaving,
                 onClick = { viewModel.save(onSaved) }
             ) {
                 Text(if (state.isSaving) "Guardando..." else "Guardar cambios")

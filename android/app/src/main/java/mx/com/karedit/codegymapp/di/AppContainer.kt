@@ -46,6 +46,7 @@ class AppContainer(context: Context) {
             database.pendingActionDao()
         ).migrate()
     }
+    val pendingActionReviewRepository = mx.com.karedit.codegymapp.data.repository.PendingActionReviewRepository(database.pendingActionDao(), database.cachedCatalogDao())
     val offlineActionQueue = OfflineActionQueue(database.pendingActionDao(), moshi)
     val sessionManager = SessionManager(tokenStorage)
     private val api = RetrofitFactory.createApi(sessionManager)

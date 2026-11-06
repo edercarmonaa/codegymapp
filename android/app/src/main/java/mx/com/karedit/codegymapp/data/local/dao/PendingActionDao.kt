@@ -9,6 +9,9 @@ import kotlinx.coroutines.flow.Flow
 
 @Dao
 interface PendingActionDao {
+    @Query("SELECT * FROM pending_actions WHERE errorKind = 'validation' ORDER BY createdAt ASC")
+    fun reviewActionsFlow(): Flow<List<PendingActionEntity>>
+
     @Query("SELECT * FROM pending_actions ORDER BY createdAt ASC")
     suspend fun pending(): List<PendingActionEntity>
 

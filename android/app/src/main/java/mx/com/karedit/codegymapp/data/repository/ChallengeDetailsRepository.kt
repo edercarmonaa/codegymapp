@@ -184,14 +184,17 @@ class ChallengeDetailsRepository(
             val now = System.currentTimeMillis()
             catalogDao.replacePlatforms(response.platforms.map { it.toCacheEntity(now) })
             catalogDao.replaceLanguages(response.languages.map { it.toCacheEntity(now) })
+            catalogDao.cacheDifficulties(response.difficultyOptions)
             ChallengeDetailsOptions(
                 platforms = response.platforms.map { it.toDomain() },
-                languages = response.languages.map { it.toDomain() }
+                languages = response.languages.map { it.toDomain() },
+                difficulties = catalogDao.difficulties()
             )
         } catch (exception: Exception) {
             val cached = ChallengeDetailsOptions(
                 platforms = catalogDao.platforms().map { it.toDomain() },
-                languages = catalogDao.languages().map { it.toDomain() }
+                languages = catalogDao.languages().map { it.toDomain() },
+                difficulties = catalogDao.difficulties()
             )
             if (cached.platforms.isNotEmpty() || cached.languages.isNotEmpty()) {
                 cached
@@ -204,5 +207,6 @@ class ChallengeDetailsRepository(
 
 data class ChallengeDetailsOptions(
     val platforms: List<MobilePlatform>,
+    val difficulties: List<mx.com.karedit.codegymapp.domain.model.ChallengeDifficulty>,
     val languages: List<MobileLanguage>
 )

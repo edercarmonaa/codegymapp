@@ -12,8 +12,20 @@ import mx.com.karedit.codegymapp.data.repository.ThemePreference
 
 class SettingsViewModel(
     private val settingsRepository: SettingsRepository,
-    private val authRepository: AuthRepository
+    private val authRepository: AuthRepository,
+    private val reviewRepository: mx.com.karedit.codegymapp.data.repository.PendingActionReviewRepository,
+    private val syncActions: () -> Unit
 ) : ViewModel() {
+    val reviewActions = reviewRepository.actions
+    val difficulties = MutableStateFlow<List<mx.com.karedit.codegymapp.domain.model.ChallengeDifficulty>>(emptyList())
+    init { viewModelScope.launch { difficulties.value = reviewRepository.difficulties() } }
+    fun retryAction(id: Long, difficulty: String, date: String) {
+        viewModelScope.launch {
+            reviewRepository.retry(id, difficulty, date)
+                .onSuccess { syncActions(); _message.value = "Acción lista para sincronizar." }
+                .onFailure { _message.value = it.message }
+        }
+    }
     val settings = settingsRepository.settings
 
     private val _message = MutableStateFlow<String?>(null)
@@ -53,6 +65,7 @@ class SettingsViewModel(
     }
 
     fun syncNow() {
+        syncActions()
         viewModelScope.launch {
             settingsRepository.syncSettings()
                 .onSuccess { message -> _message.value = message }

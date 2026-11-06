@@ -87,11 +87,13 @@ class PlannedRepository(
 
     suspend fun cancelChallenge(id: Int): Result<String> =
         challengeAction(offline = { offlineCancel(id) }) {
+            challengeDao.validateCancellation(id)
             api.cancelChallenge(MobileChallengeActionRequestDto(id))
         }
 
     suspend fun rescheduleChallenge(id: Int, scheduledDate: String): Result<String> =
         challengeAction(offline = { offlineReschedule(id, scheduledDate) }) {
+            validateRescheduleDate(scheduledDate)
             api.rescheduleChallenge(MobileChallengeRescheduleRequestDto(id, scheduledDate))
         }
 

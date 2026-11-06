@@ -116,7 +116,7 @@ class SyncManager(
                         platformId = payload.platformId,
                         title = payload.title,
                         challengeUrl = payload.challengeUrl,
-                        difficulty = payload.difficulty,
+                        difficulty = mx.com.karedit.codegymapp.domain.model.difficultyKey(payload.difficulty),
                         timeSpentMinutes = payload.timeSpentMinutes,
                         notes = payload.notes,
                         languageIds = payload.languageIds,
@@ -131,7 +131,7 @@ class SyncManager(
                         platformId = payload.platformId,
                         title = payload.title,
                         challengeUrl = payload.challengeUrl,
-                        difficulty = payload.difficulty,
+                        difficulty = mx.com.karedit.codegymapp.domain.model.difficultyKey(payload.difficulty),
                         timeSpentMinutes = payload.timeSpentMinutes,
                         notes = payload.notes,
                         languageIds = payload.languageIds,
@@ -166,6 +166,7 @@ class SyncManager(
             }
             ActionTypes.CHALLENGE_RESCHEDULE -> {
                 val payload = moshi.adapter(ReschedulePayload::class.java).fromJson(payloadJson) ?: return false
+                mx.com.karedit.codegymapp.data.repository.validateRescheduleDate(payload.scheduledDate)
                 api.rescheduleChallenge(
                     MobileChallengeRescheduleRequestDto(payload.id, payload.scheduledDate)
                 ).ok
@@ -281,7 +282,10 @@ internal fun classifySyncFailure(exception: Exception): SyncFailure = when {
     )
     exception is HttpException && exception.code() in 400..499 &&
         exception.code() !in setOf(408, 429) -> SyncFailure.validation(
-        "La acción requiere revisión antes de sincronizar."
+        runCatching {
+            val body = exception.response()?.errorBody()?.string().orEmpty()
+            Moshi.Builder().build().adapter(Map::class.java).fromJson(body)?.get("message") as? String
+        }.getOrNull() ?: "La acción requiere revisión antes de sincronizar."
     )
     exception is HttpException && (exception.code() >= 500 || exception.code() in setOf(408, 429)) -> SyncFailure(
         SyncErrorKinds.SERVER,
@@ -290,7 +294,7 @@ internal fun classifySyncFailure(exception: Exception): SyncFailure = when {
         stopsQueue = true
     )
     exception is IllegalArgumentException || exception is IllegalStateException -> SyncFailure.validation(
-        "Los datos guardados para esta acción no son válidos."
+        exception.message ?: "Los datos guardados para esta acción no son válidos."
     )
     else -> SyncFailure(
         SyncErrorKinds.UNKNOWN,
@@ -320,7 +324,7 @@ private fun ChallengeCreatePayload.toDetails(serverId: Int): ChallengeDetailsPay
         platformId = platformId,
         title = title,
         challengeUrl = challengeUrl,
-        difficulty = difficulty,
+        difficulty = mx.com.karedit.codegymapp.domain.model.difficultyKey(difficulty),
         timeSpentMinutes = timeSpentMinutes,
         notes = notes,
         languageIds = languageIds,
@@ -333,7 +337,7 @@ private fun ChallengeDetailsPayload.toRequest(): MobileChallengeDetailsRequestDt
         platformId = platformId,
         title = title,
         challengeUrl = challengeUrl,
-        difficulty = difficulty,
+        difficulty = mx.com.karedit.codegymapp.domain.model.difficultyKey(difficulty),
         timeSpentMinutes = timeSpentMinutes,
         notes = notes,
         languageIds = languageIds,

@@ -24,7 +24,7 @@ interface CachedChallengeDao {
     @Query("UPDATE cached_challenges SET status = :status, completedDate = :completedDate WHERE id = :id")
     suspend fun updateStatus(id: Int, status: String, completedDate: String?)
 
-    @Query("UPDATE cached_challenges SET scheduledDate = :scheduledDate, isRescheduled = 1 WHERE id = :id")
+    @Query("UPDATE cached_challenges SET scheduledDate = :scheduledDate, isRescheduled = 1, status = 'pending', completedDate = NULL WHERE id = :id")
     suspend fun updateScheduledDate(id: Int, scheduledDate: String)
 
     @Query(

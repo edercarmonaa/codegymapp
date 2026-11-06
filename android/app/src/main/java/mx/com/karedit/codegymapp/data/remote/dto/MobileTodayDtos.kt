@@ -210,6 +210,7 @@ data class MobileSettingsRequestDto(
 
 data class MobileCreateOptionsResponseDto(
     val ok: Boolean,
+    @Json(name = "difficulty_options") val difficultyOptions: Map<String, String>? = null,
     val platforms: List<MobilePlatformDto> = emptyList(),
     val languages: List<MobileLanguageDto> = emptyList(),
     val message: String? = null

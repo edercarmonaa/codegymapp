@@ -207,12 +207,6 @@ class GoalsRepository(
             )
         }
         catalogDao.replaceOptions(
-            CatalogOptionKinds.DIFFICULTIES,
-            difficultyOptions().mapIndexed { index, option ->
-                option.toCacheEntity(CatalogOptionKinds.DIFFICULTIES, index, now)
-            }
-        )
-        catalogDao.replaceOptions(
             CatalogOptionKinds.CHALLENGE_STATUSES,
             challengeStatusOptions().mapIndexed { index, option ->
                 option.toCacheEntity(CatalogOptionKinds.CHALLENGE_STATUSES, index, now)
@@ -279,12 +273,6 @@ object CatalogOptionKinds {
     const val CHALLENGE_STATUSES = "challenge_statuses"
     const val ROUTINE_FREQUENCIES = "routine_frequencies"
 }
-
-private fun difficultyOptions(): List<MobileGoalOption> = listOf(
-    MobileGoalOption("facil", "Fácil"),
-    MobileGoalOption("medio", "Medio"),
-    MobileGoalOption("dificil", "Difícil")
-)
 
 private fun challengeStatusOptions(): List<MobileGoalOption> = listOf(
     MobileGoalOption("pending", "Pendientes"),

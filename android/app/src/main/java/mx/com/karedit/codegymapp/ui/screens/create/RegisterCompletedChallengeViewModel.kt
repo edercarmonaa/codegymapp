@@ -30,6 +30,7 @@ class RegisterCompletedChallengeViewModel(
                         it.copy(
                             platforms = options.platforms,
                             languages = options.languages,
+                            difficulties = options.difficulties,
                             selectedPlatformId = it.selectedPlatformId ?: options.platforms.firstOrNull()?.id
                         )
                     }
@@ -120,6 +121,7 @@ data class RegisterCompletedChallengeUiState(
     val title: String = "",
     val challengeUrl: String = "",
     val difficulty: String = "",
+    val difficulties: List<mx.com.karedit.codegymapp.domain.model.ChallengeDifficulty> = emptyList(),
     val timeSpentMinutes: String = "",
     val notes: String = "",
     val githubLinks: String = "",
@@ -131,7 +133,7 @@ data class RegisterCompletedChallengeUiState(
     fun validationMessage(): String? = when {
         selectedPlatformId == null -> "Selecciona una plataforma."
         title.isBlank() -> "Captura el nombre del reto."
-        difficulty.isBlank() -> "Captura la dificultad."
+        difficulties.none { it.value == difficulty } -> "Selecciona una dificultad válida."
         (timeSpentMinutes.toIntOrNull() ?: 0) <= 0 -> "Captura el tiempo invertido."
         selectedLanguageIds.isEmpty() -> "Selecciona al menos un lenguaje."
         else -> null

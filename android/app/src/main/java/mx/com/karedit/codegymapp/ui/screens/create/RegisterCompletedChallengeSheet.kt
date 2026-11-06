@@ -93,13 +93,11 @@ fun RegisterCompletedChallengeSheet(
                 singleLine = true,
                 enabled = !state.isSaving
             )
-            OutlinedTextField(
-                modifier = Modifier.fillMaxWidth(),
+            mx.com.karedit.codegymapp.ui.components.DifficultyPicker(
                 value = state.difficulty,
-                onValueChange = viewModel::updateDifficulty,
-                label = { Text("Dificultad") },
-                singleLine = true,
-                enabled = !state.isSaving
+                options = state.difficulties,
+                enabled = !state.isSaving,
+                onSelected = viewModel::updateDifficulty
             )
             OutlinedTextField(
                 modifier = Modifier.fillMaxWidth(),

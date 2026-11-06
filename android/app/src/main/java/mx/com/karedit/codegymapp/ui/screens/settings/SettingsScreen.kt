@@ -48,6 +48,8 @@ fun SettingsScreen(
 ) {
     val settings by viewModel.settings.collectAsState()
     val message by viewModel.message.collectAsState()
+    val reviewActions by viewModel.reviewActions.collectAsState(initial = emptyList())
+    val difficulties by viewModel.difficulties.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
     val showHapticSnackbar = rememberCodeGymHapticSnackbar(snackbarHostState)
     val scrollState = rememberScrollState()
@@ -80,6 +82,9 @@ fun SettingsScreen(
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
 
+            reviewActions.forEach { action ->
+                PendingActionReviewCard(action, difficulties, viewModel::retryAction)
+            }
             ThemeSettingsCard(
                 selected = settings.themePreference,
                 onSelected = viewModel::updateTheme

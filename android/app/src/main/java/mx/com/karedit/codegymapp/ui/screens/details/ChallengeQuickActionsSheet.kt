@@ -38,6 +38,9 @@ fun ChallengeQuickActionsSheet(
     var confirmMiss by remember(challenge.id) { mutableStateOf(false) }
     var confirmCancel by remember(challenge.id) { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
+    val validDate = runCatching {
+        java.time.LocalDate.parse(rescheduleDate) >= java.time.LocalDate.now()
+    }.getOrDefault(false)
 
     ModalBottomSheet(onDismissRequest = onDismiss) {
         Column(
@@ -61,13 +64,16 @@ fun ChallengeQuickActionsSheet(
                 )
                 Button(
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = rescheduleDate.isNotBlank() && rescheduleDate != challenge.scheduledDate,
+                    enabled = validDate && rescheduleDate != challenge.scheduledDate,
                     onClick = {
                         hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                         onReschedule(rescheduleDate)
                     }
                 ) {
                     Text("Guardar nueva fecha")
+                }
+                if (!validDate) {
+                    Text("Selecciona una fecha actual o futura.", color = MaterialTheme.colorScheme.error)
                 }
                 TextButton(
                     modifier = Modifier.fillMaxWidth(),
@@ -86,10 +92,14 @@ fun ChallengeQuickActionsSheet(
                     }
                 }
                 OutlinedButton(
+                    enabled = !challenge.isRescheduled,
                     modifier = Modifier.fillMaxWidth(),
                     onClick = { confirmCancel = true }
                 ) {
                     Text("Cancelar")
+                }
+                if (challenge.isRescheduled) {
+                    Text("Los retos reprogramados no se pueden cancelar.")
                 }
             }
         }

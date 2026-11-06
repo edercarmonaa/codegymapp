@@ -37,6 +37,7 @@ class CreateChallengeRepository(
             }
 
             cacheCatalogs(response.platforms, response.languages)
+            catalogDao.cacheDifficulties(response.difficultyOptions)
             response.platforms.map { it.toDomain() }
         } catch (exception: Exception) {
             val cached = catalogDao.platforms().map { it.toDomain() }
@@ -52,9 +53,11 @@ class CreateChallengeRepository(
             }
 
             cacheCatalogs(response.platforms, response.languages)
+            catalogDao.cacheDifficulties(response.difficultyOptions)
             MobileChallengeOptions(
                 platforms = response.platforms.map { it.toDomain() },
-                languages = response.languages.map { it.toDomain() }
+                languages = response.languages.map { it.toDomain() },
+                difficulties = catalogDao.difficulties()
             )
         } catch (exception: Exception) {
             val cached = cachedOptions()
@@ -156,7 +159,8 @@ class CreateChallengeRepository(
     private suspend fun cachedOptions(): MobileChallengeOptions =
         MobileChallengeOptions(
             platforms = catalogDao.platforms().map { it.toDomain() },
-            languages = catalogDao.languages().map { it.toDomain() }
+            languages = catalogDao.languages().map { it.toDomain() },
+                difficulties = catalogDao.difficulties()
         )
 
     private suspend fun cacheOfflineChallenge(localId: Int, platformId: Int, scheduledDate: String) {
@@ -195,5 +199,6 @@ class CreateChallengeRepository(
 
 data class MobileChallengeOptions(
     val platforms: List<MobilePlatform>,
+    val difficulties: List<mx.com.karedit.codegymapp.domain.model.ChallengeDifficulty>,
     val languages: List<MobileLanguage>
 )
